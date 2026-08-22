@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  name        String
+  role        String   // 'teacher' | 'student' | 'parent'
+  avatar      String?
+  bio         String?
+  phone       String?  @unique
+  parentPhone String?
+  password    String?  // Hashed password
+  grade       String?  // Educational stage / grade
+  subject     String?  // Subject taught (for teachers)
+  studentId   String?  // Link parent account to student
+
+  courses     Course[]     @relation("TeacherCourses")
+  enrollments Enrollment[]
+  submissions Submission[]
+}
+
+model Course {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  coverImage  String
+  subject     String   // E.g. 'history', 'geography', 'physics', 'chemistry', 'math', 'arabic', 'english'
+  grade       String   // E.g. 'sec1', 'sec2', 'sec3', 'prep3'
+  isFree      Boolean  @default(false)
+  teacherId   String
+
+  teacher     User         @relation("TeacherCourses", fields: [teacherId], references: [id], onDelete: Cascade)
+  sections    Section[]
+  codes       Code[]
+  enrollments Enrollment[]
+}
+
+model Section {
+  id       String        @id @default(cuid())
+  courseId String
+  title    String
+  order    Int
+
+  course   Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  items    SectionItem[]
+}
+
+model SectionItem {
+  id        String     @id @default(cuid())
+  sectionId String
+  type      String     // 'video' | 'quiz'
+  title     String
+  url       String?
+  duration  Int?       // Seconds
+
+  section     Section     @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  questions   Question[]
+  submissions Submission[]
+}
+
+model Question {
+  id                 String      @id @default(cuid())
+  sectionItemId      String
+  prompt             String
+  type               String      @default("multiple-choice")
+  optionsJson        String      // JSON array of strings
+  correctOptionIndex Int
+
+  quizItem           SectionItem @relation(fields: [sectionItemId], references: [id], onDelete: Cascade)
+}
+
+model Code {
+  id                String   @id @default(cuid())
+  courseId          String
+  codeString        String   @unique
+  status            String   @default("unused") // 'unused' | 'used'
+  assignedStudentId String?
+  createdAt         DateTime @default(now())
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
+
+model Enrollment {
+  id                 String   @id @default(cuid())
+  studentId          String
+  courseId           String
+  unlockedAt         DateTime @default(now())
+  completedItemsJson String   @default("[]") // JSON array of item IDs
+
+  student User   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, courseId])
+}
+
+model Submission {
+  id          String      @id @default(cuid())
+  studentId   String
+  quizId      String
+  answersJson String      // JSON array of selected indices
+  score       Int
+  submittedAt DateTime    @default(now())
+
+  student  User        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  quizItem SectionItem @relation(fields: [quizId], references: [id], onDelete: Cascade)
+}
