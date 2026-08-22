@@ -61,7 +61,7 @@ const GRADE_OPTIONS = [
 ];
 
 export default function LessonsLibraryPage() {
-  const { courses, fetchCourses, users, currentUser, isLoading } = useStore();
+  const { courses, fetchCourses, users, currentUser, enrollments, fetchEnrollments, isLoading } = useStore();
   const [activeCategory, setActiveCategory] = useState<CategoryKey>('all');
   const [selectedGrade, setSelectedGrade] = useState<string>('all');
   const [selectedPriceFilter, setSelectedPriceFilter] = useState<'all' | 'free' | 'paid'>('all');
@@ -72,7 +72,10 @@ export default function LessonsLibraryPage() {
     if (courses.length === 0) {
       fetchCourses();
     }
-  }, [courses.length, fetchCourses]);
+    if (currentUser?.role === 'student' && enrollments.length === 0) {
+      fetchEnrollments();
+    }
+  }, [courses.length, fetchCourses, currentUser, enrollments.length, fetchEnrollments]);
 
   if (isLoading && courses.length === 0) {
     return <LessonsPageSkeleton />;
@@ -310,6 +313,8 @@ export default function LessonsLibraryPage() {
               const videoCount = allItems.filter((i: any) => i.type === 'video').length;
               const quizCount = allItems.filter((i: any) => i.type === 'quiz').length;
 
+              const isEnrolled = course.isFree || (currentUser?.role === 'teacher') || enrollments.some((e) => e.studentId === currentUser?.id && e.courseId === course.id);
+
               return (
                 <div
                   key={course.id}
@@ -335,9 +340,17 @@ export default function LessonsLibraryPage() {
                               <span className="bg-white/90 backdrop-blur-md text-forest text-xs font-bold px-3 py-1 rounded-full shadow-sm border border-black/5">
                                 {gradeLabel}
                               </span>
-                              {course.isFree && (
+                              {course.isFree ? (
                                 <span className="bg-gold text-forest font-bold px-2.5 py-1 rounded-full text-xs shadow-sm">
                                   {strings.courses.free}
+                                </span>
+                              ) : isEnrolled ? (
+                                <span className="bg-emerald-600 text-white font-bold px-2.5 py-1 rounded-full text-xs shadow-sm">
+                                  مفعل
+                                </span>
+                              ) : (
+                                <span className="bg-forest/80 text-gold font-bold px-2.5 py-1 rounded-full text-xs shadow-sm">
+                                  يتطلب كود
                                 </span>
                               )}
                             </div>
@@ -473,6 +486,10 @@ export default function LessonsLibraryPage() {
                             <span className="text-emerald-800 font-bold text-xs bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full inline-block">
                               محاضرة مجانية
                             </span>
+                          ) : isEnrolled ? (
+                            <span className="text-forest font-bold text-xs bg-gold/20 border border-gold/30 px-3 py-1.5 rounded-full inline-block">
+                              كورس مفعل
+                            </span>
                           ) : (
                             <span className="text-forest/80 font-bold text-xs bg-black/5 px-3 py-1.5 rounded-full inline-block">
                               تفعيل بكود الحصة
@@ -488,7 +505,7 @@ export default function LessonsLibraryPage() {
                             icon={<ArrowLeft size={14} weight="bold" />}
                             className="px-4 py-2 text-xs sm:text-sm font-bold whitespace-nowrap"
                           >
-                            {course.isFree ? 'ابدأ الآن' : 'اشترك بالكورس'}
+                            {isEnrolled ? (course.isFree ? 'ابدأ الآن' : 'متابعة المذاكرة') : 'تفعيل الكورس'}
                           </Button>
                         </Link>
                       </div>

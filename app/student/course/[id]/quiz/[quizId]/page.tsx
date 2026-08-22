@@ -31,7 +31,7 @@ function QuizContent() {
   const courseId = params.id as string;
   const quizId = params.quizId as string;
   const router = useRouter();
-  const { currentUser, submitQuiz } = useStore();
+  const { currentUser, enrollments, fetchEnrollments, submitQuiz } = useStore();
   
   const [questions, setQuestions] = useState<ParsedQuestion[]>([]);
   const [quizTitle, setQuizTitle] = useState('اختبار تقييم الدرس');
@@ -42,6 +42,12 @@ function QuizContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  useEffect(() => {
+    if (currentUser?.role === 'student' && enrollments.length === 0) {
+      fetchEnrollments();
+    }
+  }, [currentUser, enrollments.length, fetchEnrollments]);
+
   // Fetch real quiz questions strictly from database
   useEffect(() => {
     async function loadQuizData() {
@@ -51,6 +57,16 @@ function QuizContent() {
         if (res.ok) {
           const data = await res.json();
           if (data.course) {
+            // Check enrollment access
+            const isFree = Boolean(data.course.isFree);
+            const isTeacher = currentUser?.role === 'teacher';
+            const isEnrolled = isFree || isTeacher || enrollments.some(e => e.studentId === currentUser?.id && e.courseId === courseId);
+
+            if (!isEnrolled) {
+              router.replace(`/student/course/${courseId}`);
+              return;
+            }
+
             setCourseTitle(data.course.title || 'المنهج الدراسي');
             const allItems = (data.course.sections || []).flatMap((s: any) => s.items || []);
             const targetQuiz = allItems.find((i: any) => i.id === quizId && i.type === 'quiz') ||

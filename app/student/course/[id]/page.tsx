@@ -15,7 +15,11 @@ import {
   ArrowLeft,
   ArrowRight,
   Eye,
-  PencilSimple
+  PencilSimple,
+  Ticket,
+  WhatsappLogo,
+  WarningCircle,
+  GraduationCap
 } from '@phosphor-icons/react';
 import { Button } from '@/components/common/Button';
 import { CustomVideoPlayer } from '@/components/video/CustomVideoPlayer';
@@ -29,13 +33,22 @@ function CourseViewContent() {
   const params = useParams();
   const id = params.id as string;
   const router = useRouter();
-  const { courses, currentUser, enrollments, markItemComplete } = useStore();
+  const { courses, currentUser, enrollments, fetchEnrollments, markItemComplete, redeemCode } = useStore();
   
   const [courseData, setCourseData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
+  const [redeemInput, setRedeemInput] = useState('');
+  const [redeemFeedback, setRedeemFeedback] = useState<{ success: boolean; message: string } | null>(null);
+  const [isRedeeming, setIsRedeeming] = useState(false);
 
   const isTeacherPreview = currentUser?.role === 'teacher';
+
+  useEffect(() => {
+    if (currentUser?.role === 'student' && enrollments.length === 0) {
+      fetchEnrollments();
+    }
+  }, [currentUser, enrollments.length, fetchEnrollments]);
 
   // Fetch full course data including sections, video lessons, and quizzes
   useEffect(() => {
@@ -78,6 +91,9 @@ function CourseViewContent() {
     : [];
 
   const currentEnrollment = enrollments.find((e) => e.studentId === currentUser?.id && e.courseId === id);
+  const isEnrolled = !!currentEnrollment;
+  const isFree = Boolean(course?.isFree);
+  const canAccess = isTeacherPreview || isFree || isEnrolled;
   const completedItems = currentEnrollment?.completedItems || [];
 
   const activeVideoItem = activeVideo
@@ -87,6 +103,22 @@ function CourseViewContent() {
   const handleMarkComplete = () => {
     if (activeVideo && currentUser && id && !isTeacherPreview) {
       markItemComplete(currentUser.id, id, activeVideo);
+    }
+  };
+
+  const handleRedeemCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUser || !redeemInput.trim()) return;
+
+    setIsRedeeming(true);
+    setRedeemFeedback(null);
+    const result = await redeemCode(currentUser.id, redeemInput.trim());
+    setRedeemFeedback(result);
+    setIsRedeeming(false);
+
+    if (result.success) {
+      setRedeemInput('');
+      await fetchEnrollments();
     }
   };
 
@@ -101,6 +133,136 @@ function CourseViewContent() {
         <Button onClick={() => router.push(isTeacherPreview ? '/teacher/courses' : '/lessons')}>
           العودة للقائمة
         </Button>
+      </div>
+    );
+  }
+
+  // Gated Access Screen for Unenrolled Students on Paid Courses
+  if (!canAccess) {
+    return (
+      <div className="w-full min-h-[85dvh] py-12 px-4 sm:px-6 bg-bone flex items-center justify-center text-start">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96, y: 15 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          className="w-full max-w-xl double-bezel shadow-2xl shadow-forest/10"
+        >
+          <div className="double-bezel-inner p-6 sm:p-10 bg-white flex flex-col gap-6 text-start">
+            
+            {/* Header Lock Icon & Badge */}
+            <div className="flex items-center justify-between border-b border-black/5 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-forest text-gold flex items-center justify-center shadow-md">
+                  <LockKey size={26} weight="fill" />
+                </div>
+                <div>
+                  <span className="text-xs font-bold text-forest/50 uppercase tracking-wider block">
+                    محتوى تعليمي محمي
+                  </span>
+                  <h1 className="font-display font-bold text-xl text-forest">
+                    يتطلب كود تفعيل للمشاهدة
+                  </h1>
+                </div>
+              </div>
+
+              <span className="bg-forest/5 text-forest text-xs font-bold px-3 py-1 rounded-full border border-black/5">
+                كورس مدفوع
+              </span>
+            </div>
+
+            {/* Course Summary Card */}
+            <div className="flex items-center gap-4 p-4 rounded-2xl bg-[#F7F6F3] border border-black/5">
+              <div className="w-20 h-16 rounded-xl overflow-hidden bg-forest/10 shrink-0 relative">
+                <img
+                  src={course.coverImage}
+                  alt={course.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="font-display font-bold text-sm sm:text-base text-forest truncate mb-0.5">
+                  {course.title}
+                </h3>
+                <p className="text-xs text-forest/70 line-clamp-1 mb-1.5">
+                  {course.description}
+                </p>
+                <div className="flex items-center gap-2 text-[11px] font-bold text-forest/60">
+                  <span>المعلم: {course.teacher?.name || 'أستاذ المادة'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Code Activation Form */}
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <Ticket size={18} weight="fill" className="text-gold" />
+                <h2 className="font-bold text-sm text-forest">أدخل كود الحصة لفتح الكورس فوراً:</h2>
+              </div>
+
+              <form onSubmit={handleRedeemCode} className="flex flex-col gap-3">
+                <div className="flex flex-col sm:flex-row gap-2.5">
+                  <input
+                    type="text"
+                    required
+                    value={redeemInput}
+                    onChange={(e) => setRedeemInput(e.target.value)}
+                    dir="ltr"
+                    placeholder="GEO2026-XXXX"
+                    className="flex-1 bg-[#F7F6F3] focus:bg-white rounded-xl px-4 py-3.5 text-sm text-forest border border-transparent focus:border-gold/60 outline-none text-center font-mono font-bold tracking-widest uppercase transition-all shadow-inner"
+                  />
+                  <Button
+                    type="submit"
+                    disabled={isRedeeming || redeemInput.trim().length < 4}
+                    className="px-6 py-3.5 text-xs sm:text-sm font-bold shrink-0 hover:bg-forest shadow-md"
+                  >
+                    {isRedeeming ? 'جاري التفعيل...' : 'تفعيل الكورس'}
+                  </Button>
+                </div>
+
+                <AnimatePresence>
+                  {redeemFeedback && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      className={`p-3.5 rounded-xl text-xs font-bold flex items-center gap-2 ${
+                        redeemFeedback.success
+                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                          : 'bg-rose-50 text-rose-800 border border-rose-200'
+                      }`}
+                    >
+                      {redeemFeedback.success ? (
+                        <CheckCircle size={18} weight="fill" className="text-emerald-600 shrink-0" />
+                      ) : (
+                        <WarningCircle size={18} weight="fill" className="text-rose-600 shrink-0" />
+                      )}
+                      <span>{redeemFeedback.message}</span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </form>
+            </div>
+
+            {/* Bottom Actions & WhatsApp Support */}
+            <div className="pt-4 border-t border-black/5 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <a
+                href={`https://wa.me/201000000000?text=أود%20شراء%20أو%20طلب%20كود%20تفعيل%20كورس%20${encodeURIComponent(course.title)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition-colors cursor-pointer"
+              >
+                <WhatsappLogo size={18} weight="fill" className="text-emerald-600" />
+                <span>طلب الكود عبر واتساب</span>
+              </a>
+
+              <Link href="/lessons" className="w-full sm:w-auto">
+                <Button variant="ghost" className="w-full sm:w-auto px-4 py-2.5 text-xs font-bold text-forest/70 hover:text-forest">
+                  العودة لمكتبة الكورسات
+                </Button>
+              </Link>
+            </div>
+
+          </div>
+        </motion.div>
       </div>
     );
   }
@@ -135,6 +297,7 @@ function CourseViewContent() {
           </Link>
         </div>
       )}
+
 
       {/* Main Classroom Layout */}
       <div className="flex flex-col lg:flex-row gap-8 items-start">

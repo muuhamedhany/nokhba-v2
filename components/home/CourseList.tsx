@@ -39,7 +39,7 @@ const CATEGORY_KEYWORDS: Record<CategoryKey, string[]> = {
 };
 
 export function CourseList() {
-  const { courses, fetchCourses, users, isLoading } = useStore();
+  const { courses, fetchCourses, users, currentUser, enrollments, fetchEnrollments, isLoading } = useStore();
   const [activeCategory, setActiveCategory] = useState<CategoryKey>('all');
   const [expandedCourseId, setExpandedCourseId] = useState<string | null>(null);
 
@@ -47,7 +47,10 @@ export function CourseList() {
     if (courses.length === 0) {
       fetchCourses();
     }
-  }, [courses.length, fetchCourses]);
+    if (currentUser?.role === 'student' && enrollments.length === 0) {
+      fetchEnrollments();
+    }
+  }, [courses.length, fetchCourses, currentUser, enrollments.length, fetchEnrollments]);
 
   // Robust Subject Category Matching
   const filteredCourses = courses.filter((course) => {
@@ -183,6 +186,8 @@ export function CourseList() {
                   ? `${(totalDurationMinutes / 60).toFixed(1)} ساعة` 
                   : `${Math.round(totalDurationMinutes)} دقيقة`;
 
+                const isEnrolled = course.isFree || (currentUser?.role === 'teacher') || enrollments.some((e) => e.studentId === currentUser?.id && e.courseId === course.id);
+
                 return (
                   <div
                     key={course.id}
@@ -209,9 +214,17 @@ export function CourseList() {
                               <span className="bg-white/90 backdrop-blur-md text-forest text-xs font-bold px-3 py-1 rounded-full shadow-sm border border-black/5">
                                 {gradeLabel}
                               </span>
-                              {course.isFree && (
+                              {course.isFree ? (
                                 <span className="bg-gold text-forest font-bold px-2.5 py-1 rounded-full text-xs shadow-sm">
                                   {strings.courses.free}
+                                </span>
+                              ) : isEnrolled ? (
+                                <span className="bg-emerald-600 text-white font-bold px-2.5 py-1 rounded-full text-xs shadow-sm">
+                                  مفعل
+                                </span>
+                              ) : (
+                                <span className="bg-forest/80 text-gold font-bold px-2.5 py-1 rounded-full text-xs shadow-sm">
+                                  يتطلب كود
                                 </span>
                               )}
                             </div>
@@ -326,9 +339,9 @@ export function CourseList() {
 
                       {/* Card Actions Footer */}
                       <div className="pt-4 border-t border-black/5 flex items-center justify-between gap-2.5">
-                        <Link href={`/student/course/${course.id}`} className="flex-1">
+                        <Link href={currentUser ? `/student/course/${course.id}` : `/login`} className="flex-1">
                           <Button className="w-full py-2.5 px-4 text-xs sm:text-sm font-bold shadow-md shadow-forest/10">
-                            ابدأ المشاهدة
+                            {isEnrolled ? (course.isFree ? 'ابدأ المشاهدة' : 'متابعة المذاكرة') : 'تفعيل الكورس'}
                           </Button>
                         </Link>
 
