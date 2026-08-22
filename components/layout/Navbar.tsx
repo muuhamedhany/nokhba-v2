@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { strings } from '@/locales/ar';
 import { Button } from '../common/Button';
 import { useStore } from '@/store';
@@ -14,6 +14,14 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const { currentUser, logout } = useStore();
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await logout();
+    setIsOpen(false);
+    router.push('/');
+    router.refresh();
+  };
 
   const handleLogoClick = (e: React.MouseEvent) => {
     if (pathname === '/') {
@@ -72,7 +80,7 @@ export function Navbar() {
                 </Link>
                 <Button 
                   variant="secondary" 
-                  onClick={logout}
+                  onClick={handleLogout}
                   className="px-4 py-2 rounded-full text-sm h-10"
                 >
                   تسجيل خروج
@@ -150,7 +158,7 @@ export function Navbar() {
                         الإعدادات
                       </Button>
                     </Link>
-                    <Button variant="secondary" onClick={() => { logout(); setIsOpen(false); }} className="w-full text-lg">
+                    <Button variant="secondary" onClick={handleLogout} className="w-full text-lg">
                       تسجيل خروج
                     </Button>
                   </>
