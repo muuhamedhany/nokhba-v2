@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
       where: whereClause,
       include: {
         teacher: {
-          select: { id: true, name: true, avatar: true, subject: true }
+          select: { id: true, name: true, avatar: true, subject: true, phone: true }
         },
         sections: {
           orderBy: { order: 'asc' },
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
       },
       include: {
         teacher: {
-          select: { id: true, name: true, avatar: true, subject: true }
+          select: { id: true, name: true, avatar: true, subject: true, phone: true }
         },
         sections: true
       }

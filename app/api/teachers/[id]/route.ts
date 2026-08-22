@@ -23,6 +23,7 @@ export async function GET(
         avatar: true,
         bio: true,
         subject: true,
+        phone: true,
         courses: true,
       }
     });

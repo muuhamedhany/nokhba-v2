@@ -244,15 +244,28 @@ function CourseViewContent() {
 
             {/* Bottom Actions & WhatsApp Support */}
             <div className="pt-4 border-t border-black/5 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <a
-                href={`https://wa.me/201000000000?text=أود%20شراء%20أو%20طلب%20كود%20تفعيل%20كورس%20${encodeURIComponent(course.title)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition-colors cursor-pointer"
-              >
-                <WhatsappLogo size={18} weight="fill" className="text-emerald-600" />
-                <span>طلب الكود عبر واتساب</span>
-              </a>
+              {(() => {
+                const rawPhone = course.teacher?.phone || '01000000001';
+                const cleanDigits = rawPhone.replace(/\D/g, '');
+                const waNumber = cleanDigits.startsWith('20')
+                  ? cleanDigits
+                  : cleanDigits.startsWith('0')
+                    ? `2${cleanDigits}`
+                    : `20${cleanDigits}`;
+                const waText = `أود شراء أو طلب كود تفعيل كورس ${course.title} - الأستاذ ${course.teacher?.name || ''}`;
+
+                return (
+                  <a
+                    href={`https://wa.me/${waNumber}?text=${encodeURIComponent(waText)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    <WhatsappLogo size={18} weight="fill" className="text-emerald-600" />
+                    <span>طلب الكود عبر واتساب ({course.teacher?.name || 'أستاذ المادة'})</span>
+                  </a>
+                );
+              })()}
 
               <Link href="/lessons" className="w-full sm:w-auto">
                 <Button variant="ghost" className="w-full sm:w-auto px-4 py-2.5 text-xs font-bold text-forest/70 hover:text-forest">

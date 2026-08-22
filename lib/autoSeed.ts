@@ -55,6 +55,7 @@ export const INITIAL_COURSES = [
       name: 'أ. أيمن ماضي',
       avatar: 'https://picsum.photos/seed/teacher1/200/200',
       subject: 'الجغرافيا والتاريخ',
+      phone: '01000000001',
     },
   },
   {
@@ -71,6 +72,7 @@ export const INITIAL_COURSES = [
       name: 'أ. أيمن ماضي',
       avatar: 'https://picsum.photos/seed/teacher1/200/200',
       subject: 'الجغرافيا والتاريخ',
+      phone: '01000000001',
     },
   },
   {
@@ -87,6 +89,7 @@ export const INITIAL_COURSES = [
       name: 'أ. أيمن ماضي',
       avatar: 'https://picsum.photos/seed/teacher1/200/200',
       subject: 'الجغرافيا والتاريخ',
+      phone: '01000000001',
     },
   },
   {
@@ -103,6 +106,7 @@ export const INITIAL_COURSES = [
       name: 'د. أحمد خالد',
       avatar: 'https://picsum.photos/seed/teacher2/200/200',
       subject: 'الفيزياء والرياضيات',
+      phone: '01000000002',
     },
   },
   {
@@ -119,6 +123,7 @@ export const INITIAL_COURSES = [
       name: 'د. أحمد خالد',
       avatar: 'https://picsum.photos/seed/teacher2/200/200',
       subject: 'الفيزياء والرياضيات',
+      phone: '01000000002',
     },
   },
   {
@@ -135,6 +140,7 @@ export const INITIAL_COURSES = [
       name: 'أ. سارة حسن',
       avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400',
       subject: 'الكيمياء والأحياء',
+      phone: '01000000003',
     },
   },
   {
@@ -151,6 +157,7 @@ export const INITIAL_COURSES = [
       name: 'أ. هشام كمال',
       avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400',
       subject: 'اللغة العربية واللغات',
+      phone: '01000000004',
     },
   },
   {
@@ -167,6 +174,7 @@ export const INITIAL_COURSES = [
       name: 'أ. هشام كمال',
       avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400',
       subject: 'اللغة العربية واللغات',
+      phone: '01000000004',
     },
   },
 ];

@@ -345,20 +345,33 @@ export function CourseList() {
                           </Button>
                         </Link>
 
-                        <a
-                          href={`https://wa.me/201000000000?text=أود%20الاستفسار%20عن%20كود%20كورس%20${encodeURIComponent(course.title)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="shrink-0"
-                          title="طلب كود التفعيل عبر واتساب"
-                        >
-                          <button 
-                            type="button"
-                            className="w-10 h-10 rounded-full border border-forest/15 hover:border-forest/30 bg-forest/5 hover:bg-forest/10 flex items-center justify-center text-emerald-600 transition-colors cursor-pointer"
-                          >
-                            <WhatsappLogo size={20} weight="fill" />
-                          </button>
-                        </a>
+                        {(() => {
+                          const rawPhone = teacher?.phone || '01000000001';
+                          const cleanDigits = rawPhone.replace(/\D/g, '');
+                          const waNumber = cleanDigits.startsWith('20')
+                            ? cleanDigits
+                            : cleanDigits.startsWith('0')
+                              ? `2${cleanDigits}`
+                              : `20${cleanDigits}`;
+                          const waText = `أود الاستفسار عن كود كورس ${course.title} - الأستاذ ${teacher?.name || ''}`;
+
+                          return (
+                            <a
+                              href={`https://wa.me/${waNumber}?text=${encodeURIComponent(waText)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="shrink-0"
+                              title={`طلب كود التفعيل عبر واتساب (${teacher?.name || 'الأستاذ'})`}
+                            >
+                              <button 
+                                type="button"
+                                className="w-10 h-10 rounded-full border border-forest/15 hover:border-forest/30 bg-forest/5 hover:bg-forest/10 flex items-center justify-center text-emerald-600 transition-colors cursor-pointer"
+                              >
+                                <WhatsappLogo size={20} weight="fill" />
+                              </button>
+                            </a>
+                          );
+                        })()}
                       </div>
 
                     </div>

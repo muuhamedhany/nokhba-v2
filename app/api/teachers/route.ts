@@ -21,6 +21,7 @@ export async function GET() {
         avatar: true,
         bio: true,
         subject: true,
+        phone: true,
         _count: {
           select: { courses: true }
         }

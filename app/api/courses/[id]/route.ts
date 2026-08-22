@@ -22,7 +22,7 @@ export async function GET(
       where: { id },
       include: {
         teacher: {
-          select: { id: true, name: true, avatar: true, subject: true }
+          select: { id: true, name: true, avatar: true, subject: true, phone: true }
         },
         sections: {
           orderBy: { order: 'asc' },
@@ -81,7 +81,7 @@ export async function PUT(
       },
       include: {
         teacher: {
-          select: { id: true, name: true, avatar: true, subject: true }
+          select: { id: true, name: true, avatar: true, subject: true, phone: true }
         },
         sections: {
           orderBy: { order: 'asc' },
