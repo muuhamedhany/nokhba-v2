@@ -132,10 +132,37 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
 
   const [sections, setSections] = useState<LocalSection[]>([]);
   const [imageInputType, setImageInputType] = useState<'upload' | 'link'>('link');
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [errors, setErrors] = useState<{ title?: string; description?: string }>({});
   const [touched, setTouched] = useState<{ title?: boolean; description?: boolean }>({});
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const handleImageFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setIsUploadingImage(true);
+      try {
+        const uploadFormData = new FormData();
+        uploadFormData.append('file', file);
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: uploadFormData,
+        });
+        const data = await res.json();
+        if (data.success && data.url) {
+          setFormData((prev) => ({ ...prev, coverImage: data.url }));
+        } else {
+          alert(data.message || 'فشل رفع الصورة');
+        }
+      } catch (err) {
+        console.error('Error uploading image:', err);
+        alert('حدث خطأ أثناء رفع الصورة');
+      } finally {
+        setIsUploadingImage(false);
+      }
+    }
+  };
 
   const [isAddSectionOpen, setIsAddSectionOpen] = useState(false);
   const [isEditSectionOpen, setIsEditSectionOpen] = useState(false);
@@ -814,14 +841,21 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
                     type="file" 
                     accept="image/*" 
                     className="hidden" 
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        setFormData({...formData, coverImage: URL.createObjectURL(e.target.files[0])});
-                      }
-                    }}
+                    onChange={handleImageFileUpload}
+                    disabled={isUploadingImage}
                   />
-                  <ImageIcon size={24} weight="duotone" className="text-forest/40" />
-                  <span className="text-xs font-bold text-forest">اضغط لاختيار صورة جديدة من جهازك</span>
+                  {isUploadingImage ? (
+                    <div className="flex flex-col items-center gap-2 py-2 text-forest">
+                      <div className="w-6 h-6 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+                      <span className="text-xs font-bold">جاري رفع الصورة إلى Cloudflare R2...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <ImageIcon size={24} weight="duotone" className="text-forest/40" />
+                      <span className="text-xs font-bold text-forest">اضغط لاختيار صورة جديدة من جهازك</span>
+                      <span className="text-[10px] text-forest/50">يتم رفع وحفظ الصور مباشرة عبر Cloudflare R2</span>
+                    </>
+                  )}
                 </div>
               ) : (
                 <Input 

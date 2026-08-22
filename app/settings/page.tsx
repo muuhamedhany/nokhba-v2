@@ -18,6 +18,7 @@ function SettingsContent() {
     grade: 'sec3'
   });
 
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [errors, setErrors] = useState<{ name?: string; parentPhone?: string }>({});
   const [touched, setTouched] = useState<{ name?: boolean; parentPhone?: boolean }>({});
   const [savedFeedback, setSavedFeedback] = useState(false);
@@ -31,6 +32,42 @@ function SettingsContent() {
       });
     }
   }, [currentUser]);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0] && currentUser) {
+      const file = e.target.files[0];
+      setIsUploadingAvatar(true);
+      try {
+        const uploadData = new FormData();
+        uploadData.append('file', file);
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: uploadData,
+        });
+        const data = await res.json();
+        if (data.success && data.url) {
+          // Persist in DB
+          await fetch('/api/auth/me', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ avatar: data.url }),
+          });
+
+          // Update store
+          updateUser(currentUser.id, { avatar: data.url });
+          setSavedFeedback(true);
+          setTimeout(() => setSavedFeedback(false), 4000);
+        } else {
+          alert(data.message || 'فشل رفع الصورة');
+        }
+      } catch (err) {
+        console.error('Error uploading avatar:', err);
+        alert('حدث خطأ أثناء رفع الصورة');
+      } finally {
+        setIsUploadingAvatar(false);
+      }
+    }
+  };
 
   const validateField = (field: 'name' | 'parentPhone', value: string) => {
     if (field === 'name') {
@@ -52,7 +89,7 @@ function SettingsContent() {
     setErrors((prev) => ({ ...prev, [field]: errorMsg }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser) return;
 
@@ -66,14 +103,28 @@ function SettingsContent() {
       return;
     }
 
-    updateUser(currentUser.id, {
-      name: formData.name.trim(),
-      parentPhone: formData.parentPhone.trim(),
-      grade: formData.grade
-    });
+    try {
+      await fetch('/api/auth/me', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          parentPhone: formData.parentPhone.trim(),
+          grade: formData.grade,
+        }),
+      });
 
-    setSavedFeedback(true);
-    setTimeout(() => setSavedFeedback(false), 4000);
+      updateUser(currentUser.id, {
+        name: formData.name.trim(),
+        parentPhone: formData.parentPhone.trim(),
+        grade: formData.grade
+      });
+
+      setSavedFeedback(true);
+      setTimeout(() => setSavedFeedback(false), 4000);
+    } catch (err) {
+      console.error('Error saving user profile:', err);
+    }
   };
 
   if (!currentUser) return null;
@@ -101,12 +152,28 @@ function SettingsContent() {
                     currentUser.role === 'student' ? <Student size={56} weight="duotone" /> : <User size={56} weight="duotone" />
                   )}
                 </div>
+                
+                <input
+                  id="avatarInput"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleAvatarUpload}
+                  disabled={isUploadingAvatar}
+                />
+
                 <button
                   type="button"
-                  className="absolute bottom-0 right-0 w-9 h-9 bg-gold text-forest rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-md cursor-pointer"
-                  title="تغيير الصورة"
+                  onClick={() => document.getElementById('avatarInput')?.click()}
+                  disabled={isUploadingAvatar}
+                  className="absolute bottom-0 right-0 w-9 h-9 bg-gold text-forest rounded-full flex items-center justify-center hover:scale-110 transition-transform shadow-md cursor-pointer disabled:opacity-50"
+                  title="تغيير الصورة الشخصية"
                 >
-                  <Camera size={18} weight="fill" />
+                  {isUploadingAvatar ? (
+                    <div className="w-4 h-4 border-2 border-forest border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Camera size={18} weight="fill" />
+                  )}
                 </button>
               </div>
 
