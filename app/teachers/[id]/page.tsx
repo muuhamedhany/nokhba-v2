@@ -2,14 +2,38 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { User, Books } from '@phosphor-icons/react';
+import Link from 'next/link';
+import { motion } from 'motion/react';
+import { 
+  SealCheck, 
+  Books, 
+  VideoCamera, 
+  Exam, 
+  WhatsappLogo, 
+  GraduationCap, 
+  ArrowRight,
+  Sparkle,
+  ChalkboardTeacher,
+  Clock,
+  User
+} from '@phosphor-icons/react';
+import { Button } from '@/components/common/Button';
+import { strings } from '@/locales/ar';
+import { useStore } from '@/store';
 
 export default function TeacherProfile() {
   const params = useParams();
   const id = params.id as string;
+  const { currentUser, enrollments, fetchEnrollments } = useStore();
 
   const [teacher, setTeacher] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    if (currentUser?.role === 'student' && enrollments.length === 0) {
+      fetchEnrollments();
+    }
+  }, [currentUser, enrollments.length, fetchEnrollments]);
 
   useEffect(() => {
     async function fetchTeacher() {
@@ -30,105 +54,333 @@ export default function TeacherProfile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen py-12 flex items-center justify-center bg-bone">
-        <div className="w-12 h-12 rounded-full border-4 border-gold border-t-transparent animate-spin" />
+      <div className="w-full min-h-[90dvh] py-16 px-4 bg-bone flex items-center justify-center text-start">
+        <div className="flex flex-col items-center gap-4 text-forest font-bold">
+          <div className="w-12 h-12 border-3 border-gold border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm">جاري تحميل ملف المعلم والمقررات...</p>
+        </div>
       </div>
     );
   }
 
   if (!teacher) {
     return (
-      <div className="min-h-screen py-12 flex items-center justify-center bg-bone">
-        <h1 className="text-2xl font-display font-bold text-forest">المعلم غير موجود</h1>
+      <div className="w-full min-h-[90dvh] py-20 px-4 bg-bone flex items-center justify-center text-start">
+        <div className="max-w-md w-full double-bezel text-center">
+          <div className="double-bezel-inner p-8 bg-white flex flex-col items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center">
+              <ChalkboardTeacher size={36} weight="duotone" />
+            </div>
+            <h1 className="font-display font-bold text-2xl text-forest">المعلم غير موجود</h1>
+            <p className="text-sm text-forest/70 leading-relaxed">
+              لم نتمكن من العثور على المعلم المطلوب، قد يكون الرابط غير صحيح أو تم تحديث الحساب.
+            </p>
+            <Link href="/lessons" className="w-full mt-2">
+              <Button className="w-full py-3 font-bold text-sm">
+                استعراض مكتبة الكورسات
+              </Button>
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
 
   const teacherCourses = teacher.courses || [];
+  const allItems = teacherCourses.flatMap((c: any) => (c.sections || []).flatMap((s: any) => s.items || []));
+  const totalVideos = allItems.filter((i: any) => i.type === 'video').length;
+  const totalQuizzes = allItems.filter((i: any) => i.type === 'quiz').length;
+  const rawPhone = teacher.phone || '01000000001';
+  const cleanDigits = rawPhone.replace(/\D/g, '');
+  const waNumber = cleanDigits.startsWith('20') ? cleanDigits : (cleanDigits.startsWith('0') ? `2${cleanDigits}` : `20${cleanDigits}`);
+  const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(`مرحباً أستاذ ${teacher.name}، أود الاستفسار والتواصل بخصوص المنهج الدراسي عبر منصة نُـخبة.`)}`;
 
   return (
-    <div className="w-full min-h-screen py-12 bg-bone">
-      
-      {/* Teacher Header Section */}
-      <div className="max-w-5xl mx-auto px-4 mb-16">
-        <div className="flex flex-col md:flex-row items-center md:items-start gap-8 md:gap-12 text-center md:text-start">
-          
-          <div className="w-48 h-48 md:w-56 md:h-56 shrink-0 rounded-[3rem] overflow-hidden bg-black/5 double-bezel rotate-3 shadow-xl">
-            <div className="double-bezel-inner w-full h-full flex items-center justify-center overflow-hidden">
-              {teacher.avatar ? (
-                <img src={teacher.avatar} alt={teacher.name} className="w-full h-full object-cover" />
-              ) : (
-                <User size={80} className="text-forest/30" weight="duotone" />
-              )}
-            </div>
-          </div>
+    <main className="w-full min-h-screen py-10 md:py-16 bg-bone overflow-x-hidden text-start">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col gap-12 md:gap-16">
 
-          <div className="flex flex-col gap-6 pt-4">
-            <div className="flex flex-col gap-2">
-              <h1 className="font-display font-bold text-4xl md:text-5xl text-forest">{teacher.name}</h1>
-              <p className="text-gold font-bold text-lg">{teacher.subject || 'معلم عبر منصة إديوفيجن'}</p>
-            </div>
-            
-            <p className="text-forest/80 text-lg leading-relaxed max-w-2xl">
-              {teacher.bio || 'لا توجد نبذة تعريفية مضافة لهذا المعلم بعد.'}
-            </p>
-
-            <div className="flex items-center justify-center md:justify-start gap-6 mt-2">
-              <div className="flex items-center gap-2 text-forest">
-                <Books size={24} weight="duotone" className="text-gold" />
-                <span className="font-semibold">{teacherCourses.length} كورسات</span>
-              </div>
-            </div>
-          </div>
-
+        {/* Breadcrumb Back Link */}
+        <div>
+          <Link
+            href="/lessons"
+            className="inline-flex items-center gap-2 text-xs font-bold text-forest/70 hover:text-forest bg-white/60 hover:bg-white px-4 py-2 rounded-full border border-black/5 shadow-xs transition-all"
+          >
+            <ArrowRight size={14} weight="bold" />
+            <span>العودة إلى مكتبة الكورسات والمناهج</span>
+          </Link>
         </div>
-      </div>
 
-      {/* Teacher Courses Section */}
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex flex-col gap-8">
-          <div className="flex items-center justify-between">
-            <h2 className="font-display font-bold text-3xl text-forest">الكورسات المتاحة</h2>
-          </div>
-          
-          {teacherCourses.length === 0 ? (
-            <div className="p-12 text-center text-forest/60 bg-black/5 rounded-[2rem]">
-              لا توجد كورسات متاحة حالياً لهذا المعلم.
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {teacherCourses.map((course: any) => (
-                <div key={course.id} className="bg-white rounded-[2rem] overflow-hidden border border-black/5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group cursor-pointer">
-                  <div className="w-full aspect-[4/3] relative overflow-hidden bg-black/5">
-                    <img 
-                      src={course.coverImage || 'https://picsum.photos/seed/course/800/600'} 
-                      alt={course.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute top-4 start-4 flex items-center gap-2">
-                      <span className="bg-white/90 backdrop-blur text-forest px-3 py-1 rounded-full text-xs font-bold shadow-sm capitalize">
-                        {course.subject}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="p-6 flex flex-col flex-1 gap-4">
-                    <div className="flex-1">
-                      <h3 className="font-display font-bold text-xl text-forest line-clamp-2 mb-2 group-hover:text-gold transition-colors">
-                        {course.title}
-                      </h3>
-                      <p className="text-forest/60 text-sm line-clamp-2">
-                        {course.description}
-                      </p>
-                    </div>
+        {/* Teacher Hero Banner (Double-Bezel) */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          className="double-bezel shadow-xl"
+        >
+          <div className="double-bezel-inner p-6 sm:p-10 md:p-12 bg-white flex flex-col lg:flex-row gap-8 lg:gap-12 items-start lg:items-center justify-between">
+            
+            {/* Left/Main Col: Avatar & Info */}
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8 text-center sm:text-start w-full lg:w-auto">
+              
+              {/* Avatar Frame with Verified Badge */}
+              <div className="relative shrink-0">
+                <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-44 md:h-44 rounded-[2.5rem] bg-[#F2F0EB] p-2 ring-1 ring-black/5 shadow-lg overflow-hidden">
+                  <div className="w-full h-full rounded-[calc(2.5rem-0.5rem)] overflow-hidden bg-forest/5 flex items-center justify-center">
+                    {teacher.avatar ? (
+                      <img
+                        src={teacher.avatar}
+                        alt={teacher.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User size={64} weight="duotone" className="text-forest/30" />
+                    )}
                   </div>
                 </div>
-              ))}
+
+                <div
+                  className="absolute -bottom-2 -right-2 bg-gold text-forest p-2 rounded-full shadow-md ring-4 ring-white"
+                  title="معلم معتمد وموثق في نُـخبة"
+                >
+                  <SealCheck size={22} weight="fill" />
+                </div>
+              </div>
+
+              {/* Title & Bio Details */}
+              <div className="flex flex-col gap-3 max-w-2xl">
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
+                  <span className="bg-forest text-gold text-xs font-bold px-3 py-1 rounded-full shadow-xs">
+                    معلم معتمد
+                  </span>
+                  <span className="bg-gold/15 text-forest border border-gold/30 text-xs font-bold px-3 py-1 rounded-full">
+                    {teacher.subject || 'المواد الدراسية للثانوية'}
+                  </span>
+                </div>
+
+                <h1 className="font-display font-bold text-3xl sm:text-4xl md:text-5xl text-forest tracking-tight">
+                  {teacher.name}
+                </h1>
+
+                <p className="text-forest/75 text-sm sm:text-base leading-relaxed mt-1">
+                  {teacher.bio ||
+                    'خبير تدريس المناهج الدراسية للثانوية العامة بموقع نُـخبة مع إعداد مذكرات تفاعلية، امتحانات دورية، وشروحات مبسطة لجميع مستويات الطلاب.'}
+                </p>
+
+                {/* WhatsApp Action Hotline */}
+                <div className="pt-3 flex flex-wrap items-center justify-center sm:justify-start gap-3">
+                  <a
+                    href={waUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-emerald-700/20 transition-all cursor-pointer"
+                  >
+                    <WhatsappLogo size={20} weight="fill" />
+                    <span>تواصل عبر واتساب الأستاذ</span>
+                  </a>
+
+                  <span className="text-xs font-bold text-forest/50 font-mono" dir="ltr">
+                    {rawPhone}
+                  </span>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Right Col: High-Impact Performance Metrics */}
+            <div className="grid grid-cols-2 sm:grid-cols-2 gap-3.5 w-full lg:w-72 shrink-0 pt-4 lg:pt-0 border-t lg:border-t-0 lg:border-s border-black/5 lg:ps-8">
+              
+              <div className="bg-[#F7F6F3] p-4 rounded-2xl border border-black/5 flex flex-col gap-1">
+                <div className="flex items-center gap-2 text-forest/60 text-xs font-bold">
+                  <Books size={18} weight="duotone" className="text-gold" />
+                  <span>الكورسات</span>
+                </div>
+                <span className="font-display font-bold text-2xl text-forest">
+                  {teacherCourses.length}
+                </span>
+              </div>
+
+              <div className="bg-[#F7F6F3] p-4 rounded-2xl border border-black/5 flex flex-col gap-1">
+                <div className="flex items-center gap-2 text-forest/60 text-xs font-bold">
+                  <VideoCamera size={18} weight="duotone" className="text-gold" />
+                  <span>المحاضرات</span>
+                </div>
+                <span className="font-display font-bold text-2xl text-forest">
+                  {totalVideos}
+                </span>
+              </div>
+
+              <div className="bg-[#F7F6F3] p-4 rounded-2xl border border-black/5 flex flex-col gap-1">
+                <div className="flex items-center gap-2 text-forest/60 text-xs font-bold">
+                  <Exam size={18} weight="duotone" className="text-gold" />
+                  <span>الاختبارات</span>
+                </div>
+                <span className="font-display font-bold text-2xl text-forest">
+                  {totalQuizzes}
+                </span>
+              </div>
+
+              <div className="bg-[#F7F6F3] p-4 rounded-2xl border border-black/5 flex flex-col gap-1">
+                <div className="flex items-center gap-2 text-forest/60 text-xs font-bold">
+                  <Sparkle size={18} weight="duotone" className="text-gold" />
+                  <span>التقييم</span>
+                </div>
+                <span className="font-display font-bold text-2xl text-forest">
+                  4.95 / 5
+                </span>
+              </div>
+
+            </div>
+
+          </div>
+        </motion.div>
+
+        {/* Teacher Courses Section */}
+        <section className="flex flex-col gap-8">
+          
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-black/5 pb-5">
+            <div>
+              <div className="inline-flex items-center gap-1.5 text-gold text-xs font-bold uppercase tracking-wider mb-1">
+                <GraduationCap size={16} weight="fill" />
+                <span>المناهج والبرامج التعليمية</span>
+              </div>
+              <h2 className="font-display font-bold text-2xl sm:text-3xl text-forest">
+                كورسات {teacher.name}
+              </h2>
+            </div>
+
+            <span className="text-xs font-bold text-forest/60 bg-white px-3.5 py-1.5 rounded-full border border-black/5 shadow-xs">
+              {teacherCourses.length} كورس متاح حالياً
+            </span>
+          </div>
+
+          {teacherCourses.length === 0 ? (
+            <div className="w-full p-12 text-center bg-white rounded-3xl border border-black/5 shadow-xs flex flex-col items-center gap-3">
+              <Books size={48} weight="duotone" className="text-forest/30" />
+              <p className="font-bold text-forest text-base">لا توجد كورسات متاحة حالياً لهذا المعلم.</p>
+              <p className="text-xs text-forest/60">سيتم إضافة المحاضرات والمناهج الجديدة قريباً.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-start">
+              {teacherCourses.map((course: any) => {
+                const subjectLabel = strings.subjects[course.subject as keyof typeof strings.subjects] || course.subject;
+                const gradeLabel = strings.grades[course.grade as keyof typeof strings.grades] || course.grade;
+                const courseItems = (course.sections || []).flatMap((s: any) => s.items || []);
+                const videoCount = courseItems.filter((i: any) => i.type === 'video').length;
+                const quizCount = courseItems.filter((i: any) => i.type === 'quiz').length;
+                const totalMinutes = courseItems
+                  .filter((i: any) => i.type === 'video')
+                  .reduce((acc: number, curr: any) => acc + (curr.duration || 1800), 0) / 60;
+                const formattedDuration = totalMinutes >= 60 
+                  ? `${(totalMinutes / 60).toFixed(1)} ساعة` 
+                  : `${Math.round(totalMinutes)} دقيقة`;
+
+                const isEnrolled =
+                  course.isFree ||
+                  currentUser?.role === 'teacher' ||
+                  enrollments.some((e) => e.studentId === currentUser?.id && e.courseId === course.id);
+
+                return (
+                  <motion.div
+                    key={course.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                    className="double-bezel group hover:shadow-xl transition-shadow duration-300 h-full"
+                  >
+                    <div className="double-bezel-inner p-5 flex flex-col justify-between h-full bg-white shadow-xs">
+                      
+                      <div>
+                        {/* Course Cover Image */}
+                        <Link href={`/courses/${course.id}`} className="block relative aspect-[16/10] w-full rounded-2xl overflow-hidden mb-4 bg-forest/5 shadow-inner cursor-pointer">
+                          <img
+                            src={course.coverImage || 'https://picsum.photos/seed/course/800/600'}
+                            alt={course.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]"
+                          />
+
+                          {/* Badges */}
+                          <div className="absolute top-3 inset-x-3 flex items-center justify-between pointer-events-none">
+                            <span className="bg-forest/85 backdrop-blur-md text-white text-xs font-semibold px-3 py-1 rounded-full shadow-sm">
+                              {subjectLabel}
+                            </span>
+
+                            <div className="flex items-center gap-1.5">
+                              <span className="bg-white/90 backdrop-blur-md text-forest text-xs font-bold px-3 py-1 rounded-full shadow-sm border border-black/5">
+                                {gradeLabel}
+                              </span>
+                              {course.isFree ? (
+                                <span className="bg-gold text-forest font-bold px-2.5 py-1 rounded-full text-xs shadow-sm">
+                                  {strings.courses.free}
+                                </span>
+                              ) : isEnrolled ? (
+                                <span className="bg-emerald-600 text-white font-bold px-2.5 py-1 rounded-full text-xs shadow-sm">
+                                  مفعل
+                                </span>
+                              ) : (
+                                <span className="bg-forest/80 text-gold font-bold px-2.5 py-1 rounded-full text-xs shadow-sm">
+                                  يتطلب كود
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </Link>
+
+                        {/* Title & Description */}
+                        <Link href={`/courses/${course.id}`} className="block group-hover:text-gold transition-colors">
+                          <h3 className="font-display font-bold text-lg text-forest mb-2 line-clamp-2 leading-snug">
+                            {course.title}
+                          </h3>
+                        </Link>
+
+                        <p className="text-forest/65 text-xs line-clamp-2 leading-relaxed mb-4">
+                          {course.description}
+                        </p>
+
+                        {/* Course Metadata Stats */}
+                        <div className="flex items-center gap-3 text-xs text-forest/70 pb-4 border-b border-black/5 font-medium">
+                          <span className="inline-flex items-center gap-1">
+                            <VideoCamera size={15} weight="duotone" className="text-gold" />
+                            <span>{videoCount} محاضرات</span>
+                          </span>
+                          <span>•</span>
+                          <span className="inline-flex items-center gap-1">
+                            <Exam size={15} weight="duotone" className="text-gold" />
+                            <span>{quizCount} اختبارات</span>
+                          </span>
+                          <span>•</span>
+                          <span className="inline-flex items-center gap-1">
+                            <Clock size={15} weight="duotone" className="text-gold" />
+                            <span>{formattedDuration}</span>
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Card Actions */}
+                      <div className="pt-4 flex items-center justify-between gap-2.5">
+                        <Link href={`/courses/${course.id}`} className="flex-1">
+                          <Button variant="ghost" className="w-full py-2.5 px-3 text-xs font-bold text-forest border border-black/5 hover:border-black/15 bg-black/5 hover:bg-black/10">
+                            تفاصيل الكورس
+                          </Button>
+                        </Link>
+
+                        <Link href={currentUser ? `/student/course/${course.id}` : `/login`} className="flex-1">
+                          <Button className="w-full py-2.5 px-3 text-xs font-bold shadow-md shadow-forest/10">
+                            {isEnrolled ? (course.isFree ? 'دخول المحاضرة' : 'متابعة المذاكرة') : 'دخول الكورس'}
+                          </Button>
+                        </Link>
+                      </div>
+
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           )}
-        </div>
-      </div>
 
-    </div>
+        </section>
+
+      </div>
+    </main>
   );
 }

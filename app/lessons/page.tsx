@@ -323,7 +323,7 @@ export default function LessonsLibraryPage() {
                   <div className="double-bezel-inner p-5 flex flex-col justify-between h-full bg-white shadow-xs opacity-100">
                       <div>
                         {/* Course Cover Image with Badges */}
-                        <div className="relative aspect-[16/10] w-full rounded-2xl overflow-hidden mb-4 bg-forest/5 shadow-inner">
+                        <Link href={`/courses/${course.id}`} className="block relative aspect-[16/10] w-full rounded-2xl overflow-hidden mb-4 bg-forest/5 shadow-inner cursor-pointer">
                           <img
                             src={course.coverImage}
                             alt={course.title}
@@ -355,11 +355,15 @@ export default function LessonsLibraryPage() {
                               )}
                             </div>
                           </div>
-                        </div>
+                        </Link>
 
-                        {/* Teacher Mini Bar */}
+                        {/* Teacher Mini Bar (Clickable to Profile) */}
                         <div className="flex items-center justify-between mb-3.5 pb-3 border-b border-black/5">
-                          <div className="flex items-center gap-2.5">
+                          <Link
+                            href={`/teachers/${teacher?.id || course.teacherId}`}
+                            className="inline-flex items-center gap-2.5 hover:opacity-85 transition-opacity cursor-pointer"
+                            title={`عرض الملف الشخصي للأستاذ ${teacher?.name || ''}`}
+                          >
                             <div className="w-9 h-9 rounded-full bg-forest text-gold flex items-center justify-center text-xs font-bold shrink-0 overflow-hidden shadow-sm">
                               {teacher?.avatar ? (
                                 <img
@@ -373,7 +377,7 @@ export default function LessonsLibraryPage() {
                             </div>
                             <div>
                               <div className="flex items-center gap-1">
-                                <span className="text-xs font-bold text-forest">
+                                <span className="text-xs font-bold text-forest hover:text-gold transition-colors">
                                   {teacher?.name || 'أستاذ المادة'}
                                 </span>
                                 <SealCheck size={14} weight="fill" className="text-gold" />
@@ -382,7 +386,7 @@ export default function LessonsLibraryPage() {
                                 {teacher?.subject ? `أستاذ ${teacher.subject}` : 'نخبة مصر الأكاديمية'}
                               </span>
                             </div>
-                          </div>
+                          </Link>
 
                           {/* Syllabus Summary Pill */}
                           <div className="flex items-center gap-1 text-[11px] font-bold text-forest bg-[#F7F6F3] px-2.5 py-1 rounded-full border border-black/5">
@@ -391,9 +395,11 @@ export default function LessonsLibraryPage() {
                         </div>
 
                         {/* Course Title & Description */}
-                        <h3 className="font-display font-bold text-xl text-forest leading-snug mb-2 group-hover:text-forest/85 transition-colors">
-                          {course.title}
-                        </h3>
+                        <Link href={`/courses/${course.id}`} className="block">
+                          <h3 className="font-display font-bold text-xl text-forest leading-snug mb-2 hover:text-gold transition-colors">
+                            {course.title}
+                          </h3>
+                        </Link>
                         <p className="text-forest/75 text-xs sm:text-sm leading-relaxed line-clamp-2 mb-4">
                           {course.description}
                         </p>

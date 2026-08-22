@@ -24,7 +24,15 @@ export async function GET(
         bio: true,
         subject: true,
         phone: true,
-        courses: true,
+        courses: {
+          include: {
+            sections: {
+              include: {
+                items: true,
+              }
+            }
+          }
+        },
       }
     });
 

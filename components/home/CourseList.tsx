@@ -197,7 +197,7 @@ export function CourseList() {
                       
                       <div>
                         {/* Course Cover Image */}
-                        <div className="relative aspect-[16/10] w-full rounded-2xl overflow-hidden mb-4 bg-forest/5 shadow-inner">
+                        <Link href={`/courses/${course.id}`} className="block relative aspect-[16/10] w-full rounded-2xl overflow-hidden mb-4 bg-forest/5 shadow-inner cursor-pointer">
                           <img 
                             src={course.coverImage} 
                             alt={course.title}
@@ -229,11 +229,15 @@ export function CourseList() {
                               )}
                             </div>
                           </div>
-                        </div>
+                        </Link>
 
-                        {/* Teacher Mini Bar */}
-                        <div className="flex items-center gap-2.5 mb-3">
-                          <div className="w-8 h-8 rounded-full bg-forest text-gold flex items-center justify-center text-xs font-bold shrink-0 overflow-hidden">
+                        {/* Teacher Mini Bar (Clickable to Profile) */}
+                        <Link
+                          href={`/teachers/${teacher?.id || course.teacherId}`}
+                          className="inline-flex items-center gap-2.5 mb-3 p-1 pe-3 rounded-full hover:bg-forest/5 transition-all cursor-pointer w-fit"
+                          title={`عرض الملف الشخصي للأستاذ ${teacher?.name || ''}`}
+                        >
+                          <div className="w-8 h-8 rounded-full bg-forest text-gold flex items-center justify-center text-xs font-bold shrink-0 overflow-hidden shadow-xs">
                             {teacher?.avatar ? (
                               <img src={teacher.avatar} alt={teacher.name} className="w-full h-full object-cover" />
                             ) : (
@@ -241,15 +245,17 @@ export function CourseList() {
                             )}
                           </div>
                           <div className="flex items-center gap-1">
-                            <span className="text-xs font-bold text-forest">{teacher?.name || 'أستاذ المادة'}</span>
+                            <span className="text-xs font-bold text-forest hover:text-gold transition-colors">{teacher?.name || 'أستاذ المادة'}</span>
                             <SealCheck size={14} weight="fill" className="text-gold" />
                           </div>
-                        </div>
+                        </Link>
 
                         {/* Course Title & Description */}
-                        <h3 className="font-display font-bold text-xl text-forest leading-snug mb-2 group-hover:text-forest/85 transition-colors">
-                          {course.title}
-                        </h3>
+                        <Link href={`/courses/${course.id}`} className="block">
+                          <h3 className="font-display font-bold text-xl text-forest leading-snug mb-2 hover:text-gold transition-colors">
+                            {course.title}
+                          </h3>
+                        </Link>
                         <p className="text-forest/75 text-xs sm:text-sm leading-relaxed line-clamp-2 mb-4">
                           {course.description}
                         </p>
