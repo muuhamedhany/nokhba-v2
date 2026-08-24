@@ -18,6 +18,16 @@ export async function POST(request: NextRequest) {
 
     const { id, courseId, title, order } = await request.json();
 
+    if (!courseId || !title) {
+      return NextResponse.json({ success: false, message: 'بيانات غير مكتملة' }, { status: 400 });
+    }
+
+    // Verify course ownership
+    const course = await prisma.course.findUnique({ where: { id: courseId } });
+    if (!course || course.teacherId !== user.id) {
+      return NextResponse.json({ success: false, message: 'غير مصرح بإضافة وحدة لهذا الكورس' }, { status: 403 });
+    }
+
     const newSection = await prisma.section.create({
       data: {
         id: id || `s_${Date.now()}`,

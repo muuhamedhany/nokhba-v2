@@ -128,10 +128,19 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const adminFetch = (url: string, options: RequestInit = {}) => {
+    const headers = new Headers(options.headers || {});
+    headers.set('x-admin-key', passcode.trim());
+    return fetch(url, {
+      ...options,
+      headers,
+    });
+  };
+
   const fetchAdminData = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/admin/data');
+      const res = await adminFetch('/api/admin/data');
       const data = await res.json();
       if (data.success) {
         setStats(data.stats);
@@ -162,7 +171,7 @@ export default function AdminDashboardPage() {
     e.preventDefault();
     try {
       if (editingUser) {
-        const res = await fetch('/api/admin/data', {
+        const res = await adminFetch('/api/admin/data', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ entity: 'user', id: editingUser.id, payload: userFormData })
@@ -174,7 +183,7 @@ export default function AdminDashboardPage() {
           fetchAdminData();
         }
       } else {
-        const res = await fetch('/api/admin/data', {
+        const res = await adminFetch('/api/admin/data', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ entity: 'user', payload: userFormData })
@@ -195,7 +204,7 @@ export default function AdminDashboardPage() {
   const handleDeleteUser = async (id: string, name: string) => {
     if (!confirm(`هل أنت متأكد من حذف المستخدم "${name}" نهائياً من قاعدة البيانات؟`)) return;
     try {
-      const res = await fetch(`/api/admin/data?entity=user&id=${id}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/admin/data?entity=user&id=${id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
         showNotification('success', 'تم حذف المستخدم بنجاح');
@@ -211,7 +220,7 @@ export default function AdminDashboardPage() {
     e.preventDefault();
     try {
       if (editingCourse) {
-        const res = await fetch('/api/admin/data', {
+        const res = await adminFetch('/api/admin/data', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ entity: 'course', id: editingCourse.id, payload: courseFormData })
@@ -223,7 +232,7 @@ export default function AdminDashboardPage() {
           fetchAdminData();
         }
       } else {
-        const res = await fetch('/api/admin/data', {
+        const res = await adminFetch('/api/admin/data', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ entity: 'course', payload: courseFormData })
@@ -244,7 +253,7 @@ export default function AdminDashboardPage() {
   const handleDeleteCourse = async (id: string, title: string) => {
     if (!confirm(`هل أنت متأكد من حذف الكورس "${title}" وكافة محتوياته؟`)) return;
     try {
-      const res = await fetch(`/api/admin/data?entity=course&id=${id}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/admin/data?entity=course&id=${id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
         showNotification('success', 'تم حذف الكورس بنجاح');
@@ -260,7 +269,7 @@ export default function AdminDashboardPage() {
     e.preventDefault();
     if (!selectedCourseForSections || !sectionTitle.trim()) return;
     try {
-      const res = await fetch('/api/admin/data', {
+      const res = await adminFetch('/api/admin/data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -284,7 +293,7 @@ export default function AdminDashboardPage() {
   const handleDeleteSection = async (sectionId: string) => {
     if (!confirm('هل تريد حذف هذه الوحدة وجميع الدروس داخلها؟')) return;
     try {
-      const res = await fetch(`/api/admin/data?entity=section&id=${sectionId}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/admin/data?entity=section&id=${sectionId}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
         showNotification('success', 'تم حذف الوحدة بنجاح');
@@ -300,7 +309,7 @@ export default function AdminDashboardPage() {
     e.preventDefault();
     if (!selectedSectionId || !itemFormData.title.trim()) return;
     try {
-      const res = await fetch('/api/admin/data', {
+      const res = await adminFetch('/api/admin/data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -323,7 +332,7 @@ export default function AdminDashboardPage() {
   const handleDeleteItem = async (itemId: string) => {
     if (!confirm('هل تريد حذف هذا المحتوى؟')) return;
     try {
-      const res = await fetch(`/api/admin/data?entity=item&id=${itemId}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/admin/data?entity=item&id=${itemId}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
         showNotification('success', 'تم حذف الدرس بنجاح');
@@ -342,7 +351,7 @@ export default function AdminDashboardPage() {
       return;
     }
     try {
-      const res = await fetch('/api/admin/data', {
+      const res = await adminFetch('/api/admin/data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ entity: 'code', payload: codeGenData })
@@ -362,7 +371,7 @@ export default function AdminDashboardPage() {
   const handleDeleteCode = async (codeId: string) => {
     if (!confirm('هل تريد حذف هذا الكود؟')) return;
     try {
-      const res = await fetch(`/api/admin/data?entity=code&id=${codeId}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/admin/data?entity=code&id=${codeId}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
         showNotification('success', 'تم حذف الكود بنجاح');
@@ -378,7 +387,7 @@ export default function AdminDashboardPage() {
     if (!confirm('تحذير: هذا الإجراء سيعيد تهيئة قاعدة البيانات بالكامل وزرع الكورسات والمعلمين الافتراضيين. هل تريد المتابعة؟')) return;
     setIsLoading(true);
     try {
-      const res = await fetch('/api/admin/reset', { method: 'POST' });
+      const res = await adminFetch('/api/admin/reset', { method: 'POST' });
       const data = await res.json();
       if (data.success) {
         showNotification('success', data.message || 'تمت إعادة تهيئة قاعدة البيانات بنجاح');

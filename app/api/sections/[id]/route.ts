@@ -22,6 +22,17 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
+
+    // Verify section ownership via parent course
+    const existingSection = await prisma.section.findUnique({
+      where: { id },
+      include: { course: true }
+    });
+
+    if (!existingSection || existingSection.course.teacherId !== user.id) {
+      return NextResponse.json({ success: false, message: 'غير مصرح بتعديل هذه الوحدة' }, { status: 403 });
+    }
+
     const updated = await prisma.section.update({
       where: { id },
       data: {
@@ -54,6 +65,17 @@ export async function DELETE(
     }
 
     const { id } = await params;
+
+    // Verify section ownership via parent course
+    const existingSection = await prisma.section.findUnique({
+      where: { id },
+      include: { course: true }
+    });
+
+    if (!existingSection || existingSection.course.teacherId !== user.id) {
+      return NextResponse.json({ success: false, message: 'غير مصرح بحذف هذه الوحدة' }, { status: 403 });
+    }
+
     await prisma.section.delete({ where: { id } });
 
     return NextResponse.json({ success: true });

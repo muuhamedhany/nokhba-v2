@@ -69,6 +69,12 @@ export async function PUT(
     const { id } = await params;
     const data = await request.json();
 
+    // Verify course ownership
+    const existingCourse = await prisma.course.findUnique({ where: { id } });
+    if (!existingCourse || existingCourse.teacherId !== user.id) {
+      return NextResponse.json({ success: false, message: 'غير مصرح بتعديل هذا الكورس' }, { status: 403 });
+    }
+
     const updatedCourse = await prisma.course.update({
       where: { id },
       data: {

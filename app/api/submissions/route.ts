@@ -11,19 +11,29 @@ import { getSessionUser } from '@/lib/auth';
 export async function GET(request: NextRequest) {
   try {
     const user = await getSessionUser();
-    const { searchParams } = new URL(request.url);
-    const teacherId = searchParams.get('teacherId');
+    if (!user) {
+      return NextResponse.json({ success: false, message: 'غير مصرح' }, { status: 401 });
+    }
 
+    const { searchParams } = new URL(request.url);
     const whereClause: any = {};
-    if (teacherId || (user && user.role === 'teacher')) {
-      const targetTeacherId = teacherId || user?.id;
+
+    if (user.role === 'teacher') {
       whereClause.quizItem = {
         section: {
           course: {
-            teacherId: targetTeacherId
+            teacherId: user.id
           }
         }
       };
+    } else if (user.role === 'parent') {
+      if (user.studentId) {
+        whereClause.studentId = user.studentId;
+      } else {
+        return NextResponse.json({ submissions: [] });
+      }
+    } else if (user.role === 'student') {
+      whereClause.studentId = user.id;
     }
 
     const submissions = await prisma.submission.findMany({
@@ -66,8 +76,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const user = await getSessionUser();
-    if (!user) {
-      return NextResponse.json({ success: false, message: 'غير مصرح' }, { status: 403 });
+    if (!user || user.role !== 'student') {
+      return NextResponse.json({ success: false, message: 'فقط الطلاب يمكنهم إرسال الإجابات' }, { status: 403 });
     }
 
     const { id, quizId, answers, score } = await request.json();

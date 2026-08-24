@@ -18,6 +18,20 @@ export async function POST(request: NextRequest) {
 
     const { sectionId, item } = await request.json();
 
+    if (!sectionId || !item || !item.title) {
+      return NextResponse.json({ success: false, message: 'بيانات ناقصة' }, { status: 400 });
+    }
+
+    // Verify section ownership via parent course
+    const section = await prisma.section.findUnique({
+      where: { id: sectionId },
+      include: { course: true }
+    });
+
+    if (!section || section.course.teacherId !== user.id) {
+      return NextResponse.json({ success: false, message: 'غير مصرح بإضافة محتوى لهذه الوحدة' }, { status: 403 });
+    }
+
     if (item.type === 'video') {
       const newItem = await prisma.sectionItem.create({
         data: {

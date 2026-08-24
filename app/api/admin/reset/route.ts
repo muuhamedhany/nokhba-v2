@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { INITIAL_COURSES, INITIAL_TEACHERS } from '@/lib/autoSeed';
+import { verifyAdminRequest } from '@/lib/adminAuth';
 
 /**
  * @route   POST /api/admin/reset
@@ -10,6 +11,10 @@ import { INITIAL_COURSES, INITIAL_TEACHERS } from '@/lib/autoSeed';
  */
 export async function POST(request: NextRequest) {
   try {
+    if (!verifyAdminRequest(request)) {
+      return NextResponse.json({ success: false, message: 'غير مصرح بإعادة تهيئة قاعدة البيانات' }, { status: 401 });
+    }
+
     const defaultTeacherPass = await bcrypt.hash('123456', 10);
     const defaultStudentPass = await bcrypt.hash('password', 10);
     const defaultParentPass = await bcrypt.hash('01012345678', 10);

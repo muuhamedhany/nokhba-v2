@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { fallbackUserStore } from '@/lib/userStore';
 import { ensureInitialData, INITIAL_COURSES, INITIAL_TEACHERS } from '@/lib/autoSeed';
+import { verifyAdminRequest } from '@/lib/adminAuth';
 import bcrypt from 'bcryptjs';
 
 /**
@@ -11,6 +12,10 @@ import bcrypt from 'bcryptjs';
  */
 export async function GET(request: NextRequest) {
   try {
+    if (!verifyAdminRequest(request)) {
+      return NextResponse.json({ success: false, message: 'غير مصرح بالوصول إلى لوحة التحكم' }, { status: 401 });
+    }
+
     await ensureInitialData();
 
     // 1. Fetch Users
@@ -138,6 +143,10 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    if (!verifyAdminRequest(request)) {
+      return NextResponse.json({ success: false, message: 'غير مصرح بالوصول إلى لوحة التحكم' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { entity, payload } = body;
 
@@ -263,6 +272,10 @@ export async function POST(request: NextRequest) {
  */
 export async function PUT(request: NextRequest) {
   try {
+    if (!verifyAdminRequest(request)) {
+      return NextResponse.json({ success: false, message: 'غير مصرح بالوصول إلى لوحة التحكم' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { entity, id, payload } = body;
 
@@ -336,6 +349,10 @@ export async function PUT(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
+    if (!verifyAdminRequest(request)) {
+      return NextResponse.json({ success: false, message: 'غير مصرح بالوصول إلى لوحة التحكم' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const entity = searchParams.get('entity');
     const id = searchParams.get('id');
