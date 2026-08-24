@@ -127,11 +127,37 @@ function NewCourseContent() {
     }
   }, [teacherSubjects, formData.subject]);
 
-  const [imageInputType, setImageInputType] = useState<'upload' | 'link'>('link');
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [errors, setErrors] = useState<{ title?: string; description?: string }>({});
   const [touched, setTouched] = useState<{ title?: boolean; description?: boolean }>({});
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const handleImageFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setIsUploadingImage(true);
+      try {
+        const uploadFormData = new FormData();
+        uploadFormData.append('file', file);
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: uploadFormData,
+        });
+        const data = await res.json();
+        if (data.success && data.url) {
+          setFormData((prev) => ({ ...prev, coverImage: data.url }));
+        } else {
+          alert(data.message || 'فشل رفع الصورة');
+        }
+      } catch (err) {
+        console.error('Error uploading image:', err);
+        alert('حدث خطأ أثناء رفع الصورة');
+      } finally {
+        setIsUploadingImage(false);
+      }
+    }
+  };
 
   // Step 2: Curriculum Structure in memory (starts clean and empty)
   const [sections, setSections] = useState<LocalSection[]>([]);
@@ -676,55 +702,33 @@ function NewCourseContent() {
                 )}
               </div>
 
-              <div className="flex bg-[#F7F6F3] p-1 rounded-xl w-fit mx-auto gap-1">
-                <button
-                  type="button"
-                  onClick={() => setImageInputType('upload')}
-                  className={`px-3.5 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                    imageInputType === 'upload' ? 'bg-white text-forest shadow-xs' : 'text-forest/50 hover:text-forest'
-                  }`}
-                >
-                  رفع صورة
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setImageInputType('link')}
-                  className={`px-3.5 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                    imageInputType === 'link' ? 'bg-white text-forest shadow-xs' : 'text-forest/50 hover:text-forest'
-                  }`}
-                >
-                  رابط مباشر
-                </button>
-              </div>
-
-              {imageInputType === 'upload' ? (
-                <div 
-                  className="w-full border-2 border-dashed border-black/10 hover:border-gold rounded-2xl p-4 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-colors bg-[#F7F6F3]"
-                  onClick={() => document.getElementById('imageUpload')?.click()}
-                >
-                  <input 
-                    id="imageUpload" 
-                    type="file" 
-                    accept="image/*" 
-                    className="hidden" 
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        setFormData({...formData, coverImage: URL.createObjectURL(e.target.files[0])});
-                      }
-                    }}
-                  />
-                  <ImageIcon size={24} weight="duotone" className="text-forest/40" />
-                  <span className="text-xs font-bold text-forest">اضغط لاختيار صورة من جهازك</span>
-                </div>
-              ) : (
-                <Input 
-                  placeholder="رابط الصورة (https://...)" 
-                  value={formData.coverImage}
-                  onChange={e => setFormData({...formData, coverImage: e.target.value})}
-                  dir="ltr"
-                  className="text-start text-xs font-mono"
+              <div 
+                className="w-full border-2 border-dashed border-black/10 hover:border-gold rounded-2xl p-5 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors bg-[#F7F6F3]"
+                onClick={() => document.getElementById('imageUpload')?.click()}
+              >
+                <input 
+                  id="imageUpload" 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={handleImageFileUpload}
+                  disabled={isUploadingImage}
                 />
-              )}
+                {isUploadingImage ? (
+                  <div className="flex flex-col items-center gap-2 py-3 text-forest">
+                    <div className="w-6 h-6 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+                    <span className="text-xs font-bold">جاري رفع الصورة</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="w-12 h-12 rounded-2xl bg-white border border-black/5 flex items-center justify-center text-forest shadow-xs">
+                      <ImageIcon size={28} weight="duotone" className="text-gold" />
+                    </div>
+                    <span className="text-xs font-bold text-forest">اضغط لاختيار صورة الغلاف من جهازك</span>
+                    <span className="text-[11px] text-forest/50 font-medium">يدعم صيغ PNG, JPG, WebP (حتى 10MB)</span>
+                  </>
+                )}
+              </div>
             </div>
 
             {/* Next Step Banner CTA */}
