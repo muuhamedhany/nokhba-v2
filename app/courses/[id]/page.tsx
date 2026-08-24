@@ -123,7 +123,7 @@ export default function CourseLandingPage() {
 
   const isEnrolled =
     course.isFree ||
-    currentUser?.role === 'teacher' ||
+    (currentUser?.role === 'teacher' && course.teacherId === currentUser?.id) ||
     enrollments.some((e) => e.studentId === currentUser?.id && e.courseId === course.id);
 
   const rawPhone = teacher?.phone || '01000000001';

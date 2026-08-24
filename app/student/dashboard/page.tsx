@@ -194,7 +194,7 @@ function StudentDashboardContent() {
         </div>
 
         {myCourses.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
             {myCourses.map((course) => {
               const enrollment = enrollments.find(e => e.studentId === currentUser?.id && e.courseId === course.id);
               const completedCount = enrollment?.completedItems?.length || 0;
@@ -202,10 +202,10 @@ function StudentDashboardContent() {
               return (
                 <div 
                   key={course.id}
-                  className="bg-white rounded-3xl p-5 border border-black/5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between gap-5 group"
+                  className="bg-white rounded-3xl p-5 border border-black/5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between gap-5 group h-full"
                 >
-                  <div className="flex flex-col gap-3.5">
-                    <div className="aspect-video w-full rounded-2xl overflow-hidden relative bg-forest/5">
+                  <div className="flex flex-col gap-3.5 flex-1">
+                    <div className="aspect-video w-full rounded-2xl overflow-hidden relative bg-forest/5 shrink-0">
                       <img 
                         src={course.coverImage} 
                         alt={course.title}
@@ -220,21 +220,21 @@ function StudentDashboardContent() {
                       </div>
                     </div>
 
-                    <div>
+                    <div className="flex-1 flex flex-col">
                       <div className="flex items-center justify-between text-[11px] text-forest/50 font-medium mb-1">
                         <span>{course.teacher?.name || 'أستاذ المادة'}</span>
                         <span className="font-mono">{completedCount} دروس مكتملة</span>
                       </div>
-                      <h3 className="font-display font-bold text-lg text-forest leading-snug line-clamp-1 group-hover:text-gold-dark transition-colors">
+                      <h3 className="font-display font-bold text-lg text-forest leading-snug line-clamp-2 min-h-[3rem] group-hover:text-gold-dark transition-colors">
                         {course.title}
                       </h3>
-                      <p className="text-forest/70 text-xs line-clamp-2 mt-1 leading-relaxed">
+                      <p className="text-forest/70 text-xs line-clamp-2 min-h-[2rem] mt-1 leading-relaxed">
                         {course.description}
                       </p>
                     </div>
                   </div>
 
-                  <Link href={`/student/course/${course.id}`} className="w-full">
+                  <Link href={`/student/course/${course.id}`} className="w-full mt-auto">
                     <Button 
                       variant="primary" 
                       className="w-full py-3 text-xs font-bold shadow-sm"

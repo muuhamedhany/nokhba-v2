@@ -7,7 +7,7 @@ export function BackgroundGradient({ active = true }: { active?: boolean }) {
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0">
       {/* Base warm ivory background canvas */}
-      <div className="absolute inset-0 bg-[#F9F7F2]" />
+      <div className="absolute inset-0 bg-[#FBF9F5]" />
 
       {/* Atmospheric corner ambient gradients */}
       <motion.div
@@ -17,13 +17,13 @@ export function BackgroundGradient({ active = true }: { active?: boolean }) {
         className="absolute inset-0"
       >
         {/* Top-left soft warm beige wash */}
-        <div className="absolute -top-[12%] -left-[6%] w-[50vw] h-[50vw] max-w-[700px] max-h-[700px] rounded-full bg-gradient-to-br from-[#E6DACB]/70 via-[#EFE6DA]/40 to-transparent blur-3xl" />
+        <div className="absolute -top-[10%] -left-[5%] w-[45vw] h-[45vw] max-w-[650px] max-h-[650px] rounded-full bg-gradient-to-br from-[#EFE5D8]/80 via-[#F5ECE0]/40 to-transparent blur-3xl" />
 
         {/* Bottom-right soft warm sand wash */}
-        <div className="absolute -bottom-[12%] -right-[6%] w-[55vw] h-[55vw] max-w-[750px] max-h-[750px] rounded-full bg-gradient-to-tl from-[#E4D7C7]/65 via-[#EFE5D8]/35 to-transparent blur-3xl" />
+        <div className="absolute -bottom-[10%] -right-[5%] w-[50vw] h-[50vw] max-w-[700px] max-h-[700px] rounded-full bg-gradient-to-tl from-[#ECE0D0]/75 via-[#F5EDE1]/35 to-transparent blur-3xl" />
 
-        {/* Center subtle warm golden glow behind hero CTAs */}
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[650px] h-[360px] rounded-full bg-[#F4C300]/[0.05] blur-3xl" />
+        {/* Center subtle warm golden ambient glow */}
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[340px] rounded-full bg-[#D9A438]/[0.035] blur-3xl" />
       </motion.div>
 
       {/* Bottom smooth section fader */}

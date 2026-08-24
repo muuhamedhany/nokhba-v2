@@ -170,7 +170,7 @@ export function CourseList() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-start"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch"
             >
               {filteredCourses.map((course) => {
                 const isExpanded = expandedCourseId === course.id;
@@ -186,18 +186,18 @@ export function CourseList() {
                   ? `${(totalDurationMinutes / 60).toFixed(1)} ساعة` 
                   : `${Math.round(totalDurationMinutes)} دقيقة`;
 
-                const isEnrolled = course.isFree || (currentUser?.role === 'teacher') || enrollments.some((e) => e.studentId === currentUser?.id && e.courseId === course.id);
+                const isEnrolled = course.isFree || (currentUser?.role === 'teacher' && course.teacherId === currentUser?.id) || enrollments.some((e) => e.studentId === currentUser?.id && e.courseId === course.id);
 
                 return (
                   <div
                     key={course.id}
-                    className="double-bezel group hover:shadow-xl transition-shadow duration-300"
+                    className="double-bezel group hover:shadow-xl transition-shadow duration-300 h-full flex flex-col"
                   >
-                    <div className="double-bezel-inner p-5 flex flex-col justify-between h-full bg-white shadow-xs opacity-100">
+                    <div className="double-bezel-inner p-5 flex flex-col justify-between h-full bg-white shadow-xs opacity-100 flex-1">
                       
-                      <div>
+                      <div className="flex-1 flex flex-col">
                         {/* Course Cover Image */}
-                        <Link href={`/courses/${course.id}`} className="block relative aspect-[16/10] w-full rounded-2xl overflow-hidden mb-4 bg-forest/5 shadow-inner cursor-pointer">
+                        <Link href={`/courses/${course.id}`} className="block relative aspect-[16/10] w-full rounded-2xl overflow-hidden mb-4 bg-forest/5 shadow-inner cursor-pointer shrink-0">
                           <img 
                             src={course.coverImage} 
                             alt={course.title}
@@ -252,11 +252,11 @@ export function CourseList() {
 
                         {/* Course Title & Description */}
                         <Link href={`/courses/${course.id}`} className="block">
-                          <h3 className="font-display font-bold text-xl text-forest leading-snug mb-2 hover:text-gold transition-colors">
+                          <h3 className="font-display font-bold text-xl text-forest leading-snug mb-2 line-clamp-2 min-h-[3.25rem] hover:text-gold transition-colors">
                             {course.title}
                           </h3>
                         </Link>
-                        <p className="text-forest/75 text-xs sm:text-sm leading-relaxed line-clamp-2 mb-4">
+                        <p className="text-forest/75 text-xs sm:text-sm leading-relaxed line-clamp-2 min-h-[2.5rem] mb-4">
                           {course.description}
                         </p>
 

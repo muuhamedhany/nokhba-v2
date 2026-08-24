@@ -260,7 +260,7 @@ export default function TeacherProfile() {
               <p className="text-xs text-forest/60">سيتم إضافة المحاضرات والمناهج الجديدة قريباً.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch">
               {teacherCourses.map((course: any) => {
                 const subjectLabel = strings.subjects[course.subject as keyof typeof strings.subjects] || course.subject;
                 const gradeLabel = strings.grades[course.grade as keyof typeof strings.grades] || course.grade;
@@ -276,7 +276,7 @@ export default function TeacherProfile() {
 
                 const isEnrolled =
                   course.isFree ||
-                  currentUser?.role === 'teacher' ||
+                  (currentUser?.role === 'teacher' && course.teacherId === currentUser?.id) ||
                   enrollments.some((e) => e.studentId === currentUser?.id && e.courseId === course.id);
 
                 return (
@@ -286,13 +286,13 @@ export default function TeacherProfile() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                    className="double-bezel group hover:shadow-xl transition-shadow duration-300 h-full"
+                    className="double-bezel group hover:shadow-xl transition-shadow duration-300 h-full flex flex-col"
                   >
-                    <div className="double-bezel-inner p-5 flex flex-col justify-between h-full bg-white shadow-xs">
+                    <div className="double-bezel-inner p-5 flex flex-col justify-between h-full bg-white shadow-xs flex-1">
                       
-                      <div>
+                      <div className="flex-1 flex flex-col">
                         {/* Course Cover Image */}
-                        <Link href={`/courses/${course.id}`} className="block relative aspect-[16/10] w-full rounded-2xl overflow-hidden mb-4 bg-forest/5 shadow-inner cursor-pointer">
+                        <Link href={`/courses/${course.id}`} className="block relative aspect-[16/10] w-full rounded-2xl overflow-hidden mb-4 bg-forest/5 shadow-inner cursor-pointer shrink-0">
                           <img
                             src={course.coverImage || 'https://picsum.photos/seed/course/800/600'}
                             alt={course.title}
@@ -328,12 +328,12 @@ export default function TeacherProfile() {
 
                         {/* Title & Description */}
                         <Link href={`/courses/${course.id}`} className="block group-hover:text-gold transition-colors">
-                          <h3 className="font-display font-bold text-lg text-forest mb-2 line-clamp-2 leading-snug">
+                          <h3 className="font-display font-bold text-lg text-forest mb-2 line-clamp-2 min-h-[3rem] leading-snug">
                             {course.title}
                           </h3>
                         </Link>
 
-                        <p className="text-forest/65 text-xs line-clamp-2 leading-relaxed mb-4">
+                        <p className="text-forest/65 text-xs line-clamp-2 min-h-[2.25rem] leading-relaxed mb-4">
                           {course.description}
                         </p>
 

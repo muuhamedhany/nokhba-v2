@@ -59,8 +59,8 @@ function QuizContent() {
           if (data.course) {
             // Check enrollment access
             const isFree = Boolean(data.course.isFree);
-            const isTeacher = currentUser?.role === 'teacher';
-            const isEnrolled = isFree || isTeacher || enrollments.some(e => e.studentId === currentUser?.id && e.courseId === courseId);
+            const isTeacherOwner = currentUser?.role === 'teacher' && data.course.teacherId === currentUser?.id;
+            const isEnrolled = isFree || isTeacherOwner || enrollments.some(e => e.studentId === currentUser?.id && e.courseId === courseId);
 
             if (!isEnrolled) {
               router.replace(`/student/course/${courseId}`);

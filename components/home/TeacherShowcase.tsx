@@ -107,11 +107,11 @@ export function TeacherShowcase() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: idx * 0.1, ease: [0.16, 1, 0.3, 1] }}
-              className="double-bezel group hover:shadow-xl transition-shadow duration-300 h-full"
+              className="double-bezel group hover:shadow-xl transition-shadow duration-300 h-full flex flex-col"
             >
-              <div className="double-bezel-inner p-6 flex flex-col justify-between h-full bg-white shadow-xs">
+              <div className="double-bezel-inner p-6 flex flex-col justify-between h-full bg-white shadow-xs flex-1">
                 
-                <div className="flex flex-col items-center text-center">
+                <div className="flex flex-col items-center text-center flex-1">
                   {/* Teacher Avatar */}
                   <Link href={`/teachers/${teacher.id}`} className="relative mb-4 block group-hover:scale-105 transition-transform duration-500 cursor-pointer">
                     <div className="w-24 h-24 rounded-full bg-forest/5 p-1 ring-2 ring-forest/10 shadow-md overflow-hidden">
@@ -133,7 +133,7 @@ export function TeacherShowcase() {
 
                   {/* Name & Subject */}
                   <Link href={`/teachers/${teacher.id}`} className="block group-hover:text-gold transition-colors">
-                    <h3 className="font-display font-bold text-lg text-forest mb-1">
+                    <h3 className="font-display font-bold text-lg text-forest mb-1 line-clamp-1 min-h-[1.75rem]">
                       {teacher.name}
                     </h3>
                   </Link>
@@ -142,12 +142,12 @@ export function TeacherShowcase() {
                   </p>
 
                   {/* Bio */}
-                  <p className="text-xs text-forest/70 line-clamp-3 leading-relaxed mb-4">
+                  <p className="text-xs text-forest/70 line-clamp-3 min-h-[3.5rem] leading-relaxed mb-4">
                     {teacher.bio}
                   </p>
                 </div>
 
-                <div>
+                <div className="mt-auto">
                   {/* Stats Strip */}
                   <div className="grid grid-cols-2 gap-2 py-2 px-3 rounded-xl bg-[#F7F6F3] border border-black/5 text-center text-xs mb-4">
                     <div className="flex flex-col">

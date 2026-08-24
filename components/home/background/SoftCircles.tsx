@@ -27,17 +27,17 @@ export function SoftCircles({ active = true }: SoftCirclesProps) {
         }
       >
         <motion.circle
-          cx="1240"
+          cx="1260"
           cy="460"
           r="105"
-          fill="#E4D2BD"
-          fillOpacity="0.75"
+          fill="#EBE0D2"
+          fillOpacity="0.8"
           animate={{
-            y: [0, -4, 4, 0],
-            scale: [1, 1.02, 0.98, 1],
+            y: [0, -3, 3, 0],
+            scale: [1, 1.015, 0.985, 1],
           }}
           transition={{
-            duration: 12,
+            duration: 14,
             repeat: Infinity,
             ease: 'easeInOut',
           }}
@@ -61,17 +61,17 @@ export function SoftCircles({ active = true }: SoftCirclesProps) {
         }
       >
         <motion.circle
-          cx="1225"
-          cy="155"
+          cx="1245"
+          cy="160"
           r="28"
-          fill="#DFC9B0"
+          fill="#E2D3C0"
           fillOpacity="0.9"
           animate={{
-            y: [0, 5, -5, 0],
-            x: [0, -3, 3, 0],
+            y: [0, 4, -4, 0],
+            x: [0, -2, 2, 0],
           }}
           transition={{
-            duration: 9,
+            duration: 10,
             repeat: Infinity,
             ease: 'easeInOut',
           }}

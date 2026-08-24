@@ -37,14 +37,14 @@ export function DotPatterns({ active = true }: DotPatternsProps) {
       </defs>
 
       {/* ------------------------------------------------------------- */}
-      {/* CLUSTER 1: Top-Left Region */}
+      {/* CLUSTER 1: Top-Left Region (Under Top-Left Blob) */}
       {/* ------------------------------------------------------------- */}
       <motion.rect
         x="65"
-        y="235"
-        width="160"
-        height="180"
-        rx="16"
+        y="255"
+        width="155"
+        height="165"
+        rx="14"
         fill="url(#hero-dot-grid)"
         initial={{ opacity: 0, y: 15 }}
         animate={
@@ -59,11 +59,11 @@ export function DotPatterns({ active = true }: DotPatternsProps) {
       />
 
       {/* ------------------------------------------------------------- */}
-      {/* CLUSTER 2: Top-Right Corner */}
+      {/* CLUSTER 2: Top-Right Corner (Tall Vertical Grid) */}
       {/* ------------------------------------------------------------- */}
       <motion.rect
-        x="1300"
-        y="30"
+        x="1310"
+        y="35"
         width="115"
         height="230"
         rx="14"
@@ -81,13 +81,13 @@ export function DotPatterns({ active = true }: DotPatternsProps) {
       />
 
       {/* ------------------------------------------------------------- */}
-      {/* CLUSTER 3: Bottom-Right Region */}
+      {/* CLUSTER 3: Bottom-Right Corner Grid */}
       {/* ------------------------------------------------------------- */}
       <motion.rect
-        x="1220"
-        y="770"
-        width="170"
-        height="110"
+        x="1240"
+        y="885"
+        width="150"
+        height="95"
         rx="14"
         fill="url(#hero-dot-grid)"
         initial={{ opacity: 0, scale: 0.9 }}
@@ -99,28 +99,6 @@ export function DotPatterns({ active = true }: DotPatternsProps) {
                 transition: { duration: 1.2, delay: 0.5, ease: [0.16, 1, 0.3, 1] },
               }
             : { opacity: 0, scale: 0.9 }
-        }
-      />
-
-      {/* ------------------------------------------------------------- */}
-      {/* CLUSTER 4: Bottom-Left Region */}
-      {/* ------------------------------------------------------------- */}
-      <motion.rect
-        x="90"
-        y="775"
-        width="140"
-        height="100"
-        rx="14"
-        fill="url(#hero-dot-grid)"
-        initial={{ opacity: 0, y: 15 }}
-        animate={
-          active
-            ? {
-                opacity: 0.75,
-                y: 0,
-                transition: { duration: 1.2, delay: 0.45, ease: [0.16, 1, 0.3, 1] },
-              }
-            : { opacity: 0, y: 15 }
         }
       />
     </g>

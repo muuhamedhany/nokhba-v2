@@ -78,14 +78,14 @@ function TeacherCourseListContent() {
 
       {/* Courses Grid */}
       {filteredCourses.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
           {filteredCourses.map((course) => (
             <div 
               key={course.id}
-              className="bg-white rounded-3xl p-5 border border-black/5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between gap-5 group"
+              className="bg-white rounded-3xl p-5 border border-black/5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between gap-5 group h-full"
             >
-              <div className="flex flex-col gap-3.5">
-                <div className="aspect-video w-full rounded-2xl overflow-hidden bg-forest/5 relative">
+              <div className="flex flex-col gap-3.5 flex-1">
+                <div className="aspect-video w-full rounded-2xl overflow-hidden bg-forest/5 relative shrink-0">
                   <img 
                     src={course.coverImage} 
                     alt={course.title}
@@ -100,22 +100,22 @@ function TeacherCourseListContent() {
                   </div>
                 </div>
 
-                <div>
+                <div className="flex-1 flex flex-col">
                   <div className="flex items-center justify-between text-[11px] text-forest/50 font-medium mb-1">
                     <span className="capitalize">{course.subject}</span>
                     <span>{course.grade === 'sec3' ? 'الثالث الثانوي' : 'المرحلة الثانوية'}</span>
                   </div>
-                  <h3 className="font-display font-bold text-base text-forest line-clamp-1 group-hover:text-gold-dark transition-colors">
+                  <h3 className="font-display font-bold text-base text-forest line-clamp-2 min-h-[2.75rem] group-hover:text-gold-dark transition-colors">
                     {course.title}
                   </h3>
-                  <p className="text-forest/70 text-xs line-clamp-2 mt-1 leading-relaxed">
+                  <p className="text-forest/70 text-xs line-clamp-2 min-h-[2rem] mt-1 leading-relaxed">
                     {course.description}
                   </p>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-2 pt-3 border-t border-black/5">
+              <div className="flex items-center gap-2 pt-3 border-t border-black/5 mt-auto">
                 <Link href={`/teacher/courses/${course.id}`} className="flex-1">
                   <Button variant="primary" className="w-full py-2.5 text-xs font-bold" icon={<PencilSimple size={16} weight="bold" />}>
                     تعديل المنهج

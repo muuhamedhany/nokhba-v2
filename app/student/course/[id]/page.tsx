@@ -42,8 +42,6 @@ function CourseViewContent() {
   const [redeemFeedback, setRedeemFeedback] = useState<{ success: boolean; message: string } | null>(null);
   const [isRedeeming, setIsRedeeming] = useState(false);
 
-  const isTeacherPreview = currentUser?.role === 'teacher';
-
   useEffect(() => {
     if (currentUser?.role === 'student' && enrollments.length === 0) {
       fetchEnrollments();
@@ -90,6 +88,7 @@ function CourseViewContent() {
     ? courseData.sections
     : [];
 
+  const isTeacherPreview = currentUser?.role === 'teacher' && course?.teacherId === currentUser?.id;
   const currentEnrollment = enrollments.find((e) => e.studentId === currentUser?.id && e.courseId === id);
   const isEnrolled = !!currentEnrollment;
   const isFree = Boolean(course?.isFree);
