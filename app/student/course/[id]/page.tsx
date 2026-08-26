@@ -8,25 +8,15 @@ import {
   Question, 
   CheckCircle, 
   LockKey, 
-  Clock, 
   BookOpen, 
-  VideoCamera, 
-  Sparkle,
-  ArrowLeft,
-  ArrowRight,
-  Eye,
-  PencilSimple,
-  Ticket,
-  WhatsappLogo,
-  WarningCircle,
-  GraduationCap,
-  FileText,
-  ChatCircleDots,
-  DownloadSimple,
-  CaretDown,
-  CaretUp,
-  ShareNetwork,
-  BookmarkSimple
+  ArrowLeft, 
+  ArrowRight, 
+  Eye, 
+  Ticket, 
+  WhatsappLogo, 
+  WarningCircle, 
+  CaretDown, 
+  CaretUp 
 } from '@phosphor-icons/react';
 import { Button } from '@/components/common/Button';
 import { SecureVideoPlayer } from '@/components/video/SecureVideoPlayer';
@@ -39,7 +29,16 @@ function CourseViewContent() {
   const params = useParams();
   const id = params.id as string;
   const router = useRouter();
-  const { courses, currentUser, enrollments, fetchEnrollments, markItemComplete, redeemCode } = useStore();
+  const { 
+    courses, 
+    currentUser, 
+    enrollments, 
+    submissions, 
+    fetchEnrollments, 
+    fetchSubmissions, 
+    markItemComplete, 
+    redeemCode 
+  } = useStore();
   
   const [courseData, setCourseData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -49,14 +48,14 @@ function CourseViewContent() {
   const [isRedeeming, setIsRedeeming] = useState(false);
   const [localCompletedItems, setLocalCompletedItems] = useState<string[]>([]);
   const [isMarking, setIsMarking] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'notes' | 'resources'>('overview');
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    if (currentUser?.role === 'student' && enrollments.length === 0) {
-      fetchEnrollments();
+    if (currentUser?.role === 'student') {
+      if (enrollments.length === 0) fetchEnrollments();
+      fetchSubmissions();
     }
-  }, [currentUser, enrollments.length, fetchEnrollments]);
+  }, [currentUser, enrollments.length, fetchEnrollments, fetchSubmissions]);
 
   // Fetch full course data including sections, video lessons, and quizzes
   useEffect(() => {
@@ -116,6 +115,16 @@ function CourseViewContent() {
     }
   }, [currentEnrollment?.completedItems]);
 
+  // Helper to check if any item (video or quiz) is completed
+  const isItemCompleted = (item: any) => {
+    if (!item) return false;
+    if (localCompletedItems.includes(item.id)) return true;
+    if (item.type === 'quiz') {
+      return submissions.some((s: any) => s.quizId === item.id && s.studentId === currentUser?.id);
+    }
+    return false;
+  };
+
   // Flattened items list for next/prev navigation
   const allItems = useMemo(() => {
     return sections.flatMap((s: any) => s.items || []);
@@ -135,11 +144,11 @@ function CourseViewContent() {
   const nextItem = currentItemIndex >= 0 && currentItemIndex < allItems.length - 1 ? allItems[currentItemIndex + 1] : null;
   const prevItem = currentItemIndex > 0 ? allItems[currentItemIndex - 1] : null;
 
-  // Progress calculations
+  // Progress calculations including both videos & completed quizzes
   const totalItemsCount = allItems.length;
-  const completedCount = allItems.filter((i: any) => localCompletedItems.includes(i.id)).length;
+  const completedCount = allItems.filter((i: any) => isItemCompleted(i)).length;
   const progressPercent = totalItemsCount > 0 ? Math.round((completedCount / totalItemsCount) * 100) : 0;
-  const isCurrentCompleted = activeVideo ? localCompletedItems.includes(activeVideo) : false;
+  const isCurrentCompleted = activeVideo ? isItemCompleted({ id: activeVideo, type: 'video' }) : false;
 
   const handleMarkComplete = async () => {
     if (!activeVideo || !currentUser || isTeacherPreview) return;
@@ -345,30 +354,30 @@ function CourseViewContent() {
       <div className="max-w-7xl mx-auto flex flex-col gap-6">
         
         {/* Top Breadcrumb & Course Header */}
-        <div className="bg-white rounded-2xl p-4 border border-black/5 shadow-xs flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
+        <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-black/5 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <Link
               href={isTeacherPreview ? '/teacher/courses' : '/student/dashboard'}
-              className="p-2 rounded-xl bg-forest/5 hover:bg-forest/10 text-forest text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+              className="p-2 rounded-xl bg-forest/5 hover:bg-forest/10 text-forest text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer shrink-0"
             >
               <ArrowRight size={16} />
               <span>لوحة التحكم</span>
             </Link>
 
-            <div className="h-4 w-px bg-black/10" />
+            <div className="h-4 w-px bg-black/10 shrink-0" />
 
-            <div>
+            <div className="min-w-0">
               <span className="text-[10px] font-bold text-forest/50 uppercase tracking-wider block">
                 {course.subject} • {course.grade}
               </span>
-              <h1 className="font-display font-bold text-sm sm:text-base text-forest line-clamp-1">
+              <h1 className="font-display font-bold text-xs sm:text-base text-forest truncate">
                 {course.title}
               </h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 bg-[#F7F6F3] px-3 py-1.5 rounded-xl border border-black/5 text-xs font-bold text-forest/70">
+          <div className="flex items-center gap-3 self-end sm:self-auto">
+            <div className="flex items-center gap-1.5 bg-[#F7F6F3] px-3 py-1.5 rounded-xl border border-black/5 text-xs font-bold text-forest/70">
               <span>المعلم:</span>
               <span className="text-forest font-extrabold">{course.teacher?.name || 'أستاذ المادة'}</span>
             </div>
@@ -377,13 +386,13 @@ function CourseViewContent() {
 
         {/* Teacher Preview Notice */}
         {isTeacherPreview && (
-          <div className="bg-forest text-gold px-4 py-2.5 rounded-2xl flex items-center justify-between text-xs font-bold shadow-xs">
+          <div className="bg-forest text-gold px-4 py-2.5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs font-bold shadow-xs">
             <div className="flex items-center gap-2">
-              <Eye size={18} weight="fill" className="text-gold" />
+              <Eye size={18} weight="fill" className="text-gold shrink-0" />
               <span>وضع معاينة الطالب (Student Preview) — يمكنك تجربة مشاهدة المحاضرات وحل الاختبارات.</span>
             </div>
             <Link href={`/teacher/courses/${id}`}>
-              <span className="text-white hover:text-gold underline cursor-pointer">العودة لتعديل الكورس</span>
+              <span className="text-white hover:text-gold underline cursor-pointer shrink-0">العودة لتعديل الكورس</span>
             </Link>
           </div>
         )}
@@ -397,7 +406,7 @@ function CourseViewContent() {
           <div className="flex-1 flex flex-col gap-5 w-full">
             
             {/* Secure Video Player with Double-Bezel Frame */}
-            <div className="rounded-2xl overflow-hidden shadow-2xl border border-5 border-forest">
+            <div className="rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border-2 sm:border-4 border-forest">
               <div className="double-bezel-dark-inner relative bg-[#0C1510] aspect-video">
                 {activeVideoItem ? (
                   <SecureVideoPlayer
@@ -417,27 +426,27 @@ function CourseViewContent() {
             </div>
 
             {/* Action Bar Under Video */}
-            <div className="bg-white rounded-2xl p-5 border border-black/5 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-black/5 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
               <div className="flex flex-col gap-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="bg-gold/20 text-forest text-[11px] font-bold px-2 py-0.5 rounded">
+                  <span className="bg-gold/20 text-forest text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded">
                     الدرس الحالي
                   </span>
                   <span className="text-xs text-forest/50 font-mono">
                     {progressPercent}% من إجمالي المنهج
                   </span>
                 </div>
-                <h2 className="font-display font-bold text-lg sm:text-xl text-forest truncate">
+                <h2 className="font-display font-bold text-base sm:text-xl text-forest truncate">
                   {activeVideoItem?.title || course.title}
                 </h2>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto shrink-0">
                 {/* Mark Complete Button */}
                 {activeVideo && (
                   isCurrentCompleted ? (
-                    <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 border border-emerald-200 px-4 py-2.5 rounded-xl text-xs font-bold shadow-xs">
+                    <div className="flex items-center justify-center gap-2 text-emerald-700 bg-emerald-50 border border-emerald-200 px-4 py-2.5 rounded-xl text-xs font-bold shadow-xs">
                       <CheckCircle size={18} weight="fill" className="text-emerald-600" />
                       <span>تم إكمال هذا الدرس</span>
                     </div>
@@ -446,7 +455,7 @@ function CourseViewContent() {
                       onClick={handleMarkComplete}
                       disabled={isMarking}
                       icon={<CheckCircle size={18} weight="bold" />}
-                      className="px-5 py-2.5 text-xs font-bold shadow-md cursor-pointer"
+                      className="px-5 py-2.5 text-xs font-bold shadow-md cursor-pointer justify-center"
                     >
                       {isMarking ? 'جاري الحفظ...' : 'حفظ التقدم وإكمال الدرس'}
                     </Button>
@@ -458,7 +467,7 @@ function CourseViewContent() {
                   <button
                     type="button"
                     onClick={() => handleNavigateItem(nextItem)}
-                    className="px-4 py-2.5 rounded-xl bg-forest hover:bg-forest/90 text-gold text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
+                    className="px-4 py-2.5 rounded-xl bg-forest hover:bg-forest/90 text-gold text-xs font-bold transition-all inline-flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
                     title={nextItem.title}
                   >
                     <span>الدرس التالي</span>
@@ -510,7 +519,7 @@ function CourseViewContent() {
                   sections.map((section: any, sIdx: number) => {
                     const isOpen = openSections[section.id] ?? true;
                     const sectionItems = section.items || [];
-                    const sectionCompleted = sectionItems.filter((i: any) => localCompletedItems.includes(i.id)).length;
+                    const sectionCompleted = sectionItems.filter((i: any) => isItemCompleted(i)).length;
                     const sectionTotal = sectionItems.length;
 
                     return (
@@ -555,13 +564,16 @@ function CourseViewContent() {
                             >
                               <div className="p-2 flex flex-col gap-1.5">
                                 {sectionItems.map((item: any, idx: number) => {
-                                  const isCompleted = localCompletedItems.includes(item.id);
+                                  const isCompleted = isItemCompleted(item);
                                   const isActive = activeVideoItem?.id === item.id;
-                                  let isLocked = false;
+                                  const userSubmission = item.type === 'quiz'
+                                    ? submissions.find((s: any) => s.quizId === item.id && s.studentId === currentUser?.id)
+                                    : null;
 
+                                  let isLocked = false;
                                   if (!isTeacherPreview && item.type === 'quiz') {
                                     const prev = sectionItems[idx - 1];
-                                    if (prev && !localCompletedItems.includes(prev.id)) {
+                                    if (prev && !isItemCompleted(prev)) {
                                       isLocked = true;
                                     }
                                   }
@@ -614,6 +626,10 @@ function CourseViewContent() {
                                       <div className="shrink-0 text-[10px] font-mono text-end opacity-70">
                                         {item.type === 'video' ? (
                                           <span>{Math.round((item.duration || 1800) / 60)} دقيقة</span>
+                                        ) : isCompleted ? (
+                                          <span className="bg-emerald-100 text-emerald-800 border border-emerald-200 px-1.5 py-0.5 rounded font-bold">
+                                            {userSubmission ? `${userSubmission.score}%` : 'تم الاجتياز'}
+                                          </span>
                                         ) : (
                                           <span className="bg-gold/20 text-forest px-1.5 py-0.5 rounded font-bold">
                                             اختبار

@@ -226,13 +226,30 @@ export const useStore = create<AppState>()(
       },
       
       submitQuiz: async (submission) => {
-        await submitQuizAction({
-          id: submission.id,
-          quizId: submission.quizId,
-          answers: submission.answers,
-          score: submission.score
-        });
-        set((state) => ({ submissions: [...state.submissions, submission] }));
+        try {
+          await submitQuizAction({
+            id: submission.id,
+            quizId: submission.quizId,
+            answers: submission.answers,
+            score: submission.score
+          });
+          set((state) => {
+            const updatedEnrollments = state.enrollments.map(e => {
+              const completed = e.completedItems || [];
+              if (!completed.includes(submission.quizId)) {
+                return { ...e, completedItems: [...completed, submission.quizId] };
+              }
+              return e;
+            });
+            return {
+              submissions: [...state.submissions, submission],
+              enrollments: updatedEnrollments
+            };
+          });
+          get().fetchEnrollments();
+        } catch (err) {
+          console.error('submitQuiz error:', err);
+        }
       },
       
       addSection: async (section) => {

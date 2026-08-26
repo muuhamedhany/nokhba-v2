@@ -571,37 +571,37 @@ export function SecureVideoPlayer({
         </div>
 
         {/* Buttons Row */}
-        <div className="flex items-center justify-between text-white text-xs md:text-sm">
+        <div className="flex items-center justify-between text-white text-xs sm:text-sm">
           {/* Left Controls (Playback & Volume) */}
-          <div className="flex items-center gap-2 md:gap-3.5">
+          <div className="flex items-center gap-1.5 sm:gap-3">
             {/* Play/Pause */}
             <button
               type="button"
               onClick={togglePlay}
-              className="p-1.5 hover:text-gold transition-colors focus:outline-none cursor-pointer"
+              className="p-2 sm:p-1.5 hover:text-gold transition-colors focus:outline-none cursor-pointer"
               title={isPlaying ? 'إيقاف مؤقت (Space)' : 'تشغيل (Space)'}
             >
               {isPlaying ? <Pause size={22} weight="fill" /> : <Play size={22} weight="fill" />}
             </button>
 
-            {/* Jump Backward 10s */}
+            {/* Jump Backward 10s (hidden on very small screens) */}
             <button
               type="button"
               onClick={() => seekRelative(-10)}
-              className="p-1.5 hover:text-gold transition-colors focus:outline-none cursor-pointer hidden sm:inline-flex"
+              className="p-1.5 hover:text-gold transition-colors focus:outline-none cursor-pointer hidden md:inline-flex"
               title="رجوع 10 ثواني (سهم يسار)"
             >
-              <ArrowCounterClockwise size={20} weight="bold" />
+              <ArrowCounterClockwise size={18} weight="bold" />
             </button>
 
-            {/* Jump Forward 10s */}
+            {/* Jump Forward 10s (hidden on very small screens) */}
             <button
               type="button"
               onClick={() => seekRelative(10)}
-              className="p-1.5 hover:text-gold transition-colors focus:outline-none cursor-pointer hidden sm:inline-flex"
+              className="p-1.5 hover:text-gold transition-colors focus:outline-none cursor-pointer hidden md:inline-flex"
               title="تقديم 10 ثواني (سهم يمين)"
             >
-              <ArrowClockwise size={20} weight="bold" />
+              <ArrowClockwise size={18} weight="bold" />
             </button>
 
             {/* Volume */}
@@ -613,11 +613,11 @@ export function SecureVideoPlayer({
                 title={isMuted ? 'إلغاء الكتم (M)' : 'كتم الصوت (M)'}
               >
                 {isMuted || volume === 0 ? (
-                  <SpeakerX size={20} weight="bold" />
+                  <SpeakerX size={18} weight="bold" />
                 ) : volume > 0.5 ? (
-                  <SpeakerHigh size={20} weight="bold" />
+                  <SpeakerHigh size={18} weight="bold" />
                 ) : (
-                  <SpeakerLow size={20} weight="bold" />
+                  <SpeakerLow size={18} weight="bold" />
                 )}
               </button>
               <input
@@ -627,28 +627,28 @@ export function SecureVideoPlayer({
                 step="0.05"
                 value={isMuted ? 0 : volume}
                 onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-                className="w-14 md:w-20 h-1 accent-gold bg-white/20 rounded-lg appearance-none cursor-pointer"
+                className="w-12 sm:w-16 md:w-20 h-1 accent-gold bg-white/20 rounded-lg appearance-none cursor-pointer hidden sm:inline-block"
               />
             </div>
 
             {/* Time Stamp */}
-            <span className="text-[11px] md:text-xs text-white/75 font-mono ms-1">
+            <span className="text-[10px] sm:text-xs text-white/80 font-mono whitespace-nowrap">
               {formatTime(currentTime)} / {formatTime(duration)}
             </span>
           </div>
 
           {/* Right Controls (Speed, Theater, Fullscreen) */}
-          <div className="flex items-center gap-2 md:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-2.5">
             {/* Speed Selector Menu */}
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setShowSpeedMenu(!showSpeedMenu)}
-                className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-mono transition-colors flex items-center gap-1 focus:outline-none cursor-pointer"
+                className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-[11px] sm:text-xs font-mono transition-colors flex items-center gap-1 focus:outline-none cursor-pointer"
                 title="سرعة التشغيل"
               >
                 <span>{playbackSpeed}x</span>
-                <Gear size={14} />
+                <Gear size={12} className="hidden sm:inline" />
               </button>
 
               <AnimatePresence>
@@ -657,7 +657,7 @@ export function SecureVideoPlayer({
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
-                    className="absolute bottom-full end-0 mb-2 bg-forest/95 backdrop-blur-xl border border-white/10 rounded-xl p-1.5 shadow-2xl min-w-[120px] z-50"
+                    className="absolute bottom-full end-0 mb-2 bg-forest/95 backdrop-blur-xl border border-white/10 rounded-xl p-1.5 shadow-2xl min-w-[110px] sm:min-w-[120px] z-50"
                   >
                     <div className="text-[10px] text-white/50 px-2 py-1 uppercase tracking-wider font-semibold border-b border-white/10 mb-1">
                       سرعة التشغيل
@@ -667,7 +667,7 @@ export function SecureVideoPlayer({
                         key={speed}
                         type="button"
                         onClick={() => handleSpeedChange(speed)}
-                        className={`w-full flex items-center justify-between px-2.5 py-1 rounded-lg text-xs font-mono text-start transition-colors ${
+                        className={`w-full flex items-center justify-between px-2 py-1 rounded-lg text-xs font-mono text-start transition-colors ${
                           playbackSpeed === speed
                             ? 'bg-gold text-forest font-bold'
                             : 'text-white/80 hover:bg-white/10'
@@ -682,7 +682,7 @@ export function SecureVideoPlayer({
               </AnimatePresence>
             </div>
 
-            {/* Theater Mode Toggle */}
+            {/* Theater Mode Toggle (Desktop only) */}
             {onToggleTheater && (
               <button
                 type="button"
@@ -692,7 +692,7 @@ export function SecureVideoPlayer({
                 }`}
                 title={isTheaterMode ? 'الخروج من وضع المسرح' : 'وضع المسرح'}
               >
-                <Television size={20} weight={isTheaterMode ? 'fill' : 'bold'} />
+                <Television size={18} weight={isTheaterMode ? 'fill' : 'bold'} />
               </button>
             )}
 
@@ -700,10 +700,10 @@ export function SecureVideoPlayer({
             <button
               type="button"
               onClick={toggleFullscreen}
-              className="p-1.5 hover:text-gold transition-colors focus:outline-none cursor-pointer"
+              className="p-2 sm:p-1.5 hover:text-gold transition-colors focus:outline-none cursor-pointer"
               title={isFullscreen ? 'الخروج من ملء الشاشة (F)' : 'ملء الشاشة (F)'}
             >
-              {isFullscreen ? <CornersIn size={20} weight="bold" /> : <CornersOut size={20} weight="bold" />}
+              {isFullscreen ? <CornersIn size={18} weight="bold" /> : <CornersOut size={18} weight="bold" />}
             </button>
           </div>
         </div>

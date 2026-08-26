@@ -114,8 +114,53 @@ export async function submitQuizAction(payload: { id: string; quizId: string; an
     }
   });
 
+  // Automatically mark the quiz item as completed in the student's enrollment
+  try {
+    const quizItem = await prisma.sectionItem.findUnique({
+      where: { id: payload.quizId },
+      include: { section: true }
+    });
+
+    if (quizItem && quizItem.section) {
+      const courseId = quizItem.section.courseId;
+      const enrollment = await prisma.enrollment.findUnique({
+        where: {
+          studentId_courseId: {
+            studentId: user.id,
+            courseId,
+          }
+        }
+      });
+
+      if (enrollment) {
+        const completed: string[] = JSON.parse(enrollment.completedItemsJson || '[]');
+        if (!completed.includes(payload.quizId)) {
+          completed.push(payload.quizId);
+          await prisma.enrollment.update({
+            where: { id: enrollment.id },
+            data: { completedItemsJson: JSON.stringify(completed) }
+          });
+        }
+      } else {
+        await prisma.enrollment.create({
+          data: {
+            id: `enr_${Date.now()}`,
+            studentId: user.id,
+            courseId,
+            completedItemsJson: JSON.stringify([payload.quizId])
+          }
+        });
+      }
+
+      revalidatePath(`/student/course/${courseId}`);
+    }
+  } catch (err) {
+    console.error('Failed to auto-mark quiz as complete in enrollment:', err);
+  }
+
   revalidatePath('/teacher/submissions');
   revalidatePath('/parent/dashboard');
+  revalidatePath('/student/dashboard');
   return { success: true };
 }
 
