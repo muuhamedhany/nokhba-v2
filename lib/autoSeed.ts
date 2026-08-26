@@ -179,6 +179,288 @@ export const INITIAL_COURSES = [
   },
 ];
 
+export const INITIAL_CURRICULUM_DATA: Record<string, Array<{
+  id: string;
+  title: string;
+  order: number;
+  items: Array<{
+    id: string;
+    type: 'video' | 'quiz';
+    title: string;
+    url?: string;
+    duration?: number;
+    questions?: Array<{
+      id: string;
+      prompt: string;
+      options: string[];
+      correctOptionIndex: number;
+    }>;
+  }>;
+}>> = {
+  c1: [
+    {
+      id: 's1_c1',
+      title: 'الوحدة الأولى: الدولة في الجغرافيا السياسية',
+      order: 1,
+      items: [
+        {
+          id: 'v1_c1',
+          type: 'video',
+          title: 'الدرس الأول: مفهوم الدولة والفرق بين الدولة والأمة',
+          url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+          duration: 2700,
+        },
+        {
+          id: 'v2_c1',
+          type: 'video',
+          title: 'الدرس الثاني: أنواع الدول والمواقع المركزية والهامشية',
+          url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+          duration: 3100,
+        },
+        {
+          id: 'q1_c1',
+          type: 'quiz',
+          title: 'اختبار تقييمي شامل على الوحدة الأولى',
+          questions: [
+            {
+              id: 'q1_1',
+              prompt: 'ما هو العنصر الأساسي الذي يميز الأمة عن الدولة؟',
+              options: ['وجود سلطة حاكمة', 'الروابط المشتركة كاللغة والتاريخ', 'الاعتراف الدولي', 'المساحة الجغرافية المحددة'],
+              correctOptionIndex: 1,
+            },
+            {
+              id: 'q1_2',
+              prompt: 'أي من الدول التالية تعتبر نموذجاً مثالياً للدولة الوحدوية المركزية؟',
+              options: ['فرنسا', 'سويسرا', 'الولايات المتحدة', 'البرازيل'],
+              correctOptionIndex: 0,
+            }
+          ]
+        }
+      ]
+    },
+    {
+      id: 's2_c1',
+      title: 'الوحدة الثانية: المقومات الطبيعية والبشرية للدولة',
+      order: 2,
+      items: [
+        {
+          id: 'v3_c1',
+          type: 'video',
+          title: 'الدرس الثالث: التضاريس والمناخ وأثرهما في قوة الدولة',
+          url: 'https://www.youtube.com/watch?v=L_LUpnjgPso',
+          duration: 2400,
+        }
+      ]
+    }
+  ],
+  c2: [
+    {
+      id: 's1_c2',
+      title: 'الجزء الأول: تفكيك أسئلة الخرائط ونماذج الوزارة',
+      order: 1,
+      items: [
+        {
+          id: 'v1_c2',
+          type: 'video',
+          title: 'المحاضرة الأولى: مفاتيح قراءة خرائط الجغرافيا السياسية بالنظام الحديث',
+          url: 'https://www.youtube.com/watch?v=aqz-KE-bpKQ',
+          duration: 2850,
+        },
+        {
+          id: 'v2_c2',
+          type: 'video',
+          title: 'المحاضرة الثانية: حل النموذج الاسترشادي الأول لوزارة التربية والتعليم',
+          url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+          duration: 3400,
+        },
+        {
+          id: 'q1_c2',
+          type: 'quiz',
+          title: 'اختبار محاكاة النموذج الاسترشادي 2026',
+          questions: [
+            {
+              id: 'q2_1',
+              prompt: 'إذا زادت نسبة الاعتماد على الموارد الطبيعية دون تصنيع، فإن ذلك يعبر عن:',
+              options: ['قوة مورفولوجية', 'تبعية اقتصادية وضعف تكنولوجي', 'تنوع مناخي مثالي', 'قوة ديموغرافية'],
+              correctOptionIndex: 1,
+            },
+            {
+              id: 'q2_2',
+              prompt: 'أقوى الحدود السياسية من الناحية المانعة للدفاع هي الحدود:',
+              options: ['الهندسية الفلكية', 'الجبلية الوعرة', 'النهرية المتغيرة', 'البحيرية المشتركة'],
+              correctOptionIndex: 1,
+            }
+          ]
+        }
+      ]
+    },
+    {
+      id: 's2_c2',
+      title: 'الجزء الثاني: التريكات الوزارية وأسئلة الربط المتوقعة',
+      order: 2,
+      items: [
+        {
+          id: 'v3_c2',
+          type: 'video',
+          title: 'المحاضرة الثالثة: أهم 50 سؤال ربط بين الوحدات الأربعة',
+          url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+          duration: 3600,
+        }
+      ]
+    }
+  ],
+  c4: [
+    {
+      id: 's1_c4',
+      title: 'الفصل الأول: الحملة الفرنسية على مصر والشام',
+      order: 1,
+      items: [
+        {
+          id: 'v1_c4',
+          type: 'video',
+          title: 'المحاضرة 1: أحوال المجتمع المصري قبل مجيء الحملة الفرنسية',
+          url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+          duration: 2600,
+        },
+        {
+          id: 'v2_c4',
+          type: 'video',
+          title: 'المحاضرة 2: نزول الحملة والمقاومة الشعبية في الصعيد والإسكندرية',
+          url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+          duration: 2900,
+        },
+        {
+          id: 'q1_c4',
+          type: 'quiz',
+          title: 'اختبار تقييمي على الفصل الأول (التاريخ)',
+          questions: [
+            {
+              id: 'q4_1',
+              prompt: 'كان الهدف الاستراتيجي الأول لنابليون بونابرت من احتلال مصر هو:',
+              options: ['قطع طريق مواصلات إنجلترا إلى الهند', 'نشر مبادئ الثورة الفرنسية', 'استغلال الآثار المصرية', 'مساعدة المماليك ضد العثمانيين'],
+              correctOptionIndex: 0,
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  c6: [
+    {
+      id: 's1_c6',
+      title: 'الفصل الأول: التيار الكهربي وقانون أوم وقوانين كيرشوف',
+      order: 1,
+      items: [
+        {
+          id: 'v1_c6',
+          type: 'video',
+          title: 'الدرس 1: شدة التيار، فرق الجهد، والمقاومة النوعية والتوصيلية',
+          url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+          duration: 3200,
+        },
+        {
+          id: 'v2_c6',
+          type: 'video',
+          title: 'الدرس 2: استراتيجيات حل دوائر كيرشوف المعقدة في 3 خطوات',
+          url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+          duration: 3500,
+        },
+        {
+          id: 'q1_c6',
+          type: 'quiz',
+          title: 'اختبار تحدي كيرشوف والدوائر المغلقة',
+          questions: [
+            {
+              id: 'q6_1',
+              prompt: 'عند زيادة طول سلك موصل إلى الضعف ونقصان مساحة مقطعه إلى النصف، فإن مقاومته تصبح:',
+              options: ['ضعف قيمتها', '4 أضعاف قيمتها', 'نصف قيمتها', 'تظل ثابتة'],
+              correctOptionIndex: 1,
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  c7: [
+    {
+      id: 's1_c7',
+      title: 'الوحدة الأولى: قواعد الاشتقاق وتطبيقاتها الهندسية',
+      order: 1,
+      items: [
+        {
+          id: 'v1_c7',
+          type: 'video',
+          title: 'المحاضرة 1: اشتقاق الدوال المثلثية والدوال الأسية واللوغاريتمية',
+          url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+          duration: 3100,
+        },
+        {
+          id: 'v2_c7',
+          type: 'video',
+          title: 'المحاضرة 2: مسائل المعدلات الزمنية المرتبطة ورسم المنحنيات',
+          url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+          duration: 2950,
+        }
+      ]
+    }
+  ],
+  c8: [
+    {
+      id: 's1_c8',
+      title: 'الباب الخامس: الكيمياء العضوية والهيدروكربونات',
+      order: 1,
+      items: [
+        {
+          id: 'v1_c8',
+          type: 'video',
+          title: 'المحاضرة 1: تجربة الكشف عن الكربون والهيدروجين وتسمية الألكانات (IUPAC)',
+          url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+          duration: 3300,
+        },
+        {
+          id: 'v2_c8',
+          type: 'video',
+          title: 'المحاضرة 2: تفاعلات ماركونيكوف وألكينات وألكاينات بالتفصيل',
+          url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+          duration: 3150,
+        }
+      ]
+    }
+  ],
+  c9: [
+    {
+      id: 's1_c9',
+      title: 'الوحدة الأولى: النحو التراكمي وتفكيك النصوص المتحررة',
+      order: 1,
+      items: [
+        {
+          id: 'v1_c9',
+          type: 'video',
+          title: 'المحاضرة 1: إعراب الجمل وثوابت النحو وإعمال المشتقات العاملة',
+          url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+          duration: 2750,
+        }
+      ]
+    }
+  ],
+  c10: [
+    {
+      id: 's1_c10',
+      title: 'Module 1: Advanced Grammar, Translation & Reading Comprehension',
+      order: 1,
+      items: [
+        {
+          id: 'v1_c10',
+          type: 'video',
+          title: 'Lecture 1: Masterclass in Tenses, Active & Passive, and Conditionals',
+          url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+          duration: 2800,
+        }
+      ]
+    }
+  ]
+};
+
 let isSeeding = false;
 
 export async function ensureInitialData(): Promise<void> {
@@ -186,20 +468,29 @@ export async function ensureInitialData(): Promise<void> {
 
   try {
     const courseCount = await prisma.course.count();
-    if (courseCount > 0) return;
+    const sectionCount = await prisma.section.count();
+
+    // If courses already exist with sections, nothing to do
+    if (courseCount > 0 && sectionCount > 5) return;
 
     isSeeding = true;
-    console.log('[AutoSeed] Database is empty. Seeding initial teachers and courses...');
+    console.log('[AutoSeed] Populating full curriculum & initial teachers/courses...');
 
     const defaultTeacherPass = await bcrypt.hash('123456', 10);
     const defaultStudentPass = await bcrypt.hash('password', 10);
     const defaultParentPass = await bcrypt.hash('01012345678', 10);
 
-    // 1. Create Teachers
+    // 1. Upsert Teachers
     for (const t of INITIAL_TEACHERS) {
       await prisma.user.upsert({
         where: { id: t.id },
-        update: {},
+        update: {
+          name: t.name,
+          role: t.role,
+          subject: t.subject,
+          avatar: t.avatar,
+          bio: t.bio,
+        },
         create: {
           id: t.id,
           name: t.name,
@@ -213,7 +504,7 @@ export async function ensureInitialData(): Promise<void> {
       });
     }
 
-    // 2. Create Demo Student & Parent
+    // 2. Upsert Demo Student & Parent
     const student = await prisma.user.upsert({
       where: { id: 'u2' },
       update: {},
@@ -241,11 +532,18 @@ export async function ensureInitialData(): Promise<void> {
       },
     });
 
-    // 3. Create Courses
+    // 3. Upsert Courses
     for (const c of INITIAL_COURSES) {
       await prisma.course.upsert({
         where: { id: c.id },
-        update: {},
+        update: {
+          title: c.title,
+          description: c.description,
+          coverImage: c.coverImage,
+          subject: c.subject,
+          grade: c.grade,
+          isFree: c.isFree,
+        },
         create: {
           id: c.id,
           title: c.title,
@@ -259,44 +557,90 @@ export async function ensureInitialData(): Promise<void> {
       });
     }
 
-    // 4. Create Section and Demo Lesson for c1
-    const s1 = await prisma.section.upsert({
-      where: { id: 's1' },
-      update: {},
-      create: {
-        id: 's1',
-        courseId: 'c1',
-        title: 'الوحدة الأولى: الدولة في الجغرافيا السياسية',
-        order: 1,
-      },
-    });
+    // 4. Upsert Full Curriculum Data (Sections, Videos, Quizzes)
+    for (const [courseId, sections] of Object.entries(INITIAL_CURRICULUM_DATA)) {
+      for (const s of sections) {
+        const createdSection = await prisma.section.upsert({
+          where: { id: s.id },
+          update: {
+            title: s.title,
+            order: s.order,
+          },
+          create: {
+            id: s.id,
+            courseId: courseId,
+            title: s.title,
+            order: s.order,
+          },
+        });
 
-    await prisma.sectionItem.upsert({
-      where: { id: 'v1' },
-      update: {},
-      create: {
-        id: 'v1',
-        sectionId: s1.id,
-        type: 'video',
-        title: 'الدرس الأول: الدولة (مفهومها وأنواعها)',
-        url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-        duration: 2700,
-      },
-    });
+        for (const item of s.items) {
+          const createdItem = await prisma.sectionItem.upsert({
+            where: { id: item.id },
+            update: {
+              title: item.title,
+              type: item.type,
+              url: item.url,
+              duration: item.duration,
+            },
+            create: {
+              id: item.id,
+              sectionId: createdSection.id,
+              type: item.type,
+              title: item.title,
+              url: item.url,
+              duration: item.duration,
+            },
+          });
 
-    // 5. Create Codes
+          if (item.type === 'quiz' && item.questions) {
+            for (const q of item.questions) {
+              await prisma.question.upsert({
+                where: { id: q.id },
+                update: {
+                  prompt: q.prompt,
+                  optionsJson: JSON.stringify(q.options),
+                  correctOptionIndex: q.correctOptionIndex,
+                },
+                create: {
+                  id: q.id,
+                  sectionItemId: createdItem.id,
+                  prompt: q.prompt,
+                  type: 'multiple-choice',
+                  optionsJson: JSON.stringify(q.options),
+                  correctOptionIndex: q.correctOptionIndex,
+                },
+              });
+            }
+          }
+        }
+      }
+    }
+
+    // 5. Create Sample Codes
     await prisma.code.upsert({
       where: { id: 'code1' },
       update: {},
       create: {
         id: 'code1',
         courseId: 'c1',
-        codeString: 'GEO2026-XYZ',
+        codeString: 'NOK-GEO2026-A1',
         status: 'unused',
       },
     });
 
-    console.log('[AutoSeed] Database successfully seeded with 8 masterclass courses!');
+    await prisma.code.upsert({
+      where: { id: 'code2' },
+      update: {},
+      create: {
+        id: 'code2',
+        courseId: 'c4',
+        codeString: 'NOK-HIS2026-B2',
+        status: 'unused',
+      },
+    });
+
+    console.log('[AutoSeed] Full curriculum & multi-course lessons successfully populated!');
   } catch (err) {
     console.error('[AutoSeed] Error during auto-seeding:', err);
   } finally {

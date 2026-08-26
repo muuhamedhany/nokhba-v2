@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useStore } from '@/store';
 import { 
@@ -19,15 +19,21 @@ import {
   Ticket,
   WhatsappLogo,
   WarningCircle,
-  GraduationCap
+  GraduationCap,
+  FileText,
+  ChatCircleDots,
+  DownloadSimple,
+  CaretDown,
+  CaretUp,
+  ShareNetwork,
+  BookmarkSimple
 } from '@phosphor-icons/react';
 import { Button } from '@/components/common/Button';
-import { CustomVideoPlayer } from '@/components/video/CustomVideoPlayer';
+import { SecureVideoPlayer } from '@/components/video/SecureVideoPlayer';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { motion, AnimatePresence } from 'motion/react';
 import Link from 'next/link';
 import { CourseClassroomSkeleton } from '@/components/common/Skeleton';
-
 
 function CourseViewContent() {
   const params = useParams();
@@ -41,6 +47,10 @@ function CourseViewContent() {
   const [redeemInput, setRedeemInput] = useState('');
   const [redeemFeedback, setRedeemFeedback] = useState<{ success: boolean; message: string } | null>(null);
   const [isRedeeming, setIsRedeeming] = useState(false);
+  const [localCompletedItems, setLocalCompletedItems] = useState<string[]>([]);
+  const [isMarking, setIsMarking] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'notes' | 'resources'>('overview');
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (currentUser?.role === 'student' && enrollments.length === 0) {
@@ -67,6 +77,13 @@ function CourseViewContent() {
             if (allVideos.length > 0) {
               setActiveVideo(allVideos[0].id);
             }
+
+            // Open all sections by default
+            const initialOpenState: Record<string, boolean> = {};
+            (data.course.sections || []).forEach((s: any) => {
+              initialOpenState[s.id] = true;
+            });
+            setOpenSections(initialOpenState);
           }
         }
       } catch (err) {
@@ -82,8 +99,6 @@ function CourseViewContent() {
   }, [id]);
 
   const course = courseData || courses.find((c) => c.id === id);
-
-  // Fallback initial sections if none in database yet
   const sections = (courseData?.sections && courseData.sections.length > 0)
     ? courseData.sections
     : [];
@@ -93,16 +108,69 @@ function CourseViewContent() {
   const isEnrolled = !!currentEnrollment;
   const isFree = Boolean(course?.isFree);
   const canAccess = isTeacherPreview || isFree || isEnrolled;
-  const completedItems = currentEnrollment?.completedItems || [];
 
-  const activeVideoItem = activeVideo
-    ? sections.flatMap((s: any) => s.items || []).find((i: any) => i.id === activeVideo && i.type === 'video')
-    : sections.flatMap((s: any) => s.items || []).find((i: any) => i.type === 'video');
-
-  const handleMarkComplete = () => {
-    if (activeVideo && currentUser && id && !isTeacherPreview) {
-      markItemComplete(currentUser.id, id, activeVideo);
+  // Sync completed items from store or local state
+  useEffect(() => {
+    if (currentEnrollment?.completedItems) {
+      setLocalCompletedItems(currentEnrollment.completedItems);
     }
+  }, [currentEnrollment?.completedItems]);
+
+  // Flattened items list for next/prev navigation
+  const allItems = useMemo(() => {
+    return sections.flatMap((s: any) => s.items || []);
+  }, [sections]);
+
+  const activeVideoItem = useMemo(() => {
+    if (activeVideo) {
+      return allItems.find((i: any) => i.id === activeVideo && i.type === 'video');
+    }
+    return allItems.find((i: any) => i.type === 'video');
+  }, [activeVideo, allItems]);
+
+  const currentItemIndex = useMemo(() => {
+    return allItems.findIndex((i: any) => i.id === activeVideoItem?.id);
+  }, [allItems, activeVideoItem]);
+
+  const nextItem = currentItemIndex >= 0 && currentItemIndex < allItems.length - 1 ? allItems[currentItemIndex + 1] : null;
+  const prevItem = currentItemIndex > 0 ? allItems[currentItemIndex - 1] : null;
+
+  // Progress calculations
+  const totalItemsCount = allItems.length;
+  const completedCount = allItems.filter((i: any) => localCompletedItems.includes(i.id)).length;
+  const progressPercent = totalItemsCount > 0 ? Math.round((completedCount / totalItemsCount) * 100) : 0;
+  const isCurrentCompleted = activeVideo ? localCompletedItems.includes(activeVideo) : false;
+
+  const handleMarkComplete = async () => {
+    if (!activeVideo || !currentUser || isTeacherPreview) return;
+
+    // Optimistic UI update
+    if (!localCompletedItems.includes(activeVideo)) {
+      setLocalCompletedItems(prev => [...prev, activeVideo]);
+    }
+
+    setIsMarking(true);
+    try {
+      await markItemComplete(currentUser.id, id, activeVideo);
+      await fetchEnrollments();
+    } catch (err) {
+      console.error('Error marking item complete:', err);
+    } finally {
+      setIsMarking(false);
+    }
+  };
+
+  const handleNavigateItem = (item: any) => {
+    if (!item) return;
+    if (item.type === 'video') {
+      setActiveVideo(item.id);
+    } else if (item.type === 'quiz') {
+      router.push(`/student/course/${id}/quiz/${item.id}`);
+    }
+  };
+
+  const toggleSectionAccordion = (secId: string) => {
+    setOpenSections(prev => ({ ...prev, [secId]: !prev[secId] }));
   };
 
   const handleRedeemCode = async (e: React.FormEvent) => {
@@ -146,8 +214,6 @@ function CourseViewContent() {
           className="w-full max-w-xl double-bezel shadow-2xl shadow-forest/10"
         >
           <div className="double-bezel-inner p-6 sm:p-10 bg-white flex flex-col gap-6 text-start">
-            
-            {/* Header Lock Icon & Badge */}
             <div className="flex items-center justify-between border-b border-black/5 pb-4">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-2xl bg-forest text-gold flex items-center justify-center shadow-md">
@@ -162,13 +228,11 @@ function CourseViewContent() {
                   </h1>
                 </div>
               </div>
-
               <span className="bg-forest/5 text-forest text-xs font-bold px-3 py-1 rounded-full border border-black/5">
                 كورس مدفوع
               </span>
             </div>
 
-            {/* Course Summary Card */}
             <div className="flex items-center gap-4 p-4 rounded-2xl bg-[#F7F6F3] border border-black/5">
               <div className="w-20 h-16 rounded-xl overflow-hidden bg-forest/10 shrink-0 relative">
                 <img
@@ -190,7 +254,6 @@ function CourseViewContent() {
               </div>
             </div>
 
-            {/* Code Activation Form */}
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2">
                 <Ticket size={18} weight="fill" className="text-gold" />
@@ -205,7 +268,7 @@ function CourseViewContent() {
                     value={redeemInput}
                     onChange={(e) => setRedeemInput(e.target.value)}
                     dir="ltr"
-                    placeholder="GEO2026-XXXX"
+                    placeholder="NOK-XXXX-YYYY"
                     className="flex-1 bg-[#F7F6F3] focus:bg-white rounded-xl px-4 py-3.5 text-sm text-forest border border-transparent focus:border-gold/60 outline-none text-center font-mono font-bold tracking-widest uppercase transition-all shadow-inner"
                   />
                   <Button
@@ -241,7 +304,6 @@ function CourseViewContent() {
               </form>
             </div>
 
-            {/* Bottom Actions & WhatsApp Support */}
             <div className="pt-4 border-t border-black/5 flex flex-col sm:flex-row items-center justify-between gap-3">
               {(() => {
                 const rawPhone = course.teacher?.phone || '01000000001';
@@ -272,204 +334,311 @@ function CourseViewContent() {
                 </Button>
               </Link>
             </div>
-
           </div>
         </motion.div>
       </div>
     );
   }
 
-  const watermarkString = isTeacherPreview
-    ? `المعلم: ${currentUser?.name || 'أستاذ المادة'} (وضع المعاينة)`
-    : `الطالب: ${currentUser?.name || 'طالب نُـخبة'} - ${currentUser?.phone || ''}`;
-
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 md:py-10 flex flex-col gap-6 text-start">
-      
-      {/* Teacher Preview Mode Top Bar */}
-      {isTeacherPreview && (
-        <div className="bg-forest text-gold px-5 py-3 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
-          <div className="flex items-center gap-2.5">
-            <Eye size={20} weight="fill" className="text-gold shrink-0" />
-            <div>
-              <span className="font-bold text-xs sm:text-sm block text-white">
-                أنت الآن في وضع &quot;معاينة كطالب&quot; (Student Preview Mode)
-              </span>
-              <span className="text-[11px] text-gold/80 block">
-                تستعرض واجهة قاعة المحاضرات ومشغل الفيديو كما تظهر تماماً للطالب المسجل.
-              </span>
-            </div>
-          </div>
-
-          <Link href={`/teacher/courses/${id}`}>
-            <button className="px-4 py-2 rounded-xl bg-gold hover:bg-white text-forest text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap">
-              <PencilSimple size={14} weight="bold" />
-              <span>العودة لتعديل المنهج</span>
-            </button>
-          </Link>
-        </div>
-      )}
-
-
-      {/* Main Classroom Layout */}
-      <div className="flex flex-col lg:flex-row gap-8 items-start">
+    <div className="w-full min-h-[90dvh] bg-[#FBF9F5] py-4 sm:py-8 px-3 sm:px-6 text-start">
+      <div className="max-w-7xl mx-auto flex flex-col gap-6">
         
-        {/* Video Player & Main Stage */}
-        <div className="flex-1 flex flex-col gap-6 w-full">
-          
-          {/* Double-Bezel Screen Frame */}
-          <div className="double-bezel aspect-video w-full shadow-2xl shadow-forest/10">
-            <div className="double-bezel-dark-inner relative w-full h-full bg-forest flex items-center justify-center overflow-hidden group">
-              {activeVideoItem && activeVideoItem.type === 'video' ? (
-                <CustomVideoPlayer 
-                  url={activeVideoItem.url || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4'} 
-                  watermarkText={watermarkString}
-                  onEnded={handleMarkComplete}
-                />
-              ) : (
-                <div className="text-white/50 flex flex-col items-center gap-4 text-center p-6">
-                  <PlayCircle size={56} weight="thin" className="text-gold animate-pulse" />
-                  <p className="text-sm font-semibold">اختر درساً من قائمة المحتوى لبدء المشاهدة</p>
-                </div>
-              )}
+        {/* Top Breadcrumb & Course Header */}
+        <div className="bg-white rounded-2xl p-4 border border-black/5 shadow-xs flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Link
+              href={isTeacherPreview ? '/teacher/courses' : '/student/dashboard'}
+              className="p-2 rounded-xl bg-forest/5 hover:bg-forest/10 text-forest text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+            >
+              <ArrowRight size={16} />
+              <span>لوحة التحكم</span>
+            </Link>
+
+            <div className="h-4 w-px bg-black/10" />
+
+            <div>
+              <span className="text-[10px] font-bold text-forest/50 uppercase tracking-wider block">
+                {course.subject} • {course.grade}
+              </span>
+              <h1 className="font-display font-bold text-sm sm:text-base text-forest line-clamp-1">
+                {course.title}
+              </h1>
             </div>
           </div>
+
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 bg-[#F7F6F3] px-3 py-1.5 rounded-xl border border-black/5 text-xs font-bold text-forest/70">
+              <span>المعلم:</span>
+              <span className="text-forest font-extrabold">{course.teacher?.name || 'أستاذ المادة'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Teacher Preview Notice */}
+        {isTeacherPreview && (
+          <div className="bg-forest text-gold px-4 py-2.5 rounded-2xl flex items-center justify-between text-xs font-bold shadow-xs">
+            <div className="flex items-center gap-2">
+              <Eye size={18} weight="fill" className="text-gold" />
+              <span>وضع معاينة الطالب (Student Preview) — يمكنك تجربة مشاهدة المحاضرات وحل الاختبارات.</span>
+            </div>
+            <Link href={`/teacher/courses/${id}`}>
+              <span className="text-white hover:text-gold underline cursor-pointer">العودة لتعديل الكورس</span>
+            </Link>
+          </div>
+        )}
+
+        {/* ------------------------------------------------------------- */}
+        {/* MASTERCLASS THEATER LAYOUT */}
+        {/* ------------------------------------------------------------- */}
+        <div className="flex flex-col lg:flex-row gap-6 items-start">
           
-          {/* Lecture Details */}
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-black/5 shadow-sm flex flex-col gap-4">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/5 pb-4">
-              <div>
-                <h1 className="font-display font-bold text-xl sm:text-2xl text-forest">
+          {/* Main Stage (Video + Quick Actions + Lecture Notes) */}
+          <div className="flex-1 flex flex-col gap-5 w-full">
+            
+            {/* Secure Video Player with Double-Bezel Frame */}
+            <div className="rounded-2xl overflow-hidden shadow-2xl border border-5 border-forest">
+              <div className="double-bezel-dark-inner relative bg-[#0C1510] aspect-video">
+                {activeVideoItem ? (
+                  <SecureVideoPlayer
+                    url={activeVideoItem.url || 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'}
+                    title={activeVideoItem.title}
+                    studentName={currentUser?.name || 'طالب نُـخبة'}
+                    studentPhone={currentUser?.phone || ''}
+                    onEnded={handleMarkComplete}
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-white/50 gap-3 p-6 text-center">
+                    <PlayCircle size={64} weight="thin" className="text-gold animate-pulse" />
+                    <p className="text-sm font-semibold">اختر درساً من قائمة المحتوى لبدء المشاهدة</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Action Bar Under Video */}
+            <div className="bg-white rounded-2xl p-5 border border-black/5 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex flex-col gap-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="bg-gold/20 text-forest text-[11px] font-bold px-2 py-0.5 rounded">
+                    الدرس الحالي
+                  </span>
+                  <span className="text-xs text-forest/50 font-mono">
+                    {progressPercent}% من إجمالي المنهج
+                  </span>
+                </div>
+                <h2 className="font-display font-bold text-lg sm:text-xl text-forest truncate">
                   {activeVideoItem?.title || course.title}
-                </h1>
+                </h2>
               </div>
 
-              {activeVideo && (
-                <div className="flex items-center gap-3">
-                  {completedItems.includes(activeVideo) ? (
-                    <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 border border-emerald-200 px-4 py-2 rounded-xl text-xs font-bold shadow-xs">
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+                {/* Mark Complete Button */}
+                {activeVideo && (
+                  isCurrentCompleted ? (
+                    <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 border border-emerald-200 px-4 py-2.5 rounded-xl text-xs font-bold shadow-xs">
                       <CheckCircle size={18} weight="fill" className="text-emerald-600" />
-                      <span>تم إكمال الدرس</span>
+                      <span>تم إكمال هذا الدرس</span>
                     </div>
                   ) : (
                     <Button
                       onClick={handleMarkComplete}
+                      disabled={isMarking}
                       icon={<CheckCircle size={18} weight="bold" />}
-                      className="px-5 py-2.5 text-xs font-bold shadow-md"
+                      className="px-5 py-2.5 text-xs font-bold shadow-md cursor-pointer"
                     >
-                      تحديد كمكتمل
+                      {isMarking ? 'جاري الحفظ...' : 'حفظ التقدم وإكمال الدرس'}
                     </Button>
-                  )}
-                </div>
-              )}
+                  )
+                )}
+
+                {/* Next Lesson Button */}
+                {nextItem && (
+                  <button
+                    type="button"
+                    onClick={() => handleNavigateItem(nextItem)}
+                    className="px-4 py-2.5 rounded-xl bg-forest hover:bg-forest/90 text-gold text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
+                    title={nextItem.title}
+                  >
+                    <span>الدرس التالي</span>
+                    <ArrowLeft size={16} />
+                  </button>
+                )}
+              </div>
             </div>
 
-            <div className="flex flex-col gap-2">
-              <h3 className="font-bold text-sm text-forest">عن الكورس:</h3>
-              <p className="text-forest/70 text-xs sm:text-sm leading-relaxed">
-                {course.description}
-              </p>
-            </div>
           </div>
 
-        </div>
-
-        {/* Sidebar: Syllabus & Lessons List */}
-        <div className="w-full lg:w-96 flex flex-col gap-6 shrink-0">
-          <div className="bg-white rounded-3xl p-6 border border-black/5 shadow-sm flex flex-col gap-5 sticky top-24">
-            
-            <div className="flex items-center justify-between border-b border-black/5 pb-4">
-              <div className="flex items-center gap-2">
-                <BookOpen size={20} weight="fill" className="text-gold" />
-                <h2 className="font-display font-bold text-lg text-forest">محتوى الكورس</h2>
+          {/* Right Sidebar: Curriculum Accordions */}
+          <div className="w-full lg:w-96 shrink-0 flex flex-col gap-4">
+            <div className="bg-white rounded-3xl p-5 border border-black/5 shadow-xs sticky top-24">
+              
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-black/5 pb-3.5 mb-4">
+                <div className="flex items-center gap-2">
+                  <BookOpen size={20} weight="fill" className="text-gold" />
+                  <h3 className="font-display font-bold text-base text-forest">فهرس المحاضرات</h3>
+                </div>
+                <span className="text-xs font-mono font-bold text-forest/60 bg-[#F7F6F3] px-2.5 py-1 rounded-full">
+                  {totalItemsCount} دروس
+                </span>
               </div>
-              <span className="text-xs font-bold text-forest/60 bg-[#F7F6F3] px-2.5 py-1 rounded-full">
-                {sections.reduce((acc: number, s: any) => acc + (s.items?.length || 0), 0)} درس
-              </span>
-            </div>
-            
-            <div className="flex flex-col gap-5 max-h-[65vh] overflow-y-auto pe-1">
-              {sections.length === 0 ? (
-                <p className="text-xs text-forest/40 text-center py-6">لم يتم إضافة دروس بعد لهذا الكورس.</p>
-              ) : (
-                sections.map((section: any, sIdx: number) => (
-                  <div key={section.id || sIdx} className="flex flex-col gap-2.5">
-                    <div className="flex items-center gap-2 px-1">
-                      <span className="w-5 h-5 rounded-full bg-forest text-gold text-[10px] font-bold flex items-center justify-center shrink-0">
-                        {sIdx + 1}
-                      </span>
-                      <h3 className="font-bold text-xs text-forest line-clamp-1">{section.title}</h3>
-                    </div>
 
-                    <div className="flex flex-col gap-1.5 ps-2">
-                      {section.items?.map((item: any, index: number) => {
-                        let isLocked = false;
-                        if (!isTeacherPreview && item.type === 'quiz') {
-                          const previousItem = section.items[index - 1];
-                          if (previousItem && !completedItems.includes(previousItem.id)) {
-                            isLocked = true;
-                          }
-                        }
+              {/* Progress Bar */}
+              <div className="mb-4">
+                <div className="flex items-center justify-between text-xs font-bold text-forest/70 mb-1.5">
+                  <span>نسبة إنجازك في المنهج:</span>
+                  <span className="font-mono text-forest">{progressPercent}%</span>
+                </div>
+                <div className="w-full h-2 bg-black/5 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gold rounded-full transition-all duration-500"
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+              </div>
 
-                        const isCompleted = completedItems.includes(item.id);
-                        const isActive = activeVideo === item.id;
+              {/* Chapter Accordions List */}
+              <div className="flex flex-col gap-3 max-h-[62vh] overflow-y-auto pe-1">
+                {sections.length === 0 ? (
+                  <div className="p-8 text-center bg-[#F7F6F3] rounded-2xl border border-black/5">
+                    <BookOpen size={32} className="text-forest/30 mx-auto mb-2" />
+                    <p className="text-xs text-forest/50 font-semibold">المعلم يجهز محتوى الكورس حالياً.</p>
+                  </div>
+                ) : (
+                  sections.map((section: any, sIdx: number) => {
+                    const isOpen = openSections[section.id] ?? true;
+                    const sectionItems = section.items || [];
+                    const sectionCompleted = sectionItems.filter((i: any) => localCompletedItems.includes(i.id)).length;
+                    const sectionTotal = sectionItems.length;
 
-                        return (
-                          <button
-                            key={item.id || index}
-                            disabled={isLocked}
-                            onClick={() => {
-                              if (isLocked) return;
-                              if (item.type === 'video') {
-                                setActiveVideo(item.id);
-                              } else {
-                                router.push(`/student/course/${id}/quiz/${item.id}`);
-                              }
-                            }}
-                            className={`flex items-center justify-between text-start gap-3 p-3 rounded-2xl transition-all cursor-pointer border ${
-                              isActive
-                                ? 'bg-forest text-gold border-forest shadow-md'
-                                : 'bg-[#F7F6F3] hover:bg-black/5 text-forest/80 border-black/5 hover:border-black/10'
-                            } ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          >
-                            <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                              <div className="shrink-0">
-                                {isLocked ? (
-                                  <LockKey size={16} weight="fill" className="text-forest/40" />
-                                ) : isCompleted ? (
-                                  <CheckCircle size={16} weight="fill" className={isActive ? "text-gold" : "text-emerald-500"} />
-                                ) : item.type === 'video' ? (
-                                  <PlayCircle size={16} weight={isActive ? "fill" : "regular"} className={isActive ? "text-gold" : "text-forest/60"} />
-                                ) : (
-                                  <Question size={16} weight="bold" className={isActive ? "text-gold" : "text-amber-600"} />
-                                )}
-                              </div>
-                              <span className={`text-xs font-semibold truncate ${isActive ? 'text-white font-bold' : 'text-forest'}`}>
-                                {item.title}
+                    return (
+                      <div
+                        key={section.id || sIdx}
+                        className="bg-[#FBF9F5] border border-black/5 rounded-2xl overflow-hidden transition-all shadow-xs"
+                      >
+                        {/* Section Header */}
+                        <button
+                          type="button"
+                          onClick={() => toggleSectionAccordion(section.id)}
+                          className="w-full flex items-center justify-between p-3.5 hover:bg-black/5 transition-colors cursor-pointer text-start"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <span className="w-6 h-6 rounded-full bg-forest text-gold text-[11px] font-bold flex items-center justify-center shrink-0 shadow-xs">
+                              {sIdx + 1}
+                            </span>
+                            <div className="min-w-0">
+                              <h4 className="font-bold text-xs sm:text-sm text-forest truncate">
+                                {section.title}
+                              </h4>
+                              <span className="text-[10px] text-forest/50 font-medium block">
+                                {sectionCompleted} من {sectionTotal} مكتمل
                               </span>
                             </div>
+                          </div>
 
-                            <div className="shrink-0 text-[10px] font-mono text-end opacity-70">
-                              {item.type === 'video' ? (
-                                <span>{Math.round((item.duration || 1800) / 60)} د</span>
-                              ) : (
-                                <span className="bg-gold/20 text-forest px-1.5 py-0.5 rounded font-bold">اختبار</span>
-                              )}
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))
-              )}
+                          <div className="flex items-center gap-2 shrink-0 text-forest/50">
+                            {isOpen ? <CaretUp size={16} weight="bold" /> : <CaretDown size={16} weight="bold" />}
+                          </div>
+                        </button>
+
+                        {/* Section Lessons */}
+                        <AnimatePresence initial={false}>
+                          {isOpen && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="overflow-hidden border-t border-black/5 bg-white/70"
+                            >
+                              <div className="p-2 flex flex-col gap-1.5">
+                                {sectionItems.map((item: any, idx: number) => {
+                                  const isCompleted = localCompletedItems.includes(item.id);
+                                  const isActive = activeVideoItem?.id === item.id;
+                                  let isLocked = false;
+
+                                  if (!isTeacherPreview && item.type === 'quiz') {
+                                    const prev = sectionItems[idx - 1];
+                                    if (prev && !localCompletedItems.includes(prev.id)) {
+                                      isLocked = true;
+                                    }
+                                  }
+
+                                  return (
+                                    <button
+                                      key={item.id || idx}
+                                      disabled={isLocked}
+                                      onClick={() => handleNavigateItem(item)}
+                                      className={`w-full flex items-center justify-between text-start gap-2.5 p-2.5 rounded-xl transition-all cursor-pointer border ${
+                                        isActive
+                                          ? 'bg-forest text-gold border-forest shadow-md'
+                                          : 'bg-[#F7F6F3] hover:bg-black/5 text-forest/80 border-black/5'
+                                      } ${isLocked ? 'opacity-40 cursor-not-allowed' : ''}`}
+                                    >
+                                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                        <div className="shrink-0">
+                                          {isLocked ? (
+                                            <LockKey size={16} weight="fill" className="text-forest/40" />
+                                          ) : isCompleted ? (
+                                            <CheckCircle
+                                              size={18}
+                                              weight="fill"
+                                              className={isActive ? 'text-gold' : 'text-emerald-500'}
+                                            />
+                                          ) : item.type === 'video' ? (
+                                            <PlayCircle
+                                              size={18}
+                                              weight={isActive ? 'fill' : 'regular'}
+                                              className={isActive ? 'text-gold' : 'text-forest/60'}
+                                            />
+                                          ) : (
+                                            <Question
+                                              size={18}
+                                              weight="bold"
+                                              className={isActive ? 'text-gold' : 'text-amber-600'}
+                                            />
+                                          )}
+                                        </div>
+
+                                        <span
+                                          className={`text-xs truncate ${
+                                            isActive ? 'text-white font-bold' : 'text-forest font-semibold'
+                                          }`}
+                                        >
+                                          {item.title}
+                                        </span>
+                                      </div>
+
+                                      <div className="shrink-0 text-[10px] font-mono text-end opacity-70">
+                                        {item.type === 'video' ? (
+                                          <span>{Math.round((item.duration || 1800) / 60)} دقيقة</span>
+                                        ) : (
+                                          <span className="bg-gold/20 text-forest px-1.5 py-0.5 rounded font-bold">
+                                            اختبار
+                                          </span>
+                                        )}
+                                      </div>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
             </div>
-
           </div>
+
         </div>
 
       </div>
-
     </div>
   );
 }

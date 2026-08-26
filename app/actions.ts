@@ -70,21 +70,34 @@ export async function markItemCompleteAction(courseId: string, itemId: string) {
     }
   });
 
-  if (!enrollment) return { success: false };
-
-  const completed: string[] = JSON.parse(enrollment.completedItemsJson || '[]');
-  if (!completed.includes(itemId)) {
-    completed.push(itemId);
-    await prisma.enrollment.update({
-      where: { id: enrollment.id },
+  let completed: string[] = [];
+  if (enrollment) {
+    completed = JSON.parse(enrollment.completedItemsJson || '[]');
+    if (!completed.includes(itemId)) {
+      completed.push(itemId);
+      await prisma.enrollment.update({
+        where: { id: enrollment.id },
+        data: {
+          completedItemsJson: JSON.stringify(completed)
+        }
+      });
+    }
+  } else {
+    // If not enrolled yet (e.g. Free Course), auto-create the enrollment with completed item
+    completed = [itemId];
+    await prisma.enrollment.create({
       data: {
+        id: `enr_${Date.now()}`,
+        studentId: user.id,
+        courseId,
         completedItemsJson: JSON.stringify(completed)
       }
     });
   }
 
   revalidatePath(`/student/course/${courseId}`);
-  return { success: true };
+  revalidatePath('/student/dashboard');
+  return { success: true, completedItems: completed };
 }
 
 export async function submitQuizAction(payload: { id: string; quizId: string; answers: number[]; score: number }) {

@@ -288,19 +288,40 @@ export const useStore = create<AppState>()(
       },
 
       markItemComplete: async (studentId, courseId, itemId) => {
-        await markItemCompleteAction(courseId, itemId);
-        set((state) => {
-          const enrollments = state.enrollments.map(e => {
-            if (e.studentId === studentId && e.courseId === courseId) {
-              const completed = e.completedItems || [];
-              if (!completed.includes(itemId)) {
-                return { ...e, completedItems: [...completed, itemId] };
-              }
+        try {
+          const res = await markItemCompleteAction(courseId, itemId);
+          set((state) => {
+            const hasEnrollment = state.enrollments.some(e => e.studentId === studentId && e.courseId === courseId);
+            if (hasEnrollment) {
+              return {
+                enrollments: state.enrollments.map(e => {
+                  if (e.studentId === studentId && e.courseId === courseId) {
+                    const completed = e.completedItems || [];
+                    if (!completed.includes(itemId)) {
+                      return { ...e, completedItems: [...completed, itemId] };
+                    }
+                  }
+                  return e;
+                })
+              };
+            } else {
+              return {
+                enrollments: [
+                  ...state.enrollments,
+                  {
+                    id: `enr_${Date.now()}`,
+                    studentId,
+                    courseId,
+                    unlockedAt: new Date().toISOString(),
+                    completedItems: [itemId],
+                  }
+                ]
+              };
             }
-            return e;
           });
-          return { enrollments };
-        });
+        } catch (err) {
+          console.error('Failed to mark item complete in store:', err);
+        }
       }
     }),
     {
