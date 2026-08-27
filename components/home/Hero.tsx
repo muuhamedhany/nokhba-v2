@@ -150,7 +150,7 @@ export function Hero() {
   const headlineSloganWords = t.hero.headlineSlogan.split(' ');
 
   return (
-    <section className="relative w-full min-h-[92dvh] flex flex-col justify-center items-center text-center px-4 pt-28 md:pt-36 pb-20 md:pb-28 overflow-hidden isolate">
+    <section className="relative w-full min-h-[90dvh] lg:min-h-[92dvh] flex flex-col justify-center items-center text-center px-4 pt-29 md:pt-30 pb-19 md:pb-30 overflow-hidden isolate">
       {/* Code-based Vector Animated Background (Blobs, Waves, Dots, Soft Circles) */}
       <HeroBackground active={hasEntered} />
 
@@ -162,7 +162,7 @@ export function Hero() {
         className="relative z-10 w-full max-w-5xl mx-auto flex flex-col items-center"
       >
         {/* Minimalist Editorial Eyebrow with Animated Hairlines */}
-        <motion.div variants={fadeUpVariants} className="mb-4 flex items-center gap-3 text-xs font-bold text-forest tracking-widest uppercase">
+        <motion.div variants={fadeUpVariants} className="mb-3 md:mb-4 flex items-center gap-3 text-xs font-bold text-forest tracking-widest uppercase">
           <motion.span
             variants={{
               hidden: { scaleX: 0 },
@@ -182,8 +182,12 @@ export function Hero() {
 
         {/* Grand Editorial Display Heading with Masked Word Staggers */}
         <h1
-          className="font-display font-bold text-forest leading-[1.2] tracking-tight max-w-4xl flex flex-col items-center gap-1.5 md:gap-3 w-full"
-          style={{ fontSize: 'clamp(2.2rem, 5.5vw, 4.6rem)' }}
+          className="font-display font-bold text-forest leading-[1.18] md:leading-[1.16] tracking-tight flex flex-col items-center gap-1 sm:gap-2 md:gap-2.5 w-full"
+          style={{
+            fontSize: isArabic 
+              ? 'clamp(2rem, 4.4vw, 3.75rem)' 
+              : 'clamp(1.75rem, 3.6vw, 3.15rem)'
+          }}
         >
           {/* Line 1 */}
           <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-3">
@@ -257,16 +261,16 @@ export function Hero() {
         {/* Subtext Paragraph with Blur-Fade Entry */}
         <motion.p
           variants={fadeUpVariants}
-          className="mt-6 text-base sm:text-lg md:text-xl text-forest/75 max-w-2xl leading-relaxed"
+          className="mt-4 md:mt-5 text-sm sm:text-base md:text-lg text-forest/75 max-w-2xl leading-relaxed"
         >
           {t.hero.subtext}
         </motion.p>
 
         {/* Action CTAs with Glide Entrance */}
-        <motion.div variants={fadeUpVariants} className="mt-10 flex flex-col sm:flex-row items-center gap-4">
+        <motion.div variants={fadeUpVariants} className="mt-6 md:mt-8 flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
           <Link href="/login">
             <Button
-              className="px-8 py-4 text-lg"
+              className="px-7 py-3.5 text-base sm:text-lg"
               icon={<GraduationCap weight="bold" size={18} />}
             >
               {t.hero.ctaStudent}
@@ -275,7 +279,7 @@ export function Hero() {
 
           <motion.div initial="rest" whileHover="hover" animate="rest" className="relative">
             <Link href="/login?role=parent" className="relative inline-block group">
-              <Button variant="ghost" className="px-8 py-4 text-lg bg-transparent hover:bg-transparent text-forest">
+              <Button variant="ghost" className="px-6 py-3.5 text-base sm:text-lg bg-transparent hover:bg-transparent text-forest">
                 {t.hero.ctaParent}
               </Button>
               {/* Dynamic Matching Calligraphic Arc on 2nd CTA */}
@@ -332,12 +336,12 @@ export function Hero() {
         {/* Floating Glass Double-Bezel Trust Metrics Strip with Animated Number Counters */}
         <motion.div
           variants={cardUnpackVariants}
-          className="mt-14 w-full max-w-4xl"
+          className="mt-8 md:mt-10 w-full max-w-4xl"
         >
           {/* Outer Shell (Double-Bezel Glass) */}
           <div className="p-2 sm:p-2.5 rounded-3xl sm:rounded-full bg-forest/5 backdrop-blur-xl border border-forest/10 shadow-xl shadow-forest/5">
             {/* Inner Core */}
-            <div className="rounded-[calc(1.5rem-0.25rem)] sm:rounded-full bg-white/85 px-6 py-4 sm:py-5 border border-white/80 shadow-inner flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-2">
+            <div className="rounded-[calc(1.5rem-0.25rem)] sm:rounded-full bg-white/85 px-6 py-3.5 sm:py-4 border border-white/80 shadow-inner flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-2">
               
               {/* Metric 1: Students Counter */}
               <div className="flex-1 flex flex-col items-center text-center px-4 w-full sm:w-auto">

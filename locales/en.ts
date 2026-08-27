@@ -24,8 +24,8 @@ export const strings: LocaleDictionary = {
   hero: {
     badge: 'The Comprehensive Educational Platform for All Subjects',
     headlinePrefix: 'Building Top Achievers is No Coincidence',
-    headlineSlogan: 'It is a Precise Curriculum with Egypt\'s Greatest Mentors',
-    subtext: 'Nokhba brings together Egypt\'s elite educators across all subjects and grades, offering rigorous tracking and continuous assessment up to exam night.',
+    headlineSlogan: 'A Guided Curriculum with Egypt\'s Top Mentors',
+    subtext: 'Nokhba brings together Egypt\'s elite educators across all subjects with continuous tracking and evaluation up to exam night.',
     ctaStudent: 'Start Learning Now',
     ctaParent: 'Parent Portal',
     ctaTeachers: 'Browse Teachers',
