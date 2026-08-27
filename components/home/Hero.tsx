@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { motion, useInView } from 'motion/react';
-import { strings } from '@/locales/ar';
+import { useLanguage } from '@/context/LanguageContext';
 import { Button } from '@/components/common/Button';
 import { Star, GraduationCap } from '@phosphor-icons/react';
 import { hasIntroPlayed } from '@/utils/entranceState';
@@ -104,7 +104,6 @@ function AnimatedNumber({
     const updateCounter = (currentTime: number) => {
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      // Custom easeOutExpo
       const ease = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
       const current = start + (end - start) * ease;
       setDisplayValue(current);
@@ -132,6 +131,7 @@ function AnimatedNumber({
 
 export function Hero() {
   const [hasEntered, setHasEntered] = useState(() => (typeof window !== 'undefined' ? hasIntroPlayed() : false));
+  const { t, isArabic } = useLanguage();
 
   useEffect(() => {
     if (hasIntroPlayed()) {
@@ -145,6 +145,9 @@ export function Hero() {
     }, 2100);
     return () => clearTimeout(timer);
   }, []);
+
+  const headlinePrefixWords = t.hero.headlinePrefix.split(' ');
+  const headlineSloganWords = t.hero.headlineSlogan.split(' ');
 
   return (
     <section className="relative w-full min-h-[92dvh] flex flex-col justify-center items-center text-center px-4 pt-28 md:pt-36 pb-20 md:pb-28 overflow-hidden isolate">
@@ -167,7 +170,7 @@ export function Hero() {
             }}
             className="w-6 h-px bg-gold origin-right"
           />
-          <span>منصة النخبة الأكاديمية · الثانوية والإعدادية</span>
+          <span>{t.hero.badge}</span>
           <motion.span
             variants={{
               hidden: { scaleX: 0 },
@@ -177,29 +180,31 @@ export function Hero() {
           />
         </motion.div>
 
-        {/* Grand Editorial Cairo Display Heading with Masked Word Staggers */}
+        {/* Grand Editorial Display Heading with Masked Word Staggers */}
         <h1
           className="font-display font-bold text-forest leading-[1.2] tracking-tight max-w-4xl flex flex-col items-center gap-1.5 md:gap-3 w-full"
           style={{ fontSize: 'clamp(2.2rem, 5.5vw, 4.6rem)' }}
         >
           {/* Line 1 */}
           <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-3">
-            {"صناعة الأوائل ليست صدفة".split(" ").map((word, i) => (
-              <MaskedWord key={`l1-${i}`}>{word}</MaskedWord>
+            {headlinePrefixWords.map((word, i) => (
+              <MaskedWord key={`l1-${word}-${i}`}>{word}</MaskedWord>
             ))}
           </div>
 
           {/* Line 2 with animated gold underline */}
           <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-3 text-forest/85">
-            {"هي منهج دقيق مع".split(" ").map((word, i) => (
-              <MaskedWord key={`l2-${i}`}>{word}</MaskedWord>
+            {headlineSloganWords.slice(0, -2).map((word, i) => (
+              <MaskedWord key={`l2-${word}-${i}`}>{word}</MaskedWord>
             ))}
             <span className="relative inline-block text-gold font-extrabold pb-2 sm:pb-3">
-              <MaskedWord>أعظم</MaskedWord>{' '}
-              <MaskedWord>أساتذة</MaskedWord>{' '}
-              <MaskedWord>المادة</MaskedWord>
+              {headlineSloganWords.slice(-2).map((word, i) => (
+                <span key={`last-${word}-${i}`} className="inline-block me-1.5 last:me-0">
+                  <MaskedWord>{word}</MaskedWord>
+                </span>
+              ))}
 
-              {/* Dynamic Calligraphic Arc / Swoop with Ambient Gold Neon Glow (Last Element to Load) */}
+              {/* Dynamic Calligraphic Arc / Swoop with Ambient Gold Neon Glow */}
               <svg
                 viewBox="0 0 280 22"
                 fill="none"
@@ -254,7 +259,7 @@ export function Hero() {
           variants={fadeUpVariants}
           className="mt-6 text-base sm:text-lg md:text-xl text-forest/75 max-w-2xl leading-relaxed"
         >
-          {strings.hero.subtext}
+          {t.hero.subtext}
         </motion.p>
 
         {/* Action CTAs with Glide Entrance */}
@@ -264,14 +269,14 @@ export function Hero() {
               className="px-8 py-4 text-lg"
               icon={<GraduationCap weight="bold" size={18} />}
             >
-              {strings.hero.ctaStudent}
+              {t.hero.ctaStudent}
             </Button>
           </Link>
 
           <motion.div initial="rest" whileHover="hover" animate="rest" className="relative">
             <Link href="/login?role=parent" className="relative inline-block group">
               <Button variant="ghost" className="px-8 py-4 text-lg bg-transparent hover:bg-transparent text-forest">
-                {strings.hero.ctaParent}
+                {t.hero.ctaParent}
               </Button>
               {/* Dynamic Matching Calligraphic Arc on 2nd CTA */}
               <svg
@@ -340,7 +345,7 @@ export function Hero() {
                   <AnimatedNumber value={50000} suffix="+" active={hasEntered} />
                 </div>
                 <span className="text-xs text-forest/70 font-medium mt-0.5">
-                  {strings.hero.stats.studentsLabel}
+                  {t.hero.stats.studentsLabel}
                 </span>
               </div>
 
@@ -353,7 +358,7 @@ export function Hero() {
                   <AnimatedNumber value={60} suffix="+" active={hasEntered} />
                 </div>
                 <span className="text-xs text-forest/70 font-medium mt-0.5">
-                  {strings.hero.stats.teachersLabel}
+                  {t.hero.stats.teachersLabel}
                 </span>
               </div>
 
@@ -366,7 +371,7 @@ export function Hero() {
                   <AnimatedNumber value={12} suffix="+" active={hasEntered} />
                 </div>
                 <span className="text-xs text-forest/70 font-medium mt-0.5">
-                  {strings.hero.stats.subjectsLabel}
+                  {t.hero.stats.subjectsLabel}
                 </span>
               </div>
 
@@ -380,7 +385,7 @@ export function Hero() {
                   <AnimatedNumber value={4.9} suffix="/5" decimals={1} active={hasEntered} />
                 </div>
                 <span className="text-xs text-forest/70 font-medium mt-0.5">
-                  {strings.hero.stats.ratingLabel}
+                  {t.hero.stats.ratingLabel}
                 </span>
               </div>
 

@@ -4,36 +4,31 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import Link from 'next/link';
 import { useStore } from '@/store';
-import { strings } from '@/locales/ar';
+import { useLanguage } from '@/context/LanguageContext';
 import { Button } from '@/components/common/Button';
 import { 
   MagnifyingGlass, 
   Funnel, 
   GraduationCap, 
   SealCheck, 
-  Sparkle, 
   ArrowLeft, 
+  ArrowRight,
   PlayCircle, 
-  FileText, 
   CaretDown, 
   BookOpen, 
-  CheckCircle,
-  X,
-  Clock,
-  Student
+  X
 } from '@phosphor-icons/react';
-import type { Course, User } from '@/types';
+import type { User } from '@/types';
 import { LessonsPageSkeleton } from '@/components/common/Skeleton';
-
 
 // Category Keys & Keywords for Smart Branch Matching
 type CategoryKey = 'all' | 'scientific' | 'literary' | 'shared';
 
-const CATEGORIES: { key: CategoryKey; label: string }[] = [
-  { key: 'all', label: 'كافة التخصصات' },
-  { key: 'scientific', label: 'المواد العلمية' },
-  { key: 'literary', label: 'المواد الأدبية' },
-  { key: 'shared', label: 'اللغات والمشترك' },
+const CATEGORIES: { key: CategoryKey; label: { ar: string; en: string } }[] = [
+  { key: 'all', label: { ar: 'كافة التخصصات', en: 'All Disciplines' } },
+  { key: 'scientific', label: { ar: 'المواد العلمية', en: 'Scientific' } },
+  { key: 'literary', label: { ar: 'المواد الأدبية', en: 'Literary' } },
+  { key: 'shared', label: { ar: 'اللغات والمشترك', en: 'Languages & General' } },
 ];
 
 const CATEGORY_KEYWORDS: Record<CategoryKey, string[]> = {
@@ -53,15 +48,16 @@ const CATEGORY_KEYWORDS: Record<CategoryKey, string[]> = {
 };
 
 const GRADE_OPTIONS = [
-  { id: 'all', label: 'كافة المراحل الدراسية' },
-  { id: 'sec3', label: 'الصف الثالث الثانوي (الشهادة العامة)' },
-  { id: 'sec2', label: 'الصف الثاني الثانوي' },
-  { id: 'sec1', label: 'الصف الأول الثانوي' },
-  { id: 'prep3', label: 'الصف الثالث الإعدادي' },
+  { id: 'all', label: { ar: 'كافة المراحل الدراسية', en: 'All Academic Grades' } },
+  { id: 'sec3', label: { ar: 'الصف الثالث الثانوي (الشهادة العامة)', en: '3rd Secondary (Grade 12)' } },
+  { id: 'sec2', label: { ar: 'الصف الثاني الثانوي', en: '2nd Secondary (Grade 11)' } },
+  { id: 'sec1', label: { ar: 'الصف الأول الثانوي', en: '1st Secondary (Grade 10)' } },
+  { id: 'prep3', label: { ar: 'الصف الثالث الإعدادي', en: '3rd Preparatory (Grade 9)' } },
 ];
 
 export default function LessonsLibraryPage() {
   const { courses, fetchCourses, users, currentUser, enrollments, fetchEnrollments, isLoading } = useStore();
+  const { t, lang, isArabic } = useLanguage();
   const [activeCategory, setActiveCategory] = useState<CategoryKey>('all');
   const [selectedGrade, setSelectedGrade] = useState<string>('all');
   const [selectedPriceFilter, setSelectedPriceFilter] = useState<'all' | 'free' | 'paid'>('all');
@@ -137,7 +133,7 @@ export default function LessonsLibraryPage() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-bone pb-28">
+    <div className="w-full min-h-screen bg-bone pb-28 text-start">
       {/* ------------------------------------------------------------- */}
       {/* 2. DYNAMIC FILTER ISLAND (Double-Bezel Glass Bar) */}
       {/* ------------------------------------------------------------- */}
@@ -154,7 +150,7 @@ export default function LessonsLibraryPage() {
                 />
                 <input
                   type="text"
-                  placeholder="ابحث باسم الكورس، الموضوع، المادة، أو اسم المعلم..."
+                  placeholder={t.courses.searchPlaceholder}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full ps-12 pe-10 py-3.5 bg-[#F7F6F3] rounded-2xl border border-transparent focus:border-gold/60 focus:bg-white outline-none transition-all duration-300 text-forest text-sm font-medium placeholder:text-forest/40 shadow-inner"
@@ -173,7 +169,9 @@ export default function LessonsLibraryPage() {
               {/* Live Matching Count Pill */}
               <div className="shrink-0 flex items-center gap-2 bg-[#F7F6F3] px-4 py-3 rounded-2xl border border-black/5 text-xs font-bold text-forest">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>عرض {filteredCourses.length} كورس متاح</span>
+                <span>
+                  {isArabic ? `عرض ${filteredCourses.length} كورس متاح` : `Showing ${filteredCourses.length} courses`}
+                </span>
               </div>
             </div>
 
@@ -203,7 +201,7 @@ export default function LessonsLibraryPage() {
                           transition={{ type: 'spring', stiffness: 350, damping: 28 }}
                         />
                       )}
-                      <span className="relative z-10">{tab.label}</span>
+                      <span className="relative z-10">{tab.label[lang]}</span>
                     </button>
                   );
                 })}
@@ -223,7 +221,7 @@ export default function LessonsLibraryPage() {
                   >
                     {GRADE_OPTIONS.map((g) => (
                       <option key={g.id} value={g.id}>
-                        {g.label}
+                        {g.label[lang]}
                       </option>
                     ))}
                   </select>
@@ -237,9 +235,9 @@ export default function LessonsLibraryPage() {
                 {/* Price Toggle */}
                 <div className="flex items-center p-1 bg-[#F7F6F3] rounded-xl border border-black/5 text-xs font-semibold">
                   {[
-                    { key: 'all', label: 'الكل' },
-                    { key: 'free', label: 'مجاني' },
-                    { key: 'paid', label: 'مدفوع' },
+                    { key: 'all', label: isArabic ? 'الكل' : 'All' },
+                    { key: 'free', label: isArabic ? 'مجاني' : 'Free' },
+                    { key: 'paid', label: isArabic ? 'مدفوع' : 'Paid' },
                   ].map((item) => (
                     <button
                       key={item.key}
@@ -261,9 +259,9 @@ export default function LessonsLibraryPage() {
                   <button
                     type="button"
                     onClick={clearFilters}
-                    className="text-xs font-bold text-rose-600 hover:text-rose-700 px-3 py-2 rounded-xl hover:bg-rose-50 transition-colors"
+                    className="text-xs font-bold text-rose-600 hover:text-rose-700 px-3 py-2 rounded-xl hover:bg-rose-50 transition-colors cursor-pointer"
                   >
-                    إعادة ضبط
+                    {isArabic ? 'إعادة ضبط' : 'Reset'}
                   </button>
                 )}
               </div>
@@ -275,7 +273,7 @@ export default function LessonsLibraryPage() {
       </section>
 
       {/* ------------------------------------------------------------- */}
-      {/* 3. COURSES GRID: Double-Bezel Hardware Masterclasses */}
+      {/* 3. COURSES GRID */}
       {/* ------------------------------------------------------------- */}
       <section className="max-w-7xl mx-auto px-4 md:px-8">
         {filteredCourses.length === 0 ? (
@@ -289,13 +287,16 @@ export default function LessonsLibraryPage() {
               <Funnel size={32} weight="duotone" className="text-forest/60" />
             </div>
             <h3 className="font-display font-bold text-2xl text-forest mb-2">
-              لم يتم العثور على كورسات مطابقة
+              {t.courses.noCoursesFound}
             </h3>
             <p className="text-forest/60 text-sm max-w-md mb-6 leading-relaxed">
-              جرّب تغيير كلمات البحث أو اختيار مرحلة دراسية وتخصص مختلف للاطلاع على كافة الدروس المتاحة.
+              {isArabic 
+                ? 'جرّب تغيير كلمات البحث أو اختيار مرحلة دراسية وتخصص مختلف للاطلاع على كافة الدروس المتاحة.'
+                : 'Try adjusting your search terms or filter selections to explore available lectures.'
+              }
             </p>
             <Button variant="secondary" onClick={clearFilters} className="px-6 py-2.5 text-sm font-bold">
-              عرض كافة الكورسات
+              {isArabic ? 'عرض كافة الكورسات' : 'View All Courses'}
             </Button>
           </motion.div>
         ) : (
@@ -305,9 +306,9 @@ export default function LessonsLibraryPage() {
               const isExpanded = expandedCourseId === course.id;
               const teacher = course.teacher || getTeacher(course.teacherId);
               const subjectLabel =
-                strings.subjects[course.subject as keyof typeof strings.subjects] || course.subject;
+                t.subjects[course.subject as keyof typeof t.subjects] || course.subject;
               const gradeLabel =
-                strings.grades[course.grade as keyof typeof strings.grades] || course.grade;
+                t.grades[course.grade as keyof typeof t.grades] || course.grade;
 
               const allItems = (course.sections || []).flatMap((s: any) => s.items || []);
               const videoCount = allItems.filter((i: any) => i.type === 'video').length;
@@ -342,15 +343,15 @@ export default function LessonsLibraryPage() {
                               </span>
                               {course.isFree ? (
                                 <span className="bg-gold text-forest font-bold px-2.5 py-1 rounded-full text-xs shadow-sm">
-                                  {strings.courses.free}
+                                  {t.courses.free}
                                 </span>
                               ) : isEnrolled ? (
                                 <span className="bg-emerald-600 text-white font-bold px-2.5 py-1 rounded-full text-xs shadow-sm">
-                                  مفعل
+                                  {isArabic ? 'مفعل' : 'Active'}
                                 </span>
                               ) : (
                                 <span className="bg-forest/80 text-gold font-bold px-2.5 py-1 rounded-full text-xs shadow-sm">
-                                  يتطلب كود
+                                  {isArabic ? 'يتطلب كود' : 'Code Required'}
                                 </span>
                               )}
                             </div>
@@ -362,7 +363,7 @@ export default function LessonsLibraryPage() {
                           <Link
                             href={`/teachers/${teacher?.id || course.teacherId}`}
                             className="inline-flex items-center gap-2.5 hover:opacity-85 transition-opacity cursor-pointer"
-                            title={`عرض الملف الشخصي للأستاذ ${teacher?.name || ''}`}
+                            title={`${isArabic ? 'عرض الملف الشخصي للأستاذ' : 'View Teacher Profile'} ${teacher?.name || ''}`}
                           >
                             <div className="w-9 h-9 rounded-full bg-forest text-gold flex items-center justify-center text-xs font-bold shrink-0 overflow-hidden shadow-sm">
                               {teacher?.avatar ? (
@@ -378,19 +379,19 @@ export default function LessonsLibraryPage() {
                             <div>
                               <div className="flex items-center gap-1">
                                 <span className="text-xs font-bold text-forest hover:text-gold transition-colors">
-                                  {teacher?.name || 'أستاذ المادة'}
+                                  {teacher?.name || (isArabic ? 'أستاذ المادة' : 'Educator')}
                                 </span>
                                 <SealCheck size={14} weight="fill" className="text-gold" />
                               </div>
                               <span className="text-[11px] text-forest/60 block">
-                                {teacher?.subject ? `أستاذ ${teacher.subject}` : 'نخبة مصر الأكاديمية'}
+                                {teacher?.subject ? `${isArabic ? 'أستاذ' : 'Teacher of'} ${teacher.subject}` : (isArabic ? 'نخبة مصر الأكاديمية' : 'Nokhba Faculty')}
                               </span>
                             </div>
                           </Link>
 
                           {/* Syllabus Summary Pill */}
                           <div className="flex items-center gap-1 text-[11px] font-bold text-forest bg-[#F7F6F3] px-2.5 py-1 rounded-full border border-black/5">
-                            <span>{allItems.length} دروس</span>
+                            <span>{allItems.length} {t.courses.lessons}</span>
                           </div>
                         </div>
 
@@ -415,8 +416,8 @@ export default function LessonsLibraryPage() {
                               <BookOpen size={16} className="text-gold" weight="duotone" />
                               <span>
                                 {allItems.length > 0
-                                  ? `خطة المنهج (${videoCount} محاضرة • ${quizCount} اختبار)`
-                                  : 'خطة المنهج (قيد التجهيز)'}
+                                  ? (isArabic ? `خطة المنهج (${videoCount} محاضرة • ${quizCount} اختبار)` : `Curriculum (${videoCount} Lectures • ${quizCount} Quizzes)`)
+                                  : (isArabic ? 'خطة المنهج (قيد التجهيز)' : 'Curriculum (In Preparation)')}
                               </span>
                             </span>
                             <CaretDown
@@ -444,7 +445,7 @@ export default function LessonsLibraryPage() {
                                     if (allItems.length === 0) {
                                       return (
                                         <div className="p-3 rounded-xl bg-white border border-black/5 text-xs text-forest/50 text-center">
-                                          محتوى المنهج قيد التجهيز من قبل أستاذ المادة.
+                                          {isArabic ? 'محتوى المنهج قيد التجهيز من قبل أستاذ المادة.' : 'Curriculum in preparation.'}
                                         </div>
                                       );
                                     }
@@ -466,12 +467,12 @@ export default function LessonsLibraryPage() {
                                         <div className="flex items-center gap-2 shrink-0">
                                           {item.type === 'quiz' && (
                                             <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
-                                              اختبار
+                                              {isArabic ? 'اختبار' : 'Quiz'}
                                             </span>
                                           )}
                                           {item.type === 'video' && item.duration && (
                                             <span className="text-[10px] font-mono text-forest/50">
-                                              {Math.round(item.duration / 60)} دقيقة
+                                              {Math.round(item.duration / 60)} {isArabic ? 'دقيقة' : 'min'}
                                             </span>
                                           )}
                                         </div>
@@ -490,15 +491,15 @@ export default function LessonsLibraryPage() {
                         <div>
                           {course.isFree ? (
                             <span className="text-emerald-800 font-bold text-xs bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full inline-block">
-                              محاضرة مجانية
+                              {isArabic ? 'محاضرة مجانية' : 'Free Lecture'}
                             </span>
                           ) : isEnrolled ? (
                             <span className="text-forest font-bold text-xs bg-gold/20 border border-gold/30 px-3 py-1.5 rounded-full inline-block">
-                              كورس مفعل
+                              {isArabic ? 'كورس مفعل' : 'Unlocked Course'}
                             </span>
                           ) : (
                             <span className="text-forest/80 font-bold text-xs bg-black/5 px-3 py-1.5 rounded-full inline-block">
-                              تفعيل بكود الحصة
+                              {isArabic ? 'تفعيل بكود الحصة' : 'Activation Code'}
                             </span>
                           )}
                         </div>
@@ -508,10 +509,13 @@ export default function LessonsLibraryPage() {
                           className="shrink-0"
                         >
                           <Button
-                            icon={<ArrowLeft size={14} weight="bold" />}
+                            icon={isArabic ? <ArrowLeft size={14} weight="bold" /> : <ArrowRight size={14} weight="bold" />}
                             className="px-4 py-2 text-xs sm:text-sm font-bold whitespace-nowrap"
                           >
-                            {isEnrolled ? (course.isFree ? 'ابدأ الآن' : 'متابعة المذاكرة') : 'تفعيل الكورس'}
+                            {isEnrolled 
+                              ? (course.isFree ? (isArabic ? 'ابدأ الآن' : 'Start Now') : (isArabic ? 'متابعة المذاكرة' : 'Continue')) 
+                              : (isArabic ? 'تفعيل الكورس' : 'Unlock Course')
+                            }
                           </Button>
                         </Link>
                       </div>

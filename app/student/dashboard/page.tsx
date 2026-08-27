@@ -2,18 +2,15 @@
 
 import React, { useEffect, useState } from 'react';
 import { useStore } from '@/store';
-import { strings } from '@/locales/ar';
+import { useLanguage } from '@/context/LanguageContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Ticket, 
   PlayCircle, 
   LockKey, 
-  GraduationCap, 
   CheckCircle, 
   ChartBar, 
   BookOpen, 
-  Clock, 
-  ArrowLeft, 
   WarningCircle, 
   Question 
 } from '@phosphor-icons/react';
@@ -22,9 +19,9 @@ import { Button } from '@/components/common/Button';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { StudentDashboardSkeleton } from '@/components/common/Skeleton';
 
-
 function StudentDashboardContent() {
   const { courses, enrollments, submissions, currentUser, fetchCourses, fetchEnrollments, fetchSubmissions, redeemCode, isLoading } = useStore();
+  const { t, isArabic } = useLanguage();
   const [codeString, setCodeString] = useState('');
   const [feedback, setFeedback] = useState<{ success: boolean; message: string } | null>(null);
   const [isRedeeming, setIsRedeeming] = useState(false);
@@ -78,10 +75,13 @@ function StudentDashboardContent() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-black/5 pb-8">
         <div>
           <h1 className="font-display font-bold text-2xl sm:text-3xl md:text-4xl text-forest mb-1">
-            أهلاً بك، {currentUser?.name || 'طالب نُـخبة'}
+            {isArabic ? `أهلاً بك، ${currentUser?.name || 'طالب نُـخبة'}` : `Welcome back, ${currentUser?.name || 'Student'}`}
           </h1>
           <p className="text-forest/70 text-xs sm:text-sm">
-            {currentUser?.grade === 'sec3' ? 'الصف الثالث الثانوي (الشهادة العامة)' : 'تابع دروسك واختباراتك المقررة بدقة'}
+            {currentUser?.grade === 'sec3' 
+              ? (isArabic ? 'الصف الثالث الثانوي (الشهادة العامة)' : '3rd Secondary (General Certificate)')
+              : (isArabic ? 'تابع دروسك واختباراتك المقررة بدقة' : 'Track your scheduled lectures and quizzes')
+            }
           </p>
         </div>
 
@@ -92,8 +92,10 @@ function StudentDashboardContent() {
               <BookOpen size={18} weight="fill" />
             </div>
             <div>
-              <span className="text-[10px] text-forest/50 block font-medium">الكورسات المفعلة</span>
-              <span className="font-display font-bold text-sm text-forest">{myCourses.length} مواد</span>
+              <span className="text-[10px] text-forest/50 block font-medium">{t.student.activeCourses}</span>
+              <span className="font-display font-bold text-sm text-forest">
+                {myCourses.length} {isArabic ? 'مواد' : 'Courses'}
+              </span>
             </div>
           </div>
 
@@ -102,8 +104,10 @@ function StudentDashboardContent() {
               <CheckCircle size={18} weight="fill" />
             </div>
             <div>
-              <span className="text-[10px] text-forest/50 block font-medium">الدروس المكتملة</span>
-              <span className="font-display font-bold text-sm text-forest">{totalCompletedLessons} درس</span>
+              <span className="text-[10px] text-forest/50 block font-medium">{t.student.completedLessons}</span>
+              <span className="font-display font-bold text-sm text-forest">
+                {totalCompletedLessons} {isArabic ? 'درس' : 'Lessons'}
+              </span>
             </div>
           </div>
 
@@ -112,7 +116,7 @@ function StudentDashboardContent() {
               <ChartBar size={18} weight="fill" />
             </div>
             <div>
-              <span className="text-[10px] text-forest/50 block font-medium">متوسط الاختبارات</span>
+              <span className="text-[10px] text-forest/50 block font-medium">{t.student.avgScore}</span>
               <span className="font-display font-bold text-sm text-forest">{avgScore > 0 ? `${avgScore}%` : '—'}</span>
             </div>
           </div>
@@ -127,10 +131,13 @@ function StudentDashboardContent() {
               <div className="w-8 h-8 rounded-xl bg-gold/20 text-forest flex items-center justify-center">
                 <Ticket size={20} weight="fill" />
               </div>
-              <h2 className="font-display font-bold text-lg sm:text-xl text-forest">تفعيل كورس أو محاضرة جديدة</h2>
+              <h2 className="font-display font-bold text-lg sm:text-xl text-forest">{t.student.redeemCode}</h2>
             </div>
             <p className="text-forest/70 text-xs sm:text-sm max-w-md">
-              أدخل كود السنتر أو الكود الإلكتروني الصادر من معلمك لفتح المحتوى فوراً.
+              {isArabic 
+                ? 'أدخل كود السنتر أو الكود الإلكتروني الصادر من معلمك لفتح المحتوى فوراً.'
+                : 'Enter the access code issued by your educator to unlock curriculum immediately.'
+              }
             </p>
           </div>
 
@@ -143,15 +150,15 @@ function StudentDashboardContent() {
                   value={codeString}
                   onChange={(e) => setCodeString(e.target.value)}
                   dir="ltr"
-                  placeholder="GEO2026-XXXX"
+                  placeholder={t.student.enterCodePlaceholder}
                   className="flex-1 bg-[#F7F6F3] focus:bg-white rounded-xl px-4 py-3 text-xs sm:text-sm text-forest border border-transparent focus:border-gold/60 outline-none text-center font-mono font-bold tracking-widest uppercase transition-all shadow-inner"
                 />
                 <Button
                   type="submit"
                   disabled={isRedeeming || codeString.trim().length < 4}
-                  className="px-6 py-3 text-xs sm:text-sm font-bold shrink-0 hover:bg-forest transition-all "
+                  className="px-6 py-3 text-xs sm:text-sm font-bold shrink-0 hover:bg-forest transition-all"
                 >
-                  {isRedeeming ? 'جاري التفعيل...' : 'تفعيل الكود'}
+                  {isRedeeming ? t.student.redeeming : t.student.redeemBtn}
                 </Button>
               </div>
 
@@ -185,11 +192,11 @@ function StudentDashboardContent() {
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="font-display font-bold text-xl sm:text-2xl text-forest">كورساتي ومحاضراتي المقررة</h2>
-            <p className="text-xs text-forest/60">تابع دراستك وشاهد المحاضرات المفعلة</p>
+            <h2 className="font-display font-bold text-xl sm:text-2xl text-forest">{t.student.myCourses}</h2>
+            <p className="text-xs text-forest/60">{isArabic ? 'تابع دراستك وشاهد المحاضرات المفعلة' : 'Continue your unlocked curriculum'}</p>
           </div>
           <span className="text-xs font-bold bg-forest/5 text-forest px-3 py-1 rounded-full border border-forest/10">
-            {myCourses.length} كورس متاح
+            {myCourses.length} {isArabic ? 'كورس متاح' : 'courses active'}
           </span>
         </div>
 
@@ -215,15 +222,15 @@ function StudentDashboardContent() {
                         <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold shadow-xs ${
                           course.isFree ? 'bg-emerald-600 text-white' : 'bg-forest text-gold border border-gold/20'
                         }`}>
-                          {course.isFree ? 'مجاني' : 'مفعل'}
+                          {course.isFree ? t.courses.free : (isArabic ? 'مفعل' : 'Active')}
                         </span>
                       </div>
                     </div>
 
                     <div className="flex-1 flex flex-col">
                       <div className="flex items-center justify-between text-[11px] text-forest/50 font-medium mb-1">
-                        <span>{course.teacher?.name || 'أستاذ المادة'}</span>
-                        <span className="font-mono">{completedCount} دروس مكتملة</span>
+                        <span>{course.teacher?.name || (isArabic ? 'أستاذ المادة' : 'Educator')}</span>
+                        <span className="font-mono">{completedCount} {isArabic ? 'دروس مكتملة' : 'completed'}</span>
                       </div>
                       <h3 className="font-display font-bold text-lg text-forest leading-snug line-clamp-2 min-h-[3rem] group-hover:text-gold-dark transition-colors">
                         {course.title}
@@ -240,7 +247,7 @@ function StudentDashboardContent() {
                       className="w-full py-3 text-xs font-bold shadow-sm"
                       icon={<PlayCircle size={18} weight="fill" />}
                     >
-                      متابعة المذاكرة
+                      {t.student.continueLearning}
                     </Button>
                   </Link>
                 </div>
@@ -250,11 +257,16 @@ function StudentDashboardContent() {
         ) : (
           <div className="p-12 text-center bg-white rounded-3xl border border-black/5 text-forest/60 flex flex-col items-center gap-3">
             <BookOpen size={44} weight="duotone" className="text-forest/30" />
-            <p className="text-sm font-bold text-forest">لم تقم بتفعيل أي كورسات بعد</p>
-            <p className="text-xs max-w-sm">أدخل كود الكورس في الحقل بالأعلى أو استكشف الكورسات المتاحة في المنصة.</p>
+            <p className="text-sm font-bold text-forest">{t.student.noCourses}</p>
+            <p className="text-xs max-w-sm">
+              {isArabic 
+                ? 'أدخل كود الكورس في الحقل بالأعلى أو استكشف الكورسات المتاحة في المنصة.'
+                : 'Enter your access code above or explore courses in the academy.'
+              }
+            </p>
             <Link href="/lessons">
               <Button variant="secondary" className="text-xs font-bold mt-2">
-                استعراض مكتبة الكورسات
+                {isArabic ? 'استعراض مكتبة الكورسات' : 'Browse Courses'}
               </Button>
             </Link>
           </div>
@@ -266,11 +278,15 @@ function StudentDashboardContent() {
         <div className="flex flex-col gap-6 pt-4 border-t border-black/5">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-display font-bold text-lg sm:text-xl text-forest">كورسات أخرى مقترحة لصفك الدراسي</h3>
-              <p className="text-xs text-forest/60">اطلب كود التفعيل من معلمك للانضمام</p>
+              <h3 className="font-display font-bold text-lg sm:text-xl text-forest">
+                {isArabic ? 'كورسات أخرى مقترحة لصفك الدراسي' : 'Recommended Courses for Your Grade'}
+              </h3>
+              <p className="text-xs text-forest/60">
+                {isArabic ? 'اطلب كود التفعيل من معلمك للانضمام' : 'Request access code from educator to join'}
+              </p>
             </div>
             <Link href="/lessons" className="text-xs text-gold font-bold hover:underline">
-              عرض الكل
+              {isArabic ? 'عرض الكل' : 'View All'}
             </Link>
           </div>
 
@@ -289,7 +305,7 @@ function StudentDashboardContent() {
                 </div>
 
                 <Button variant="secondary" disabled className="w-full py-2 text-[11px] opacity-75">
-                  يتطلب كود تفعيل
+                  {isArabic ? 'يتطلب كود تفعيل' : 'Code Required'}
                 </Button>
               </div>
             ))}
@@ -301,8 +317,10 @@ function StudentDashboardContent() {
       {studentSubmissions.length > 0 && (
         <div className="bg-white rounded-3xl p-6 sm:p-8 border border-black/5 shadow-sm flex flex-col gap-4">
           <div className="flex items-center justify-between border-b border-black/5 pb-3">
-            <h3 className="font-display font-bold text-lg text-forest">سجل تقييماتي الأخيرة</h3>
-            <span className="text-xs text-forest/50 font-mono">{studentSubmissions.length} اختبار</span>
+            <h3 className="font-display font-bold text-lg text-forest">{t.student.quizHistory}</h3>
+            <span className="text-xs text-forest/50 font-mono">
+              {studentSubmissions.length} {isArabic ? 'اختبار' : 'Quizzes'}
+            </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -313,8 +331,12 @@ function StudentDashboardContent() {
                     <Question size={18} weight="bold" />
                   </div>
                   <div>
-                    <span className="text-xs font-bold text-forest block line-clamp-1">اختبار تقييمي</span>
-                    <span className="text-[10px] text-forest/50">{new Date(sub.submittedAt).toLocaleDateString('ar-EG')}</span>
+                    <span className="text-xs font-bold text-forest block line-clamp-1">
+                      {isArabic ? 'اختبار تقييمي' : 'Assessment Quiz'}
+                    </span>
+                    <span className="text-[10px] text-forest/50">
+                      {new Date(sub.submittedAt).toLocaleDateString(isArabic ? 'ar-EG' : 'en-US')}
+                    </span>
                   </div>
                 </div>
 

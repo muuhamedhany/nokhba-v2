@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface BrandLogoProps {
   className?: string;
@@ -13,6 +14,8 @@ export function BrandLogo({
   size = 'md',
   isLight = false,
 }: BrandLogoProps) {
+  const { isArabic } = useLanguage();
+
   const iconSizes = {
     sm: 'w-7 h-7',
     md: 'w-9 h-9',
@@ -82,7 +85,7 @@ export function BrandLogo({
       <span className={`font-display font-black tracking-tight flex items-center gap-0.5 transition-colors duration-300 ${
         isLight ? 'text-white' : 'text-forest group-hover/logo:text-forest/90'
       } ${currentTextClass}`}>
-        <span>نُـخبة</span>
+        <span>{isArabic ? 'نُـخبة' : 'NOKHBA'}</span>
         <span className="w-1.5 h-1.5 rounded-full bg-gold inline-block mb-1 transition-transform duration-500 group-hover/logo:scale-125"></span>
       </span>
     </div>

@@ -17,12 +17,19 @@ export async function POST(request: NextRequest) {
     }
 
     const { codeString } = await request.json();
-    if (!codeString) {
+    if (!codeString || typeof codeString !== 'string' || !codeString.trim()) {
       return NextResponse.json({ success: false, message: 'يرجى إدخال الكود' }, { status: 400 });
     }
 
-    const code = await prisma.code.findUnique({
-      where: { codeString: codeString.trim() },
+    const cleanCode = codeString.trim();
+
+    const code = await prisma.code.findFirst({
+      where: { 
+        codeString: {
+          equals: cleanCode,
+          mode: 'insensitive'
+        }
+      },
       include: { course: true }
     });
 

@@ -6,6 +6,7 @@ import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import type { VideoItem } from '@/types';
 import { UploadSimple, FileVideo } from '@phosphor-icons/react';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface VideoLessonModalProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface VideoLessonModalProps {
 }
 
 export function VideoLessonModal({ isOpen, onClose, onSave, initialData }: VideoLessonModalProps) {
+  const { t, isArabic } = useLanguage();
   const [title, setTitle] = useState('');
   const [url, setUrl] = useState('');
   const [duration, setDuration] = useState(0); // in seconds
@@ -34,7 +36,7 @@ export function VideoLessonModal({ isOpen, onClose, onSave, initialData }: Video
       if (initialData?.url) {
         if (initialData.url.startsWith('blob:')) {
           setInputType('upload');
-          setFileName('فيديو_مسجل.mp4');
+          setFileName(isArabic ? 'فيديو_مسجل.mp4' : 'recorded_video.mp4');
         } else {
           setInputType('link');
           setFileName('');
@@ -44,7 +46,7 @@ export function VideoLessonModal({ isOpen, onClose, onSave, initialData }: Video
         setFileName('');
       }
     }
-  }, [isOpen, initialData]);
+  }, [isOpen, initialData, isArabic]);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -65,29 +67,27 @@ export function VideoLessonModal({ isOpen, onClose, onSave, initialData }: Video
 
   const handleFile = (file: File) => {
     setFileName(file.name);
-    // In a real app we'd upload and get URL. Here we just set a mock URL
     setUrl(URL.createObjectURL(file));
-    // Mock duration
     setDuration(Math.floor(Math.random() * 1200) + 600); // 10-30 mins
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || (!url && !fileName)) return alert('الرجاء إدخال العنوان ورفع الفيديو');
+    if (!title || (!url && !fileName)) return alert(isArabic ? 'الرجاء إدخال العنوان ورفع الفيديو' : 'Please provide title and video source');
     
     onSave({ title, url: url || 'mock_url', duration });
     onClose();
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={initialData ? "تعديل الدرس" : "إضافة درس جديد"}>
+    <Modal isOpen={isOpen} onClose={onClose} title={initialData ? (isArabic ? "تعديل الدرس" : "Edit Lesson") : (isArabic ? "إضافة درس جديد" : "Add New Lesson")}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         
         <Input 
-          label="عنوان الدرس" 
+          label={isArabic ? "عنوان الدرس" : "Lesson Title"} 
           value={title}
           onChange={e => setTitle(e.target.value)}
-          placeholder="مثال: الدرس الأول: مفهوم الدولة"
+          placeholder={isArabic ? "مثال: الدرس الأول: مفهوم الدولة" : "e.g. Lesson 1: Introduction to Calculus"}
           required
         />
 
@@ -98,14 +98,14 @@ export function VideoLessonModal({ isOpen, onClose, onSave, initialData }: Video
               onClick={() => setInputType('upload')}
               className={`px-6 py-2 rounded-lg text-sm font-semibold transition-colors ${inputType === 'upload' ? 'bg-white text-forest' : 'text-forest/50 hover:text-forest'}`}
             >
-              رفع فيديو
+              {isArabic ? 'رفع فيديو' : 'Upload Video'}
             </button>
             <button
               type="button"
               onClick={() => setInputType('link')}
               className={`px-6 py-2 rounded-lg text-sm font-semibold transition-colors ${inputType === 'link' ? 'bg-white text-forest' : 'text-forest/50 hover:text-forest'}`}
             >
-              رابط فيديو
+              {isArabic ? 'رابط فيديو' : 'Video URL'}
             </button>
           </div>
           
@@ -131,7 +131,7 @@ export function VideoLessonModal({ isOpen, onClose, onSave, initialData }: Video
                   </div>
                   <div className="text-center">
                     <p className="font-semibold text-forest">{fileName}</p>
-                    <p className="text-sm text-forest/50">اضغط أو اسحب لتغيير الملف</p>
+                    <p className="text-sm text-forest/50">{isArabic ? 'اضغط أو اسحب لتغيير الملف' : 'Click or drag to replace file'}</p>
                   </div>
                 </>
               ) : (
@@ -140,8 +140,8 @@ export function VideoLessonModal({ isOpen, onClose, onSave, initialData }: Video
                     <UploadSimple size={32} />
                   </div>
                   <div className="text-center">
-                    <p className="font-semibold text-forest">اضغط هنا لرفع الفيديو</p>
-                    <p className="text-sm text-forest/50">أو اسحب وأفلت الملف هنا (MP4, WebM)</p>
+                    <p className="font-semibold text-forest">{isArabic ? 'اضغط هنا لرفع الفيديو' : 'Click to upload video file'}</p>
+                    <p className="text-sm text-forest/50">{isArabic ? 'أو اسحب وأفلت الملف هنا (MP4, WebM)' : 'or drag & drop here (MP4, WebM)'}</p>
                   </div>
                 </>
               )}
@@ -149,7 +149,7 @@ export function VideoLessonModal({ isOpen, onClose, onSave, initialData }: Video
           ) : (
             <div className="flex flex-col gap-4">
               <Input 
-                label="رابط الفيديو (يوتيوب أو فيميو)" 
+                label={isArabic ? "رابط الفيديو (يوتيوب أو فيميو)" : "Video URL (YouTube, Vimeo, etc.)"} 
                 placeholder="https://youtube.com/watch?v=..."
                 value={url}
                 onChange={e => setUrl(e.target.value)}
@@ -157,9 +157,9 @@ export function VideoLessonModal({ isOpen, onClose, onSave, initialData }: Video
                 className="text-start"
               />
               <Input 
-                label="مدة الفيديو (بالدقائق)" 
+                label={isArabic ? "مدة الفيديو (بالدقائق)" : "Duration (minutes)"} 
                 type="number"
-                placeholder="مثال: 45"
+                placeholder={isArabic ? "مثال: 45" : "e.g. 45"}
                 value={duration ? Math.floor(duration / 60) : ''}
                 onChange={e => setDuration(Number(e.target.value) * 60)}
                 dir="ltr"
@@ -170,13 +170,13 @@ export function VideoLessonModal({ isOpen, onClose, onSave, initialData }: Video
 
         {duration > 0 && (
           <div className="text-sm text-forest/70 text-end">
-            مدة الفيديو: {Math.floor(duration / 60)}:{String(duration % 60).padStart(2, '0')}
+            {isArabic ? 'مدة الفيديو:' : 'Duration:'} {Math.floor(duration / 60)}:{String(duration % 60).padStart(2, '0')}
           </div>
         )}
 
         <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-black/5">
-          <Button variant="ghost" onClick={onClose} type="button">إلغاء</Button>
-          <Button type="submit">حفظ الدرس</Button>
+          <Button variant="ghost" onClick={onClose} type="button">{t.ui.cancel}</Button>
+          <Button type="submit">{isArabic ? 'حفظ الدرس' : 'Save Lesson'}</Button>
         </div>
 
       </form>

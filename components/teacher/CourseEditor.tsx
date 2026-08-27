@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useStore } from '@/store';
+import { useLanguage } from '@/context/LanguageContext';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { PromptModal } from '@/components/common/PromptModal';
@@ -11,6 +12,7 @@ import { QuizBuilderModal } from './modals/QuizBuilderModal';
 import type { Course, VideoItem, QuizItem } from '@/types';
 import { 
   CaretRight, 
+  CaretLeft,
   FloppyDisk, 
   BookOpen, 
   Image as ImageIcon, 
@@ -31,17 +33,17 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { motion } from 'motion/react';
 import Link from 'next/link';
 
-const ALL_SUBJECTS: { key: string; label: string }[] = [
-  { key: 'geography', label: 'الجغرافيا' },
-  { key: 'history', label: 'التاريخ' },
-  { key: 'physics', label: 'الفيزياء' },
-  { key: 'chemistry', label: 'الكيمياء' },
-  { key: 'math', label: 'الرياضيات' },
-  { key: 'biology', label: 'الأحياء' },
-  { key: 'arabic', label: 'اللغة العربية' },
-  { key: 'english', label: 'اللغة الإنجليزية' },
-  { key: 'french', label: 'اللغة الفرنسية' },
-  { key: 'philosophy', label: 'الفلسفة والمنطق' },
+const ALL_SUBJECTS: { key: string; label: string; labelEn: string }[] = [
+  { key: 'geography', label: 'الجغرافيا', labelEn: 'Geography' },
+  { key: 'history', label: 'التاريخ', labelEn: 'History' },
+  { key: 'physics', label: 'الفيزياء', labelEn: 'Physics' },
+  { key: 'chemistry', label: 'الكيمياء', labelEn: 'Chemistry' },
+  { key: 'math', label: 'الرياضيات', labelEn: 'Mathematics' },
+  { key: 'biology', label: 'الأحياء', labelEn: 'Biology' },
+  { key: 'arabic', label: 'اللغة العربية', labelEn: 'Arabic Language' },
+  { key: 'english', label: 'اللغة الإنجليزية', labelEn: 'English Language' },
+  { key: 'french', label: 'اللغة الفرنسية', labelEn: 'French Language' },
+  { key: 'philosophy', label: 'الفلسفة والمنطق', labelEn: 'Philosophy & Logic' },
 ];
 
 function normalizeSubject(str: string): string {
@@ -53,9 +55,9 @@ function normalizeSubject(str: string): string {
     .toLowerCase();
 }
 
-function getTeacherSubjectOptions(teacherSubjectString?: string): { key: string; label: string }[] {
+function getTeacherSubjectOptions(teacherSubjectString?: string): { key: string; label: string; labelEn: string }[] {
   if (!teacherSubjectString || !teacherSubjectString.trim()) {
-    return [{ key: 'geography', label: 'الجغرافيا' }];
+    return [{ key: 'geography', label: 'الجغرافيا', labelEn: 'Geography' }];
   }
 
   const rawItems = teacherSubjectString
@@ -64,7 +66,7 @@ function getTeacherSubjectOptions(teacherSubjectString?: string): { key: string;
     .filter(Boolean);
 
   if (rawItems.length === 0) {
-    return [{ key: 'geography', label: 'الجغرافيا' }];
+    return [{ key: 'geography', label: 'الجغرافيا', labelEn: 'Geography' }];
   }
 
   const matched = ALL_SUBJECTS.filter(s => {
@@ -79,7 +81,7 @@ function getTeacherSubjectOptions(teacherSubjectString?: string): { key: string;
     );
   });
 
-  return matched.length > 0 ? matched : [{ key: 'geography', label: 'الجغرافيا' }];
+  return matched.length > 0 ? matched : [{ key: 'geography', label: 'الجغرافيا', labelEn: 'Geography' }];
 }
 
 interface LocalSectionItem {
@@ -102,8 +104,8 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
   const params = useParams();
   const id = courseId || (params?.id as string);
   const router = useRouter();
+  const { t, isArabic } = useLanguage();
   const { 
-    courses, 
     updateCourse, 
     addSection, 
     deleteSection, 
@@ -152,11 +154,11 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
         if (data.success && data.url) {
           setFormData((prev) => ({ ...prev, coverImage: data.url }));
         } else {
-          alert(data.message || 'فشل رفع الصورة');
+          alert(data.message || (isArabic ? 'فشل رفع الصورة' : 'Image upload failed'));
         }
       } catch (err) {
         console.error('Error uploading image:', err);
-        alert('حدث خطأ أثناء رفع الصورة');
+        alert(isArabic ? 'حدث خطأ أثناء رفع الصورة' : 'Error uploading image');
       } finally {
         setIsUploadingImage(false);
       }
@@ -241,10 +243,6 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
     (acc, s) => acc + s.items.filter(i => i.type === 'video').length,
     0
   );
-  const totalQuizzes = sections.reduce(
-    (acc, s) => acc + s.items.filter(i => i.type === 'quiz').length,
-    0
-  );
 
   const validateStep1 = () => {
     const titleTrimmed = formData.title?.trim() || '';
@@ -252,10 +250,10 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
     const newErrors: { title?: string; description?: string } = {};
 
     if (titleTrimmed.length < 3) {
-      newErrors.title = 'عنوان الكورس يجب أن يتكون من 3 أحرف على الأقل';
+      newErrors.title = isArabic ? 'عنوان الكورس يجب أن يتكون من 3 أحرف على الأقل' : 'Title must be at least 3 characters';
     }
     if (descTrimmed.length < 10) {
-      newErrors.description = 'وصف الكورس يجب أن يتكون من 10 أحرف على الأقل';
+      newErrors.description = isArabic ? 'وصف الكورس يجب أن يتكون من 10 أحرف على الأقل' : 'Description must be at least 10 characters';
     }
 
     setTouched({ title: true, description: true });
@@ -283,7 +281,6 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
     setSections(prev => [...prev, newSec]);
     setIsAddSectionOpen(false);
 
-    // Save to DB in background
     try {
       await addSection({
         id: newSecId,
@@ -329,7 +326,6 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
     if (!modalState.sectionId) return;
 
     if (modalState.editingItem) {
-      // Edit existing video item
       const itemId = modalState.editingItem.id;
       setSections(prev => prev.map(s => {
         if (s.id === modalState.sectionId) {
@@ -365,7 +361,6 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
       }
 
     } else {
-      // Add new video item
       const newItemId = `v_${Date.now()}`;
       const newItem: LocalSectionItem = {
         id: newItemId,
@@ -385,7 +380,6 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
       const secId = modalState.sectionId;
       setModalState({ type: null, sectionId: null, editingItem: null });
 
-      // Save to DB
       try {
         await addItemToSection(secId, {
           id: newItemId,
@@ -404,7 +398,6 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
     if (!modalState.sectionId) return;
 
     if (modalState.editingItem) {
-      // Edit existing quiz item
       const itemId = modalState.editingItem.id;
       setSections(prev => prev.map(s => {
         if (s.id === modalState.sectionId) {
@@ -438,7 +431,6 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
       }
 
     } else {
-      // Add new quiz item
       const newItemId = `q_${Date.now()}`;
       const newItem: LocalSectionItem = {
         id: newItemId,
@@ -457,7 +449,6 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
       const secId = modalState.sectionId;
       setModalState({ type: null, sectionId: null, editingItem: null });
 
-      // Save to DB
       try {
         await addItemToSection(secId, {
           id: newItemId,
@@ -514,7 +505,7 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
 
     } catch (err: any) {
       console.error('Update course error:', err);
-      alert(err.message || 'حدث خطأ أثناء تحديث بيانات الكورس');
+      alert(err.message || (isArabic ? 'حدث خطأ أثناء تحديث بيانات الكورس' : 'Error updating course details'));
       setIsSaving(false);
     }
   };
@@ -524,7 +515,7 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
       <div className="min-h-[70vh] flex items-center justify-center text-forest font-bold">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-3 border-gold border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm">جاري تحميل بيانات المنهج...</p>
+          <p className="text-sm">{isArabic ? 'جاري تحميل بيانات المنهج...' : 'Loading curriculum...'}</p>
         </div>
       </div>
     );
@@ -542,18 +533,18 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
               type="button"
               onClick={() => router.push('/teacher/courses')}
               className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white hover:bg-black/5 border border-black/5 text-forest transition-colors cursor-pointer"
-              title="العودة لقائمة الكورسات"
+              title={isArabic ? "العودة لقائمة الكورسات" : "Back to Courses"}
             >
-              <CaretRight size={20} weight="bold" />
+              {isArabic ? <CaretRight size={20} weight="bold" /> : <CaretLeft size={20} weight="bold" />}
             </button>
             <div>
               <div className="flex items-center gap-2 mb-0.5">
-                <span className="text-[11px] font-bold text-forest/50">استوديو المعلم</span>
+                <span className="text-[11px] font-bold text-forest/50">{isArabic ? 'استوديو المعلم' : 'Teacher Studio'}</span>
                 <span className="text-[11px] text-forest/30">/</span>
-                <span className="text-[11px] font-bold text-gold">تعديل المنهج</span>
+                <span className="text-[11px] font-bold text-gold">{isArabic ? 'تعديل المنهج' : 'Edit Curriculum'}</span>
               </div>
               <h1 className="font-display font-bold text-2xl sm:text-3xl text-forest truncate max-w-lg">
-                {formData.title || 'تفاصيل الكورس'}
+                {formData.title || (isArabic ? 'تفاصيل الكورس' : 'Course Details')}
               </h1>
             </div>
           </div>
@@ -566,7 +557,7 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
                 className="px-4 py-3 rounded-xl bg-white hover:bg-black/5 border border-black/5 text-forest text-xs font-bold transition-all inline-flex items-center gap-2 cursor-pointer shadow-xs whitespace-nowrap"
               >
                 <Eye size={16} weight="bold" />
-                <span>معاينة كطالب</span>
+                <span>{isArabic ? 'معاينة كطالب' : 'Student Preview'}</span>
               </button>
             </Link>
 
@@ -583,12 +574,12 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
               {saveSuccess ? (
                 <>
                   <CheckCircle size={18} weight="fill" />
-                  <span>تم حفظ التعديلات!</span>
+                  <span>{isArabic ? 'تم حفظ التعديلات!' : 'Saved Successfully!'}</span>
                 </>
               ) : (
                 <>
                   <FloppyDisk size={18} weight="bold" />
-                  <span>{isSaving ? 'جاري الحفظ...' : 'حفظ التعديلات'}</span>
+                  <span>{isSaving ? (isArabic ? 'جاري الحفظ...' : 'Saving...') : (isArabic ? 'حفظ التعديلات' : 'Save Changes')}</span>
                 </>
               )}
             </button>
@@ -612,9 +603,9 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
               1
             </div>
             <div>
-              <span className="font-bold text-xs block">البيانات الأساسية والغلاف</span>
+              <span className="font-bold text-xs block">{isArabic ? 'البيانات الأساسية والغلاف' : 'Course Information'}</span>
               <span className={`text-[10px] block ${currentStep === 1 ? 'text-gold/80' : 'text-forest/40'}`}>
-                العنوان، المادة، والتسعير
+                {isArabic ? 'العنوان، المادة، والتسعير' : 'Title, subject & grade'}
               </span>
             </div>
           </button>
@@ -634,9 +625,9 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
               2
             </div>
             <div>
-              <span className="font-bold text-xs block">المنهج والمحاضرات</span>
+              <span className="font-bold text-xs block">{isArabic ? 'المنهج والمحاضرات' : 'Curriculum Structure'}</span>
               <span className={`text-[10px] block ${currentStep === 2 ? 'text-gold/80' : 'text-forest/40'}`}>
-                {sections.length} وحدات • {totalVideos} محاضرات
+                {sections.length} {isArabic ? 'وحدات' : 'chapters'} • {totalVideos} {isArabic ? 'محاضرات' : 'lectures'}
               </span>
             </div>
           </button>
@@ -657,11 +648,11 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
             <div className="bg-white rounded-3xl p-6 sm:p-8 border border-black/5 shadow-xs flex flex-col gap-5">
               <div className="flex items-center gap-2 border-b border-black/5 pb-3">
                 <BookOpen size={20} weight="fill" className="text-gold" />
-                <h2 className="font-display font-bold text-lg text-forest">البيانات الأكاديمية للكورس</h2>
+                <h2 className="font-display font-bold text-lg text-forest">{isArabic ? 'البيانات الأكاديمية للكورس' : 'Academic Course Info'}</h2>
               </div>
 
               <Input 
-                label="عنوان الكورس" 
+                label={isArabic ? "عنوان الكورس" : "Course Title"} 
                 value={formData.title} 
                 error={touched.title ? errors.title : undefined}
                 onChange={e => {
@@ -669,12 +660,12 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
                   if (touched.title) {
                     setErrors(prev => ({
                       ...prev,
-                      title: e.target.value.trim().length < 3 ? 'عنوان الكورس يجب أن يتكون من 3 أحرف على الأقل' : undefined
+                      title: e.target.value.trim().length < 3 ? (isArabic ? 'عنوان الكورس يجب أن يتكون من 3 أحرف على الأقل' : 'Title must be at least 3 characters') : undefined
                     }));
                   }
                 }} 
                 onBlur={() => setTouched(prev => ({ ...prev, title: true }))}
-                placeholder="مثال: مراجعة ليلة الامتحان في الجغرافيا السياسية"
+                placeholder={isArabic ? "مثال: مراجعة ليلة الامتحان في الجغرافيا السياسية" : "e.g. Masterclass Revision"}
                 required 
               />
 
@@ -682,10 +673,10 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
                 {/* Subject Selection strictly limited to Teacher's Registered Specialty */}
                 <div className="flex flex-col gap-1.5 w-full">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-forest">المادة التعليمية</label>
+                    <label className="text-xs font-bold text-forest">{isArabic ? 'المادة التعليمية' : 'Subject'}</label>
                     {teacherSubjects.length === 1 && (
                       <span className="text-[10px] font-bold text-gold bg-forest/5 px-2 py-0.5 rounded-md">
-                        تخصصك المعتمد
+                        {isArabic ? 'تخصصك المعتمد' : 'Specialty'}
                       </span>
                     )}
                   </div>
@@ -696,30 +687,30 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
                   >
                     {teacherSubjects.map(sub => (
                       <option key={sub.key} value={sub.key}>
-                        {sub.label}
+                        {isArabic ? sub.label : sub.labelEn}
                       </option>
                     ))}
                   </select>
                 </div>
 
                 <div className="flex flex-col gap-1.5 w-full">
-                  <label className="text-xs font-bold text-forest">الصف الدراسي</label>
+                  <label className="text-xs font-bold text-forest">{isArabic ? 'الصف الدراسي' : 'Grade'}</label>
                   <select 
                     className="w-full bg-[#F7F6F3] focus:bg-white border border-transparent focus:border-gold rounded-xl px-3.5 py-3 text-xs sm:text-sm text-forest outline-none font-medium cursor-pointer"
                     value={formData.grade}
                     onChange={e => setFormData({...formData, grade: e.target.value})}
                   >
-                    <option value="sec3">الصف الثالث الثانوي (الشهادة العامة)</option>
-                    <option value="sec2">الصف الثاني الثانوي</option>
-                    <option value="sec1">الصف الأول الثانوي</option>
-                    <option value="prep3">الصف الثالث الإعدادي</option>
+                    <option value="sec3">{t.grades.sec3}</option>
+                    <option value="sec2">{t.grades.sec2}</option>
+                    <option value="sec1">{t.grades.sec1}</option>
+                    <option value="prep3">{t.grades.prep3}</option>
                   </select>
                 </div>
               </div>
 
               {/* Access Mode Switch */}
               <div className="flex flex-col gap-2 pt-1">
-                <label className="text-xs font-bold text-forest">نوع إتاحة الكورس</label>
+                <label className="text-xs font-bold text-forest">{isArabic ? 'نوع إتاحة الكورس' : 'Access Type'}</label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div 
                     onClick={() => setFormData({...formData, isFree: false})}
@@ -731,9 +722,9 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
                   >
                     <ShieldCheck size={20} weight={!formData.isFree ? 'fill' : 'regular'} />
                     <div>
-                      <span className="font-bold text-xs block">اشتراك بكود سنتر</span>
+                      <span className="font-bold text-xs block">{isArabic ? 'اشتراك بكود سنتر' : 'Access Code Required'}</span>
                       <span className={`text-[10px] block ${!formData.isFree ? 'text-gold/80' : 'text-forest/50'}`}>
-                        يتطلب كود تفعيل للوصول
+                        {isArabic ? 'يتطلب كود تفعيل للوصول' : 'Gated content'}
                       </span>
                     </div>
                   </div>
@@ -748,9 +739,9 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
                   >
                     <GraduationCap size={20} weight={formData.isFree ? 'fill' : 'regular'} />
                     <div>
-                      <span className="font-bold text-xs block">كورس مجاني عام</span>
+                      <span className="font-bold text-xs block">{isArabic ? 'كورس مجاني عام' : 'Free Public Course'}</span>
                       <span className={`text-[10px] block ${formData.isFree ? 'text-gold/80' : 'text-forest/50'}`}>
-                        متاح لجميع الطلاب فوراً
+                        {isArabic ? 'متاح لجميع الطلاب فوراً' : 'Available immediately'}
                       </span>
                     </div>
                   </div>
@@ -761,10 +752,10 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
               <div className="flex flex-col gap-1.5 w-full">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-forest">
-                    وصف المنهج ومحتويات الكورس <span className="text-rose-500">*</span>
+                    {isArabic ? 'وصف المنهج ومحتويات الكورس' : 'Description'} <span className="text-rose-500">*</span>
                   </label>
-                  <span className="text-[10px] text-forest/40">
-                    {formData.description?.length || 0} حرف
+                  <span className="text-[10px] text-forest/40 font-mono">
+                    {formData.description?.length || 0} {isArabic ? 'حرف' : 'chars'}
                   </span>
                 </div>
                 <textarea 
@@ -779,12 +770,12 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
                     if (touched.description) {
                       setErrors(prev => ({
                         ...prev,
-                        description: e.target.value.trim().length < 10 ? 'وصف الكورس يجب أن يتكون من 10 أحرف على الأقل' : undefined
+                        description: e.target.value.trim().length < 10 ? (isArabic ? 'وصف الكورس يجب أن يتكون من 10 أحرف على الأقل' : 'Description must be at least 10 chars') : undefined
                       }));
                     }
                   }}
                   onBlur={() => setTouched(prev => ({ ...prev, description: true }))}
-                  placeholder="نبذة شاملة عن محتويات المنهج وما سيحصل عليه الطالب من شروحات وحل نماذج امتحانات..."
+                  placeholder={isArabic ? "نبذة شاملة عن محتويات المنهج وما سيحصل عليه الطالب من شروحات وحل نماذج امتحانات..." : "Detailed outline of what students will achieve in this course..."}
                   required
                 />
                 {touched.description && errors.description && (
@@ -799,22 +790,26 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
           <div className="lg:col-span-5 flex flex-col gap-6">
             
             <div className="bg-white rounded-3xl p-6 border border-black/5 shadow-xs flex flex-col gap-4">
-              <h3 className="font-display font-bold text-base text-forest border-b border-black/5 pb-2">غلاف الكورس</h3>
+              <h3 className="font-display font-bold text-base text-forest border-b border-black/5 pb-2">
+                {isArabic ? 'غلاف الكورس' : 'Cover Image'}
+              </h3>
               
               <div className="aspect-video w-full rounded-2xl overflow-hidden bg-forest/5 relative border border-black/5">
                 {formData.coverImage ? (
                   <img src={formData.coverImage} className="w-full h-full object-cover" alt="غلاف الكورس" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-forest/40 text-xs">بدون صورة غلاف</div>
+                  <div className="w-full h-full flex items-center justify-center text-forest/40 text-xs">
+                    {isArabic ? 'بدون صورة غلاف' : 'No Cover Art'}
+                  </div>
                 )}
               </div>
 
               <div 
                 className="w-full border-2 border-dashed border-black/10 hover:border-gold rounded-2xl p-5 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors bg-[#F7F6F3]"
-                onClick={() => document.getElementById('editImageUpload')?.click()}
+                onClick={() => document.getElementById('imageUpload')?.click()}
               >
                 <input 
-                  id="editImageUpload" 
+                  id="imageUpload" 
                   type="file" 
                   accept="image/*" 
                   className="hidden" 
@@ -824,37 +819,18 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
                 {isUploadingImage ? (
                   <div className="flex flex-col items-center gap-2 py-3 text-forest">
                     <div className="w-6 h-6 border-2 border-gold border-t-transparent rounded-full animate-spin" />
-                    <span className="text-xs font-bold">جاري رفع الصورة</span>
+                    <span className="text-xs font-bold">{isArabic ? 'جاري رفع الصورة' : 'Uploading...'}</span>
                   </div>
                 ) : (
                   <>
                     <div className="w-12 h-12 rounded-2xl bg-white border border-black/5 flex items-center justify-center text-forest shadow-xs">
                       <ImageIcon size={28} weight="duotone" className="text-gold" />
                     </div>
-                    <span className="text-xs font-bold text-forest">اضغط لاختيار صورة الغلاف من جهازك</span>
-                    <span className="text-[11px] text-forest/50 font-medium">يدعم صيغ PNG, JPG, WebP (حتى 10MB)</span>
+                    <span className="text-xs font-bold text-forest">{isArabic ? 'اضغط لاختيار صورة الغلاف من جهازك' : 'Click to select cover image'}</span>
+                    <span className="text-[11px] text-forest/50 font-medium">PNG, JPG, WebP (max 10MB)</span>
                   </>
                 )}
               </div>
-            </div>
-
-            {/* Next Step Banner CTA */}
-            <div className="bg-white rounded-3xl p-6 border border-black/5 shadow-xs flex flex-col gap-4">
-              <div>
-                <h4 className="font-display font-bold text-sm text-forest mb-1">إدارة المحاضرات والاختبارات</h4>
-                <p className="text-xs text-forest/65 leading-relaxed">
-                  انتقل إلى الخطوة الثانية لإضافة فصول جديدة، تعديل روابط الفيديوهات، أو تحديث بنوك الأسئلة.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleNextStep}
-                className="w-full py-3.5 rounded-xl bg-gold hover:bg-forest text-forest hover:text-gold font-bold text-xs sm:text-sm transition-all inline-flex items-center justify-center gap-2 shadow-sm cursor-pointer"
-              >
-                <span>الانتقال لإدارة المنهج والمحاضرات</span>
-                <ArrowLeft size={16} weight="bold" />
-              </button>
             </div>
 
           </div>
@@ -874,18 +850,18 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="px-2.5 py-0.5 rounded-md bg-forest/5 text-forest text-xs font-bold">
-                  {teacherSubjects.find(s => s.key === formData.subject)?.label || 'المادة'}
+                  {isArabic ? (teacherSubjects.find(s => s.key === formData.subject)?.label || 'المادة') : (teacherSubjects.find(s => s.key === formData.subject)?.labelEn || 'Subject')}
                 </span>
                 <span className="text-xs text-forest/40">•</span>
                 <span className="text-xs text-forest/60 font-medium">
-                  {formData.grade === 'sec3' ? 'الصف الثالث الثانوي' : 'المرحلة الدراسية'}
+                  {t.grades[formData.grade as keyof typeof t.grades] || formData.grade}
                 </span>
               </div>
               <h2 className="font-display font-bold text-xl sm:text-2xl text-forest">
-                {formData.title || 'منهج الكورس'}
+                {formData.title || (isArabic ? 'منهج الكورس' : 'Curriculum')}
               </h2>
               <p className="text-xs text-forest/60 mt-1">
-                إدارة وحدات المنهج، تنظيم محاضرات الفيديو، وبنوك الأسئلة التفاعلية.
+                {isArabic ? 'أضف وحدات المنهج، ونظم محاضرات الفيديو والاختبارات التقييمية لكل وحدة.' : 'Organize chapters, video lectures, and quizzes.'}
               </p>
             </div>
 
@@ -895,7 +871,7 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
                 className="py-3 px-6 text-xs sm:text-sm font-bold shadow-md w-full sm:w-auto" 
                 icon={<FolderPlus size={18} weight="bold" />}
               >
-                إضافة وحدة جديدة
+                {isArabic ? 'إضافة وحدة جديدة' : 'Add Chapter'}
               </Button>
             </div>
           </div>
@@ -907,9 +883,14 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
                 <FolderPlus size={32} weight="duotone" />
               </div>
               <div className="max-w-sm">
-                <h3 className="font-display font-bold text-lg text-forest mb-1">لا توجد وحدات في هذا المنهج بعد</h3>
+                <h3 className="font-display font-bold text-lg text-forest mb-1">
+                  {isArabic ? 'لا توجد وحدات في هذا المنهج بعد' : 'No chapters created yet'}
+                </h3>
                 <p className="text-xs text-forest/60 leading-relaxed">
-                  ابدأ بإضافة الوحدة الأولى للكورس، ثم أضف بداخلها المحاضرات المصورة وبنوك الأسئلة.
+                  {isArabic 
+                    ? 'ابدأ بإضافة الوحدة الأولى للكورس، ثم أضف بداخلها المحاضرات المصورة وبنوك الأسئلة.'
+                    : 'Start by creating your first chapter, then add lectures and quizzes.'
+                  }
                 </p>
               </div>
               <Button 
@@ -917,14 +898,14 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
                 className="text-xs font-bold py-2.5 px-6" 
                 icon={<Plus size={16} weight="bold" />}
               >
-                إضافة أول وحدة دراسية
+                {isArabic ? 'إضافة أول وحدة دراسية' : 'Add First Chapter'}
               </Button>
             </div>
           ) : (
             <div className="flex flex-col gap-5">
               {sections.map((section, idx) => (
                 <div 
-                  key={section.id || idx} 
+                  key={section.id} 
                   className="bg-white rounded-3xl border border-black/5 p-6 shadow-xs flex flex-col gap-4 hover:border-gold/30 transition-all text-start"
                 >
                   {/* Section Title Header */}
@@ -936,8 +917,8 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
                       <div>
                         <h3 className="font-display font-bold text-base text-forest">{section.title}</h3>
                         <span className="text-[11px] text-forest/50">
-                          {section.items.length} عنصر تعليمي (
-                          {section.items.filter(i => i.type === 'video').length} فيديو • {section.items.filter(i => i.type === 'quiz').length} اختبار
+                          {section.items.length} {isArabic ? 'عنصر تعليمي' : 'items'} (
+                          {section.items.filter(i => i.type === 'video').length} {isArabic ? 'فيديو' : 'videos'} • {section.items.filter(i => i.type === 'quiz').length} {isArabic ? 'اختبار' : 'quizzes'}
                           )
                         </span>
                       </div>
@@ -951,7 +932,7 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
                           setIsEditSectionOpen(true);
                         }}
                         className="text-forest/50 hover:text-forest p-2 rounded-xl hover:bg-black/5 transition-colors cursor-pointer"
-                        title="تعديل اسم الوحدة"
+                        title={isArabic ? "تعديل اسم الوحدة" : "Edit Chapter"}
                       >
                         <PencilSimple size={18} />
                       </button>
@@ -960,7 +941,7 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
                         type="button"
                         onClick={() => handleDeleteSection(section.id)}
                         className="text-forest/40 hover:text-rose-600 p-2 rounded-xl hover:bg-rose-50 transition-colors cursor-pointer"
-                        title="حذف الوحدة"
+                        title={isArabic ? "حذف الوحدة" : "Delete Chapter"}
                       >
                         <Trash size={18} />
                       </button>
@@ -971,12 +952,12 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
                   <div className="flex flex-col gap-2.5">
                     {section.items.length === 0 ? (
                       <div className="p-6 rounded-2xl bg-[#F7F6F3] border border-dashed border-black/10 text-center text-forest/40 text-xs">
-                        لا توجد محاضرات أو اختبارات داخل هذه الوحدة حتى الآن.
+                        {isArabic ? 'لا توجد محاضرات أو اختبارات داخل هذه الوحدة حتى الآن.' : 'No lectures or quizzes inside this chapter yet.'}
                       </div>
                     ) : (
                       section.items.map((item, itemIdx) => (
                         <div 
-                          key={item.id || itemIdx}
+                          key={item.id}
                           className="flex items-center justify-between p-3.5 rounded-2xl bg-[#F7F6F3] border border-black/5 hover:border-gold/30 transition-colors"
                         >
                           <div className="flex items-center gap-3 min-w-0">
@@ -996,7 +977,10 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
                                 <h4 className="font-bold text-xs sm:text-sm text-forest truncate">{item.title}</h4>
                               </div>
                               <span className="text-[10px] text-forest/50 block">
-                                {item.type === 'video' ? 'محاضرة مصورة عالية الجودة' : `اختبار إلكتروني (${item.questions?.length || 0} أسئلة)`}
+                                {item.type === 'video' 
+                                  ? (isArabic ? 'محاضرة مصورة عالية الجودة' : 'HD Video Lecture') 
+                                  : (isArabic ? `اختبار إلكتروني (${item.questions?.length || 0} أسئلة)` : `Quiz (${item.questions?.length || 0} questions)`)
+                                }
                               </span>
                             </div>
                           </div>
@@ -1004,7 +988,7 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
                           <div className="flex items-center gap-2 shrink-0">
                             {item.type === 'video' && (
                               <span className="text-[10px] font-mono font-bold text-forest/60 bg-white px-2.5 py-1 rounded-lg border border-black/5">
-                                {Math.round((item.duration || 1800) / 60)} دقيقة
+                                {Math.round((item.duration || 1800) / 60)} {isArabic ? 'دقيقة' : 'min'}
                               </span>
                             )}
                             
@@ -1018,7 +1002,7 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
                                 });
                               }}
                               className="p-1.5 text-forest/50 hover:text-forest rounded-lg hover:bg-black/5 transition-colors cursor-pointer"
-                              title={item.type === 'video' ? 'تعديل المحاضرة' : 'تعديل الاختبار والأسئلة'}
+                              title={item.type === 'video' ? (isArabic ? 'تعديل المحاضرة' : 'Edit Lecture') : (isArabic ? 'تعديل الاختبار والأسئلة' : 'Edit Quiz')}
                             >
                               <PencilSimple size={16} />
                             </button>
@@ -1027,7 +1011,7 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
                               type="button"
                               onClick={() => handleDeleteItem(section.id, item.id)}
                               className="p-1.5 text-forest/30 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer"
-                              title="حذف العنصر"
+                              title={isArabic ? "حذف العنصر" : "Delete Item"}
                             >
                               <Trash size={16} />
                             </button>
@@ -1045,7 +1029,7 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
                       className="px-4 py-2 rounded-xl bg-white hover:bg-forest hover:text-gold text-forest text-xs font-bold border border-black/5 shadow-xs transition-colors inline-flex items-center gap-2 cursor-pointer"
                     >
                       <Plus size={14} weight="bold" />
-                      <span>إضافة محاضرة فيديو</span>
+                      <span>{isArabic ? 'إضافة محاضرة فيديو' : 'Add Video Lecture'}</span>
                     </button>
 
                     <button 
@@ -1054,7 +1038,7 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
                       className="px-4 py-2 rounded-xl bg-white hover:bg-forest hover:text-gold text-forest text-xs font-bold border border-black/5 shadow-xs transition-colors inline-flex items-center gap-2 cursor-pointer"
                     >
                       <Plus size={14} weight="bold" />
-                      <span>إضافة اختبار تفاعلي</span>
+                      <span>{isArabic ? 'إضافة اختبار تفاعلي' : 'Add Interactive Quiz'}</span>
                     </button>
                   </div>
 
@@ -1062,41 +1046,6 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
               ))}
             </div>
           )}
-
-          {/* Bottom Complete Save Bar */}
-          <div className="bg-white rounded-3xl p-6 border border-black/5 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4 mt-4">
-            <button
-              type="button"
-              onClick={() => setCurrentStep(1)}
-              className="px-6 py-3 rounded-xl bg-[#F7F6F3] hover:bg-black/5 text-forest font-bold text-xs sm:text-sm transition-all inline-flex items-center gap-2 cursor-pointer w-full sm:w-auto justify-center"
-            >
-              <ArrowRight size={16} weight="bold" />
-              <span>العودة للبيانات الأساسية</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleSaveCourse}
-              disabled={isSaving}
-              className={`px-8 py-3.5 rounded-xl font-bold text-xs sm:text-sm transition-all inline-flex items-center justify-center gap-2.5 shadow-md cursor-pointer w-full sm:w-auto ${
-                saveSuccess 
-                  ? 'bg-emerald-600 text-white' 
-                  : 'bg-gold hover:bg-forest text-forest hover:text-gold'
-              }`}
-            >
-              {saveSuccess ? (
-                <>
-                  <CheckCircle size={20} weight="fill" />
-                  <span>تم حفظ التعديلات بنجاح!</span>
-                </>
-              ) : (
-                <>
-                  <FloppyDisk size={20} weight="bold" />
-                  <span>{isSaving ? 'جاري الحفظ...' : 'حفظ كافة التعديلات'}</span>
-                </>
-              )}
-            </button>
-          </div>
 
         </motion.div>
       )}
@@ -1106,9 +1055,9 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
         isOpen={isAddSectionOpen}
         onCancel={() => setIsAddSectionOpen(false)}
         onConfirm={handleAddSection}
-        title="إضافة وحدة دراسية جديدة"
-        description="أدخل عنوان الوحدة أو الفصل الدراسي لإضافة المحاضرات والاختبارات بداخله."
-        placeholder="مثال: الوحدة الثانية - القوى السياسية والدول"
+        title={isArabic ? "إضافة وحدة دراسية جديدة" : "Add New Chapter"}
+        description={isArabic ? "أدخل عنوان الوحدة أو الفصل الدراسي لإضافة المحاضرات والاختبارات بداخله." : "Enter the chapter title to organize lectures and quizzes."}
+        placeholder={isArabic ? "مثال: الوحدة الثانية - القوى السياسية والدول" : "e.g. Chapter 2: Analytical Geometry"}
       />
 
       {/* Edit Section Prompt Modal */}
@@ -1119,10 +1068,10 @@ function CourseEditorContent({ courseId }: { courseId?: string }) {
           setEditingSection(null);
         }}
         onConfirm={handleUpdateSectionTitle}
-        title="تعديل عنوان الوحدة الدراسية"
-        description="قم بتعديل اسم أو رقم هذه الوحدة."
+        title={isArabic ? "تعديل عنوان الوحدة الدراسية" : "Edit Chapter Title"}
+        description={isArabic ? "قم بتعديل اسم أو رقم هذه الوحدة." : "Update the chapter title or number."}
         initialValue={editingSection?.title || ''}
-        confirmText="تحديث"
+        confirmText={isArabic ? "تحديث" : "Update"}
       />
 
       {/* Video Lesson Modal */}

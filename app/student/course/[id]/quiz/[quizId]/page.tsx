@@ -3,16 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useStore } from '@/store';
-import { Button } from '@/components/common/Button';
-import { motion, AnimatePresence } from 'motion/react';
+import { useLanguage } from '@/context/LanguageContext';
+import { motion } from 'motion/react';
 import { 
-  ArrowRight, 
-  ArrowLeft, 
-  Sparkle, 
   CheckCircle, 
-  Clock, 
   Question, 
-  ShieldCheck, 
   X,
   CaretRight,
   CaretLeft
@@ -31,11 +26,12 @@ function QuizContent() {
   const courseId = params.id as string;
   const quizId = params.quizId as string;
   const router = useRouter();
+  const { t, isArabic } = useLanguage();
   const { currentUser, enrollments, fetchEnrollments, submitQuiz } = useStore();
   
   const [questions, setQuestions] = useState<ParsedQuestion[]>([]);
-  const [quizTitle, setQuizTitle] = useState('اختبار تقييم الدرس');
-  const [courseTitle, setCourseTitle] = useState('المنهج الدراسي');
+  const [quizTitle, setQuizTitle] = useState(isArabic ? 'اختبار تقييم الدرس' : 'Lesson Assessment Quiz');
+  const [courseTitle, setCourseTitle] = useState(isArabic ? 'المنهج الدراسي' : 'Curriculum');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [hasStarted, setHasStarted] = useState(false);
@@ -67,13 +63,13 @@ function QuizContent() {
               return;
             }
 
-            setCourseTitle(data.course.title || 'المنهج الدراسي');
+            setCourseTitle(data.course.title || (isArabic ? 'المنهج الدراسي' : 'Curriculum'));
             const allItems = (data.course.sections || []).flatMap((s: any) => s.items || []);
             const targetQuiz = allItems.find((i: any) => i.id === quizId && i.type === 'quiz') ||
                                allItems.find((i: any) => i.type === 'quiz');
 
             if (targetQuiz) {
-              setQuizTitle(targetQuiz.title || 'اختبار تقييم الدرس');
+              setQuizTitle(targetQuiz.title || (isArabic ? 'اختبار تقييم الدرس' : 'Lesson Assessment Quiz'));
               if (targetQuiz.questions && targetQuiz.questions.length > 0) {
                 const parsed: ParsedQuestion[] = targetQuiz.questions.map((q: any, idx: number) => {
                   let opts: string[] = [];
@@ -108,14 +104,14 @@ function QuizContent() {
     if (courseId) {
       loadQuizData();
     }
-  }, [courseId, quizId]);
+  }, [courseId, quizId, currentUser, enrollments, isArabic, router]);
 
   if (isLoading) {
     return (
       <div className="w-full min-h-[85dvh] py-12 px-4 bg-bone flex items-center justify-center text-start">
         <div className="flex flex-col items-center gap-3 text-forest font-bold">
           <div className="w-10 h-10 border-3 border-gold border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm">جاري تحميل أسئلة الاختبار...</p>
+          <p className="text-sm">{isArabic ? 'جاري تحميل أسئلة الاختبار...' : 'Loading quiz questions...'}</p>
         </div>
       </div>
     );
@@ -132,7 +128,7 @@ function QuizContent() {
             <div>
               <h1 className="font-display font-bold text-xl text-forest mb-1">{quizTitle}</h1>
               <p className="text-xs text-forest/60 leading-relaxed">
-                لم يقم أستاذ المادة بإضافة أسئلة لهذا الاختبار حتى الآن.
+                {isArabic ? 'لم يقم أستاذ المادة بإضافة أسئلة لهذا الاختبار حتى الآن.' : 'Instructor has not added questions to this quiz yet.'}
               </p>
             </div>
             <button
@@ -140,7 +136,7 @@ function QuizContent() {
               onClick={() => router.push(`/student/course/${courseId}`)}
               className="w-full py-3 rounded-xl bg-gold hover:bg-forest text-forest hover:text-gold font-bold text-xs transition-all shadow-xs cursor-pointer"
             >
-              العودة للمحاضرة
+              {isArabic ? 'العودة للمحاضرة' : 'Back to Lecture'}
             </button>
           </div>
         </div>
@@ -170,6 +166,16 @@ function QuizContent() {
   };
 
   const handleSubmit = async () => {
+    const unansweredCount = questions.length - Object.keys(answers).length;
+    if (unansweredCount > 0) {
+      const confirmSubmit = window.confirm(
+        isArabic 
+          ? `لديك ${unansweredCount} أسئلة لم تقم بالإجابة عليها بعد. هل أنت متأكد من تسليم الاختبار الآن؟`
+          : `You have ${unansweredCount} unanswered questions. Are you sure you want to submit now?`
+      );
+      if (!confirmSubmit) return;
+    }
+
     setIsSubmitting(true);
     let correctCount = 0;
     questions.forEach((q, i) => {
@@ -214,19 +220,28 @@ function QuizContent() {
                 {quizTitle}
               </h1>
               <p className="text-forest/70 text-xs sm:text-sm">
-                اختبر فهمك لمفاهيم المحاضرة وتدرب على أسئلة النظام الحديث
+                {isArabic 
+                  ? 'اختبر فهمك لمفاهيم المحاضرة وتدرب على أسئلة النظام الحديث'
+                  : 'Test your understanding of the concepts and practice exam-style questions'
+                }
               </p>
             </div>
 
             {/* Test Metadata Box */}
             <div className="grid grid-cols-2 gap-3 text-start bg-[#F7F6F3] p-4 rounded-2xl border border-black/5 text-xs">
               <div>
-                <span className="text-forest/50 block text-[11px]">عدد الأسئلة</span>
-                <span className="font-bold text-forest">{questions.length} أسئلة اختيار من متعدد</span>
+                <span className="text-forest/50 block text-[11px]">
+                  {isArabic ? 'عدد الأسئلة' : 'Total Questions'}
+                </span>
+                <span className="font-bold text-forest">
+                  {questions.length} {isArabic ? 'أسئلة اختيار من متعدد' : 'Multiple Choice'}
+                </span>
               </div>
               <div>
-                <span className="text-forest/50 block text-[11px]">درجة الاجتياز</span>
-                <span className="font-bold text-emerald-700">60% أو أعلى</span>
+                <span className="text-forest/50 block text-[11px]">
+                  {isArabic ? 'درجة الاجتياز' : 'Passing Score'}
+                </span>
+                <span className="font-bold text-emerald-700">60% {isArabic ? 'أو أعلى' : 'or higher'}</span>
               </div>
             </div>
 
@@ -236,15 +251,15 @@ function QuizContent() {
                 onClick={() => router.push(`/student/course/${courseId}`)}
                 className="flex-1 py-3.5 rounded-full bg-[#F7F6F3] hover:bg-black/5 text-forest font-bold text-xs sm:text-sm transition-all duration-300 cursor-pointer"
               >
-                العودة للمحاضرة
+                {isArabic ? 'العودة للمحاضرة' : 'Back to Lecture'}
               </button>
               <button
                 type="button"
                 onClick={() => setHasStarted(true)}
                 className="flex-1 py-3.5 px-6 rounded-full bg-gold hover:bg-forest text-forest hover:text-gold font-bold text-xs sm:text-sm transition-all duration-300 shadow-md cursor-pointer inline-flex items-center justify-center gap-2 select-none active:scale-95"
               >
-                <span>بدء الاختبار الآن</span>
-                <CaretLeft size={16} weight="bold" />
+                <span>{t.quiz.startQuiz}</span>
+                {isArabic ? <CaretLeft size={16} weight="bold" /> : <CaretRight size={16} weight="bold" />}
               </button>
             </div>
           </div>
@@ -264,26 +279,29 @@ function QuizContent() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => {
-                  if (confirm('هل تريد إنهاء الاختبار والعودة إلى صفحة الكورس؟')) {
+                  if (confirm(isArabic ? 'هل تريد إنهاء الاختبار والعودة إلى صفحة الكورس؟' : 'Exit quiz and return to course?')) {
                     router.push(`/student/course/${courseId}`);
                   }
                 }}
                 className="w-8 h-8 rounded-full bg-[#F7F6F3] hover:bg-black/10 flex items-center justify-center text-forest/70 transition-colors cursor-pointer"
-                title="إلغاء الاختبار"
+                title={isArabic ? "إلغاء الاختبار" : "Cancel Quiz"}
               >
                 <X size={16} weight="bold" />
               </button>
               <div>
                 <h2 className="font-display font-bold text-base text-forest">{quizTitle}</h2>
                 <span className="text-[11px] text-forest/50 font-mono">
-                  السؤال {currentIndex + 1} من أصل {questions.length}
+                  {isArabic 
+                    ? `السؤال ${currentIndex + 1} من أصل ${questions.length}`
+                    : `Question ${currentIndex + 1} of ${questions.length}`
+                  }
                 </span>
               </div>
             </div>
 
             <div className="text-end">
               <span className="text-xs font-bold text-forest bg-forest/5 px-3 py-1 rounded-full border border-forest/10">
-                {answeredCount} / {questions.length} تم حله
+                {answeredCount} / {questions.length} {isArabic ? 'تم حله' : 'Answered'}
               </span>
             </div>
           </div>
@@ -306,7 +324,7 @@ function QuizContent() {
             {/* Prompt */}
             <div className="flex flex-col gap-2">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-forest text-gold text-xs font-bold w-fit">
-                <span>سؤال {currentIndex + 1}</span>
+                <span>{isArabic ? `سؤال ${currentIndex + 1}` : `Question ${currentIndex + 1}`}</span>
               </div>
               <h3 className="font-display font-bold text-lg sm:text-2xl text-forest leading-relaxed pt-2">
                 {currentQuestion.prompt}
@@ -341,7 +359,7 @@ function QuizContent() {
                     </div>
 
                     <span className="font-mono text-xs opacity-50 font-bold">
-                      {['أ', 'ب', 'ج', 'د', 'هـ'][optIdx] || optIdx + 1}
+                      {isArabic ? (['أ', 'ب', 'ج', 'د', 'هـ'][optIdx] || optIdx + 1) : (['A', 'B', 'C', 'D', 'E'][optIdx] || optIdx + 1)}
                     </span>
                   </button>
                 );
@@ -356,8 +374,8 @@ function QuizContent() {
                 disabled={currentIndex === 0}
                 className="px-5 py-2.5 rounded-full bg-[#F7F6F3] hover:bg-black/5 disabled:opacity-30 disabled:cursor-not-allowed text-forest font-bold text-xs inline-flex items-center gap-1.5 transition-colors cursor-pointer"
               >
-                <CaretRight size={14} weight="bold" />
-                <span>السابق</span>
+                {isArabic ? <CaretRight size={14} weight="bold" /> : <CaretLeft size={14} weight="bold" />}
+                <span>{t.quiz.prevQuestion}</span>
               </button>
 
               {isLastQuestion ? (
@@ -368,7 +386,7 @@ function QuizContent() {
                   className="px-7 py-3 rounded-full bg-gold hover:bg-forest text-forest hover:text-gold font-bold text-xs sm:text-sm inline-flex items-center gap-2 shadow-md transition-all cursor-pointer"
                 >
                   <CheckCircle size={18} weight="bold" />
-                  <span>{isSubmitting ? 'جاري التسليم...' : 'تسليم وإنهاء الاختبار'}</span>
+                  <span>{isSubmitting ? (isArabic ? 'جاري التسليم...' : 'Submitting...') : t.quiz.submitQuiz}</span>
                 </button>
               ) : (
                 <button
@@ -376,8 +394,8 @@ function QuizContent() {
                   onClick={handleNext}
                   className="px-6 py-2.5 rounded-full bg-forest hover:bg-forest/90 text-gold font-bold text-xs inline-flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
                 >
-                  <span>التالي</span>
-                  <CaretLeft size={14} weight="bold" />
+                  <span>{t.quiz.nextQuestion}</span>
+                  {isArabic ? <CaretLeft size={14} weight="bold" /> : <CaretRight size={14} weight="bold" />}
                 </button>
               )}
             </div>

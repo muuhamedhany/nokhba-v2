@@ -2,19 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { strings } from '@/locales/ar';
+import { useLanguage } from '@/context/LanguageContext';
 import { useStore } from '@/store';
 import { Button } from '../common/Button';
 import Link from 'next/link';
 import { 
   WhatsappLogo, 
   ArrowLeft, 
+  ArrowRight,
   PlayCircle, 
   FileText, 
   CaretDown, 
   SealCheck,
   GraduationCap,
-  Sparkle,
   BookOpen
 } from '@phosphor-icons/react';
 import { SkCourseCard } from '../common/Skeleton';
@@ -40,6 +40,7 @@ const CATEGORY_KEYWORDS: Record<CategoryKey, string[]> = {
 
 export function CourseList() {
   const { courses, fetchCourses, users, currentUser, enrollments, fetchEnrollments, isLoading } = useStore();
+  const { t, isArabic } = useLanguage();
   const [activeCategory, setActiveCategory] = useState<CategoryKey>('all');
   const [expandedCourseId, setExpandedCourseId] = useState<string | null>(null);
 
@@ -70,6 +71,13 @@ export function CourseList() {
     return users.find((u) => u.id === teacherId);
   };
 
+  const categoriesList = [
+    { key: 'all', label: isArabic ? 'كافة التخصصات' : 'All Disciplines' },
+    { key: 'scientific', label: isArabic ? 'المواد العلمية' : 'Scientific Subjects' },
+    { key: 'literary', label: isArabic ? 'المواد الأدبية' : 'Literary Subjects' },
+    { key: 'shared', label: isArabic ? 'لغات ومواد مشتركة' : 'Languages & General' },
+  ];
+
   if (isLoading && courses.length === 0) {
     return (
       <section id="courses" className="w-full bg-[#F7F6F3] py-24 md:py-32 relative overflow-hidden border-t border-black/5">
@@ -87,7 +95,7 @@ export function CourseList() {
   if (courses.length === 0) return null;
 
   return (
-    <section id="courses" className="w-full bg-[#F7F6F3] py-24 md:py-32 relative overflow-hidden border-t border-black/5">
+    <section id="courses" className="w-full bg-[#F7F6F3] py-24 md:py-32 relative overflow-hidden border-t border-black/5 text-start">
       <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10">
         
         {/* Section Header with Scroll Entrance */}
@@ -100,7 +108,7 @@ export function CourseList() {
               transition={{ delay: 0.1, duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
               className="font-display font-bold text-3xl md:text-5xl text-forest tracking-tight leading-tight"
             >
-              {strings.courses.latestTitle}
+              {t.courses.latestTitle}
             </motion.h2>
 
             <motion.p 
@@ -110,12 +118,12 @@ export function CourseList() {
               transition={{ delay: 0.2, duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
               className="mt-3 text-base md:text-lg text-forest/70 leading-relaxed max-w-xl"
             >
-              {strings.courses.subtitle}
+              {t.courses.subtitle}
             </motion.p>
           </div>
 
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: isArabic ? 20 : -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ delay: 0.25, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
@@ -124,9 +132,9 @@ export function CourseList() {
               <Button 
                 variant="ghost" 
                 className="px-6 py-2.5 text-sm font-semibold border border-forest/15 hover:border-forest/30"
-                icon={<ArrowLeft size={16} weight="bold" />}
+                icon={isArabic ? <ArrowLeft size={16} weight="bold" /> : <ArrowRight size={16} weight="bold" />}
               >
-                {strings.courses.viewAll}
+                {t.courses.viewAll}
               </Button>
             </Link>
           </motion.div>
@@ -134,12 +142,7 @@ export function CourseList() {
 
         {/* Category Filter Tabs */}
         <div className="flex flex-wrap items-center gap-2.5 mb-12">
-          {[
-            { key: 'all', label: 'كافة التخصصات' },
-            { key: 'scientific', label: 'المواد العلمية' },
-            { key: 'literary', label: 'المواد الأدبية' },
-            { key: 'shared', label: 'لغات ومواد مشتركة' },
-          ].map((tab) => {
+          {categoriesList.map((tab) => {
             const isActive = activeCategory === tab.key;
             return (
               <button
@@ -175,16 +178,16 @@ export function CourseList() {
               {filteredCourses.map((course) => {
                 const isExpanded = expandedCourseId === course.id;
                 const teacher = course.teacher || getTeacher(course.teacherId);
-                const subjectLabel = strings.subjects[course.subject as keyof typeof strings.subjects] || course.subject;
-                const gradeLabel = strings.grades[course.grade as keyof typeof strings.grades] || course.grade;
+                const subjectLabel = t.subjects[course.subject as keyof typeof t.subjects] || course.subject;
+                const gradeLabel = t.grades[course.grade as keyof typeof t.grades] || course.grade;
 
                 const allItems = (course.sections || []).flatMap((s: any) => s.items || []);
                 const videoItems = allItems.filter((i: any) => i.type === 'video');
                 const quizItems = allItems.filter((i: any) => i.type === 'quiz');
                 const totalDurationMinutes = videoItems.reduce((acc: number, curr: any) => acc + (curr.duration || 1800), 0) / 60;
                 const formattedDuration = totalDurationMinutes >= 60 
-                  ? `${(totalDurationMinutes / 60).toFixed(1)} ساعة` 
-                  : `${Math.round(totalDurationMinutes)} دقيقة`;
+                  ? (isArabic ? `${(totalDurationMinutes / 60).toFixed(1)} ساعة` : `${(totalDurationMinutes / 60).toFixed(1)} hrs`) 
+                  : (isArabic ? `${Math.round(totalDurationMinutes)} دقيقة` : `${Math.round(totalDurationMinutes)} min`);
 
                 const isEnrolled = course.isFree || (currentUser?.role === 'teacher' && course.teacherId === currentUser?.id) || enrollments.some((e) => e.studentId === currentUser?.id && e.courseId === course.id);
 
@@ -216,15 +219,15 @@ export function CourseList() {
                               </span>
                               {course.isFree ? (
                                 <span className="bg-gold text-forest font-bold px-2.5 py-1 rounded-full text-xs shadow-sm">
-                                  {strings.courses.free}
+                                  {t.courses.free}
                                 </span>
                               ) : isEnrolled ? (
                                 <span className="bg-emerald-600 text-white font-bold px-2.5 py-1 rounded-full text-xs shadow-sm">
-                                  مفعل
+                                  {isArabic ? 'مفعل' : 'Active'}
                                 </span>
                               ) : (
                                 <span className="bg-forest/80 text-gold font-bold px-2.5 py-1 rounded-full text-xs shadow-sm">
-                                  يتطلب كود
+                                  {isArabic ? 'يتطلب كود' : 'Code Required'}
                                 </span>
                               )}
                             </div>
@@ -235,7 +238,7 @@ export function CourseList() {
                         <Link
                           href={`/teachers/${teacher?.id || course.teacherId}`}
                           className="inline-flex items-center gap-2.5 mb-3 p-1 pe-3 rounded-full hover:bg-forest/5 transition-all cursor-pointer w-fit"
-                          title={`عرض الملف الشخصي للأستاذ ${teacher?.name || ''}`}
+                          title={`${isArabic ? 'عرض الملف الشخصي للأستاذ' : 'View Teacher Profile'} ${teacher?.name || ''}`}
                         >
                           <div className="w-8 h-8 rounded-full bg-forest text-gold flex items-center justify-center text-xs font-bold shrink-0 overflow-hidden shadow-xs">
                             {teacher?.avatar ? (
@@ -245,7 +248,7 @@ export function CourseList() {
                             )}
                           </div>
                           <div className="flex items-center gap-1">
-                            <span className="text-xs font-bold text-forest hover:text-gold transition-colors">{teacher?.name || 'أستاذ المادة'}</span>
+                            <span className="text-xs font-bold text-forest hover:text-gold transition-colors">{teacher?.name || (isArabic ? 'أستاذ المادة' : 'Educator')}</span>
                             <SealCheck size={14} weight="fill" className="text-gold" />
                           </div>
                         </Link>
@@ -263,16 +266,16 @@ export function CourseList() {
                         {/* Quick Metrics Strip */}
                         <div className="grid grid-cols-3 gap-2 py-2.5 px-3 rounded-xl bg-[#F7F6F3] border border-black/5 text-center text-xs mb-4">
                           <div className="flex flex-col">
-                            <span className="font-display font-bold text-forest">{videoItems.length} درس</span>
-                            <span className="text-[10px] text-forest/60">محاضرات</span>
+                            <span className="font-display font-bold text-forest">{videoItems.length}</span>
+                            <span className="text-[10px] text-forest/60">{t.courses.lessons}</span>
                           </div>
                           <div className="flex flex-col border-x border-black/5">
                             <span className="font-display font-bold text-forest">{formattedDuration}</span>
-                            <span className="text-[10px] text-forest/60">مدة المنهج</span>
+                            <span className="text-[10px] text-forest/60">{isArabic ? 'مدة المنهج' : 'Duration'}</span>
                           </div>
                           <div className="flex flex-col">
-                            <span className="font-display font-bold text-forest">{quizItems.length} اختبار</span>
-                            <span className="text-[10px] text-forest/60">تقييم إلكتروني</span>
+                            <span className="font-display font-bold text-forest">{quizItems.length}</span>
+                            <span className="text-[10px] text-forest/60">{t.courses.quizzes}</span>
                           </div>
                         </div>
 
@@ -284,7 +287,7 @@ export function CourseList() {
                         >
                           <div className="flex items-center gap-1.5">
                             <FileText size={15} weight="duotone" className="text-forest" />
-                            <span>{isExpanded ? 'إخفاء خطة المنهج' : 'استعراض خطة المحاضرات'}</span>
+                            <span>{isExpanded ? (isArabic ? 'إخفاء خطة المنهج' : 'Hide Curriculum') : (isArabic ? 'استعراض خطة المحاضرات' : 'Explore Outline')}</span>
                           </div>
                           <CaretDown 
                             size={14} 
@@ -305,14 +308,14 @@ export function CourseList() {
                             >
                               <div className="flex flex-col gap-2 p-3 rounded-xl bg-forest/5 border border-forest/10 text-xs">
                                 <span className="font-bold text-[11px] text-forest/60 uppercase tracking-wider block mb-1">
-                                  محتوى الكورس التفاعلي:
+                                  {isArabic ? 'محتوى الكورس التفاعلي:' : 'Course Content Preview:'}
                                 </span>
                                 {(() => {
                                   const allItems = (course.sections || []).flatMap((s: any) => s.items || []);
                                   if (allItems.length === 0) {
                                     return (
                                       <span className="text-[11px] text-forest/50 py-1">
-                                        محتوى المنهج قيد التجهيز من قبل أستاذ المادة.
+                                        {isArabic ? 'محتوى المنهج قيد التجهيز من قبل أستاذ المادة.' : 'Course content is being prepared by instructor.'}
                                       </span>
                                     );
                                   }
@@ -325,12 +328,12 @@ export function CourseList() {
                                       <div className="flex items-center gap-1.5 shrink-0 text-[10px]">
                                         {lesson.type === 'video' && lesson.duration && (
                                           <span className="font-mono text-forest/60">
-                                            {Math.round(lesson.duration / 60)} د
+                                            {Math.round(lesson.duration / 60)} {isArabic ? 'د' : 'm'}
                                           </span>
                                         )}
                                         {lesson.type === 'quiz' && (
                                           <span className="bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded">
-                                            امتحان
+                                            {isArabic ? 'امتحان' : 'Quiz'}
                                           </span>
                                         )}
                                       </div>
@@ -347,7 +350,10 @@ export function CourseList() {
                       <div className="pt-4 border-t border-black/5 flex items-center justify-between gap-2.5">
                         <Link href={currentUser ? `/student/course/${course.id}` : `/login`} className="flex-1">
                           <Button className="w-full py-2.5 px-4 text-xs sm:text-sm font-bold shadow-md shadow-forest/10">
-                            {isEnrolled ? (course.isFree ? 'ابدأ المشاهدة' : 'متابعة المذاكرة') : 'تفعيل الكورس'}
+                            {isEnrolled 
+                              ? (course.isFree ? (isArabic ? 'ابدأ المشاهدة' : 'Watch Now') : (isArabic ? 'متابعة المذاكرة' : 'Continue Learning')) 
+                              : (isArabic ? 'تفعيل الكورس' : 'Unlock Course')
+                            }
                           </Button>
                         </Link>
 
@@ -359,7 +365,9 @@ export function CourseList() {
                             : cleanDigits.startsWith('0')
                               ? `2${cleanDigits}`
                               : `20${cleanDigits}`;
-                          const waText = `أود الاستفسار عن كود كورس ${course.title} - الأستاذ ${teacher?.name || ''}`;
+                          const waText = isArabic 
+                            ? `أود الاستفسار عن كود كورس ${course.title} - الأستاذ ${teacher?.name || ''}`
+                            : `Inquiry regarding course code for ${course.title} - ${teacher?.name || ''}`;
 
                           return (
                             <a
@@ -367,7 +375,7 @@ export function CourseList() {
                               target="_blank"
                               rel="noopener noreferrer"
                               className="shrink-0"
-                              title={`طلب كود التفعيل عبر واتساب (${teacher?.name || 'الأستاذ'})`}
+                              title={`${isArabic ? 'طلب كود التفعيل عبر واتساب' : 'Request Access Code via WhatsApp'} (${teacher?.name || ''})`}
                             >
                               <button 
                                 type="button"
@@ -396,13 +404,17 @@ export function CourseList() {
               <div className="w-14 h-14 rounded-2xl bg-forest/5 text-forest flex items-center justify-center mb-4">
                 <BookOpen size={28} weight="duotone" className="text-forest/60" />
               </div>
-              <h4 className="font-display font-bold text-xl text-forest mb-2">لا توجد كورسات في هذا التخصص حالياً</h4>
-              <p className="text-forest/70 text-xs sm:text-sm mb-6">يتم تجهيز كورسات جديدة من نخبة معلمي المادة قريباً.</p>
+              <h4 className="font-display font-bold text-xl text-forest mb-2">
+                {isArabic ? 'لا توجد كورسات في هذا التخصص حالياً' : 'No courses found in this category'}
+              </h4>
+              <p className="text-forest/70 text-xs sm:text-sm mb-6">
+                {isArabic ? 'يتم تجهيز كورسات جديدة من نخبة معلمي المادة قريباً.' : 'New courses from top educators will be added soon.'}
+              </p>
               <Button 
                 onClick={() => setActiveCategory('all')} 
                 className="px-6 py-2.5 text-xs sm:text-sm font-bold"
               >
-                عرض كافة التخصصات
+                {isArabic ? 'عرض كافة التخصصات' : 'View All Categories'}
               </Button>
             </motion.div>
           )}
@@ -419,9 +431,9 @@ export function CourseList() {
           <Link href="/lessons">
             <Button 
               className="px-10 py-3.5 text-base font-bold shadow-xl shadow-forest/10"
-              icon={<ArrowLeft size={18} weight="bold" />}
+              icon={isArabic ? <ArrowLeft size={18} weight="bold" /> : <ArrowRight size={18} weight="bold" />}
             >
-              {strings.courses.viewAll}
+              {t.courses.viewAll}
             </Button>
           </Link>
         </motion.div>

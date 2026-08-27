@@ -10,8 +10,19 @@ export async function redeemCodeAction(codeString: string) {
     return { success: false, message: 'يرجى تسجيل الدخول كطالب لتفعيل الكود' };
   }
 
-  const code = await prisma.code.findUnique({
-    where: { codeString: codeString.trim() },
+  if (!codeString || typeof codeString !== 'string' || !codeString.trim()) {
+    return { success: false, message: 'يرجى إدخال الكود' };
+  }
+
+  const cleanCode = codeString.trim();
+
+  const code = await prisma.code.findFirst({
+    where: {
+      codeString: {
+        equals: cleanCode,
+        mode: 'insensitive'
+      }
+    },
     include: { course: true }
   });
 

@@ -4,7 +4,7 @@ import React, { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useStore } from '@/store';
-import { strings } from '@/locales/ar';
+import { useLanguage } from '@/context/LanguageContext';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { motion, AnimatePresence } from 'motion/react';
@@ -21,6 +21,7 @@ function LoginForm() {
   const [errors, setErrors] = useState<{ identifier?: string; password?: string; general?: string }>({});
   const [touched, setTouched] = useState<{ identifier?: boolean; password?: boolean }>({});
   const { login, isLoading, currentUser } = useStore();
+  const { t, isArabic } = useLanguage();
   const router = useRouter();
 
   React.useEffect(() => {
@@ -35,12 +36,16 @@ function LoginForm() {
 
   const validateField = (name: 'identifier' | 'password', value: string) => {
     if (name === 'identifier') {
-      const phoneLabel = role === 'parent' ? 'رقم هاتف ولي الأمر' : role === 'teacher' ? 'رقم هاتف المعلم' : 'رقم هاتف الطالب';
-      const res = validatePhone(value, phoneLabel);
+      const phoneLabel = role === 'parent' 
+        ? (isArabic ? 'رقم هاتف ولي الأمر' : 'Parent phone number')
+        : role === 'teacher' 
+          ? (isArabic ? 'رقم هاتف المعلم' : 'Teacher phone number')
+          : (isArabic ? 'رقم هاتف الطالب' : 'Student phone number');
+      const res = validatePhone(value, isArabic, phoneLabel);
       return res.isValid ? undefined : res.message;
     }
     if (name === 'password') {
-      const res = validatePassword(value);
+      const res = validatePassword(value, isArabic);
       return res.isValid ? undefined : res.message;
     }
     return undefined;
@@ -72,15 +77,17 @@ function LoginForm() {
     } else {
       setErrors((prev) => ({
         ...prev,
-        general: 'رقم الهاتف أو كلمة المرور غير صحيحة، يرجى التأكد من البيانات والمحاولة مجدداً.',
+        general: isArabic 
+          ? 'رقم الهاتف أو كلمة المرور غير صحيحة، يرجى التأكد من البيانات والمحاولة مجدداً.'
+          : 'Incorrect phone number or password. Please check your credentials and try again.',
       }));
     }
   };
 
   const tabs = [
-    { id: 'student', label: 'طالب', icon: GraduationCap },
-    { id: 'teacher', label: 'معلم', icon: User },
-    { id: 'parent', label: 'ولي أمر', icon: UsersThree },
+    { id: 'student', label: t.auth.roleStudent, icon: GraduationCap },
+    { id: 'teacher', label: t.auth.roleTeacher, icon: User },
+    { id: 'parent', label: t.auth.roleParent, icon: UsersThree },
   ];
 
   return (
@@ -95,10 +102,10 @@ function LoginForm() {
         {/* Header */}
         <div className="text-center">
           <h1 className="font-display font-bold text-2xl sm:text-3xl text-forest mb-1.5">
-            تسجيل الدخول
+            {t.auth.loginTitle}
           </h1>
           <p className="text-forest/70 text-xs sm:text-sm">
-            حدد صفتك للمتابعة إلى حسابك في منصة نُـخبة
+            {t.auth.loginSubtitle}
           </p>
         </div>
 
@@ -152,11 +159,16 @@ function LoginForm() {
         {/* Form */}
         <form onSubmit={handleLogin} className="flex flex-col gap-4 text-start" noValidate>
           <Input
-            label={role === 'parent' ? 'رقم هاتف ولي الأمر' : role === 'teacher' ? 'رقم هاتف المعلم' : 'رقم هاتف الطالب'}
+            label={role === 'parent' 
+              ? (isArabic ? 'رقم هاتف ولي الأمر' : 'Parent Phone Number')
+              : role === 'teacher' 
+                ? (isArabic ? 'رقم هاتف المعلم' : 'Teacher Phone Number')
+                : (isArabic ? 'رقم هاتف الطالب' : 'Student Phone Number')
+            }
             type="tel"
             required
             dir="ltr"
-            className="text-end"
+            className={isArabic ? "text-end" : "text-start"}
             placeholder="010XXXXXXXX"
             value={identifier}
             error={touched.identifier ? errors.identifier : undefined}
@@ -170,11 +182,11 @@ function LoginForm() {
           />
 
           <Input
-            label="كلمة المرور"
+            label={t.auth.password}
             type="password"
             required
             dir="ltr"
-            className="text-end"
+            className={isArabic ? "text-end" : "text-start"}
             placeholder="••••••••"
             value={password}
             error={touched.password ? errors.password : undefined}
@@ -189,15 +201,15 @@ function LoginForm() {
 
           <div className="pt-2">
             <Button type="submit" className="w-full py-3.5 font-bold text-sm shadow-md" disabled={isLoading}>
-              {isLoading ? strings.ui.loading : 'تسجيل الدخول'}
+              {isLoading ? t.ui.loading : t.auth.loginBtn}
             </Button>
           </div>
         </form>
 
         <p className="text-center text-forest/70 text-xs sm:text-sm">
-          ليس لديك حساب؟{' '}
+          {t.auth.dontHaveAccount}{' '}
           <Link href={`/signup?role=${role === 'teacher' ? 'teacher' : 'student'}`} className="text-gold font-bold hover:underline">
-            إنشاء حساب جديد
+            {t.auth.createAccount}
           </Link>
         </p>
 
@@ -207,9 +219,10 @@ function LoginForm() {
 }
 
 export default function LoginPage() {
+  const { isArabic } = useLanguage();
   return (
     <div className="min-h-[80dvh] w-full flex items-center justify-center px-4 py-8 bg-bone">
-      <Suspense fallback={<div className="text-forest text-sm font-semibold">جاري التحميل...</div>}>
+      <Suspense fallback={<div className="text-forest text-sm font-semibold">{isArabic ? 'جاري التحميل...' : 'Loading...'}</div>}>
         <LoginForm />
       </Suspense>
     </div>

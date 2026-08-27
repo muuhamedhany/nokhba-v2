@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import Link from 'next/link';
+import { useLanguage } from '@/context/LanguageContext';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { 
@@ -18,42 +18,61 @@ import {
   ChalkboardTeacher, 
   Clock, 
   ShieldCheck, 
-  Question,
-  CaretDown,
-  WarningCircle,
-  Headset
+  Question, 
+  WarningCircle, 
+  Headset 
 } from '@phosphor-icons/react';
 import { validateFullName, validatePhone, validateEmail, validateMessage } from '@/utils/validators';
 
 type InquiryCategory = 'student' | 'parent' | 'code' | 'teacher';
 
-const INQUIRY_CATEGORIES: { key: InquiryCategory; label: string; icon: any }[] = [
-  { key: 'student', label: 'استفسار طالب', icon: Student },
-  { key: 'parent', label: 'بوابة ولي الأمر', icon: Users },
-  { key: 'code', label: 'تفعيل الأكواد', icon: Key },
-  { key: 'teacher', label: 'شراكات المعلمين', icon: ChalkboardTeacher },
+const INQUIRY_CATEGORIES: { key: InquiryCategory; label: { ar: string; en: string }; icon: any }[] = [
+  { key: 'student', label: { ar: 'استفسار طالب', en: 'Student Inquiry' }, icon: Student },
+  { key: 'parent', label: { ar: 'بوابة ولي الأمر', en: 'Parent Portal' }, icon: Users },
+  { key: 'code', label: { ar: 'تفعيل الأكواد', en: 'Code Activation' }, icon: Key },
+  { key: 'teacher', label: { ar: 'شراكات المعلمين', en: 'Teacher Partnership' }, icon: ChalkboardTeacher },
 ];
 
 const QUICK_FAQS = [
   {
-    q: 'كيف أحصل على كود تفعيل المحاضرة فوراً؟',
-    a: 'يمكنك التواصل مباشرة مع فريق الدعم عبر الواتساب واختيار المادة المطلوبة لاستلام كود التفعيل الفوري وفتح المحاضرة بنقرة واحدة.',
-    tag: 'تفعيل الأكواد',
+    q: {
+      ar: 'كيف أحصل على كود تفعيل المحاضرة فوراً؟',
+      en: 'How do I get an instant lecture unlock code?',
+    },
+    a: {
+      ar: 'يمكنك التواصل مباشرة مع فريق الدعم عبر الواتساب واختيار المادة المطلوبة لاستلام كود التفعيل الفوري وفتح المحاضرة بنقرة واحدة.',
+      en: 'Contact our support team directly via WhatsApp to receive your instant course code and unlock lessons with one click.',
+    },
+    tag: { ar: 'تفعيل الأكواد', en: 'Code Activation' },
   },
   {
-    q: 'كيف يمكن لولي الأمر متابعة درجات الاختبارات؟',
-    a: 'من خلال بوابة ولي الأمر في القائمة العلوية برقم هاتف الطالب المسجل، وتصل تقارير الحضور والدرجات دورياً عبر الواتساب.',
-    tag: 'أولياء الأمور',
+    q: {
+      ar: 'كيف يمكن لولي الأمر متابعة درجات الاختبارات؟',
+      en: 'How can parents monitor quiz scores and attendance?',
+    },
+    a: {
+      ar: 'من خلال بوابة ولي الأمر في القائمة العلوية برقم هاتف الطالب المسجل، وتصل تقارير الحضور والدرجات دورياً عبر الواتساب.',
+      en: 'Via the Parent Portal in the navigation using the registered phone number, with regular reports sent over WhatsApp.',
+    },
+    tag: { ar: 'أولياء الأمور', en: 'Parents' },
   },
   {
-    q: 'أنا معلم، كيف يمكنني إنشاء حساب والبدء في المنصة؟',
-    a: 'يمكنك إنشاء حساب معلم فوراً وبشكل مباشر من صفحة إنشاء الحساب دون أي انتظار، كما يمكنك مراسلتنا هنا للشراكات واستوديوهات التصوير الخاصة.',
-    tag: 'المعلمون',
+    q: {
+      ar: 'أنا معلم، كيف يمكنني إنشاء حساب والبدء في المنصة؟',
+      en: 'I am a teacher, how do I start publishing on Nokhba?',
+    },
+    a: {
+      ar: 'يمكنك إنشاء حساب معلم فوراً وبشكل مباشر من صفحة إنشاء الحساب دون أي انتظار، كما يمكنك مراسلتنا هنا للشراكات واستوديوهات التصوير الخاصة.',
+      en: 'You can create a teacher account instantly from the sign up page, or reach out to us here for specialized studio production.',
+    },
+    tag: { ar: 'المعلمون', en: 'Educators' },
   },
 ];
 
 export default function ContactPage() {
   const [category, setCategory] = useState<InquiryCategory>('student');
+  const { t, lang, isArabic } = useLanguage();
+
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -67,19 +86,19 @@ export default function ContactPage() {
   const validateField = (field: string, value: string) => {
     switch (field) {
       case 'name': {
-        const res = validateFullName(value);
+        const res = validateFullName(value, false, isArabic);
         return res.isValid ? undefined : res.message;
       }
       case 'phone': {
-        const res = validatePhone(value, 'رقم الهاتف / واتساب');
+        const res = validatePhone(value, isArabic, isArabic ? 'رقم الهاتف / واتساب' : 'Phone / WhatsApp');
         return res.isValid ? undefined : res.message;
       }
       case 'email': {
-        const res = validateEmail(value, false);
+        const res = validateEmail(value, false, isArabic);
         return res.isValid ? undefined : res.message;
       }
       case 'message': {
-        const res = validateMessage(value, 10, 'تفاصيل الاستفسار');
+        const res = validateMessage(value, 10, isArabic, isArabic ? 'تفاصيل الاستفسار' : 'Message Details');
         return res.isValid ? undefined : res.message;
       }
       default:
@@ -118,7 +137,7 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-bone pb-20 text-forest overflow-x-hidden">
+    <div className="w-full min-h-screen bg-bone pb-20 text-forest overflow-x-hidden text-start">
       
       {/* ------------------------------------------------------------- */}
       {/* 1. HEADER STAGE: Clean Editorial Header */}
@@ -132,9 +151,9 @@ export default function ContactPage() {
           transition={{ duration: 0.75, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           className="font-display font-bold text-forest text-3xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tight leading-tight max-w-4xl"
         >
-          <span>نحن هنا لدعم رحلتك</span>{' '}
+          <span>{isArabic ? 'نحن هنا لدعم رحلتك' : 'We Are Here to Support Your Journey'}</span>{' '}
           <span className="relative inline-block text-gold font-extrabold pb-2 sm:pb-3">
-            <span>خطوة بخطوة نحو القمة</span>
+            <span>{isArabic ? 'خطوة بخطوة نحو القمة' : 'Step by Step to the Top'}</span>
             <svg
               viewBox="0 0 280 22"
               fill="none"
@@ -185,7 +204,7 @@ export default function ContactPage() {
           transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
           className="mt-3 text-sm sm:text-base md:text-lg text-forest/75 max-w-2xl leading-relaxed font-normal"
         >
-          فريق الدعم الفني والأكاديمي في منصة نُـخبة متواجد للإجابة على استفسارات الطلاب، تفعيل الأكواد، ومتابعة أولياء الأمور.
+          {t.contact.subtitle}
         </motion.p>
 
         {/* Quick Working Hours Badge */}
@@ -196,18 +215,18 @@ export default function ContactPage() {
           className="mt-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/80 border border-black/5 shadow-xs text-xs font-semibold text-forest/80"
         >
           <Clock size={16} weight="bold" className="text-gold" />
-          <span>خدمة الدعم متاحة يومياً من 9:00 صباحاً حتى 11:00 مساءً</span>
+          <span>{isArabic ? 'خدمة الدعم متاحة يومياً من 9:00 صباحاً حتى 11:00 مساءً' : 'Support available daily from 9:00 AM to 11:00 PM'}</span>
         </motion.div>
 
       </section>
 
       {/* ------------------------------------------------------------- */}
-      {/* 2. MAIN SYMMETRICAL SUPPORT HUB: Side-by-Side Symmetrical Grid */}
+      {/* 2. MAIN SUPPORT HUB: Form & Direct Channels */}
       {/* ------------------------------------------------------------- */}
       <section className="max-w-7xl mx-auto px-4 md:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
           
-          {/* LEFT / MAIN COLUMN (7 cols): Double-Bezel Smart Inquiry Form */}
+          {/* LEFT / MAIN COLUMN (7 cols): Double-Bezel Form */}
           <motion.div 
             initial={{ opacity: 0, y: 28 }}
             animate={{ opacity: 1, y: 0 }}
@@ -231,17 +250,20 @@ export default function ContactPage() {
                         <CheckCircle size={44} weight="fill" />
                       </div>
                       <h3 className="font-display font-bold text-2xl sm:text-3xl text-forest mb-2">
-                        تم استلام رسالتك بنجاح!
+                        {t.contact.sendSuccess}
                       </h3>
                       <p className="text-forest/70 text-sm sm:text-base max-w-md leading-relaxed mb-6">
-                        شكراً لتواصلك مع منصة نُـخبة. سيقوم مسؤول الدعم الأكاديمي المختص بالتواصل معك على رقم هاتفك المسجل في أقرب وقت.
+                        {isArabic 
+                          ? 'شكراً لتواصلك مع منصة نُـخبة. سيقوم مسؤول الدعم الأكاديمي المختص بالتواصل معك على رقم هاتفك المسجل في أقرب وقت.'
+                          : 'Thank you for contacting Nokhba. Our academic support team will reach out to you shortly.'
+                        }
                       </p>
                       <Button
                         variant="secondary"
                         onClick={() => setIsSubmitted(false)}
                         className="px-6 py-2.5 text-xs font-bold"
                       >
-                        إرسال استفسار آخر
+                        {isArabic ? 'إرسال استفسار آخر' : 'Send Another Inquiry'}
                       </Button>
                     </motion.div>
                   ) : (
@@ -255,17 +277,17 @@ export default function ContactPage() {
                     >
                       <div>
                         <span className="text-xs font-mono font-bold uppercase tracking-wider text-forest/50 block mb-1">
-                          نموذج المراسلة الأكاديمية
+                          {isArabic ? 'نموذج المراسلة الأكاديمية' : 'Academic Messaging Form'}
                         </span>
                         <h3 className="font-display font-bold text-2xl sm:text-3xl text-forest">
-                          أرسل استفسارك مباشرة
+                          {t.contact.formTitle}
                         </h3>
                       </div>
 
                       {/* Category Selector Tabs */}
                       <div>
                         <label className="text-xs font-bold text-forest block mb-2">
-                          حدد نوع الاستفسار:
+                          {isArabic ? 'حدد نوع الاستفسار:' : 'Select Inquiry Type:'}
                         </label>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                           {INQUIRY_CATEGORIES.map((cat) => {
@@ -283,7 +305,7 @@ export default function ContactPage() {
                                 }`}
                               >
                                 <Icon size={18} weight={isActive ? 'fill' : 'regular'} />
-                                <span>{cat.label}</span>
+                                <span>{cat.label[lang]}</span>
                               </button>
                             );
                           })}
@@ -293,9 +315,9 @@ export default function ContactPage() {
                       {/* Name & Phone Inputs */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <Input
-                          label="الاسم بالكامل"
+                          label={t.contact.nameLabel}
                           required
-                          placeholder="مثال: أحمد محمد علي"
+                          placeholder={t.contact.namePlaceholder}
                           value={formData.name}
                           error={touched.name ? errors.name : undefined}
                           onChange={(e) => {
@@ -308,12 +330,12 @@ export default function ContactPage() {
                         />
 
                         <Input
-                          label="رقم الهاتف / واتساب"
+                          label={t.contact.phoneLabel}
                           type="tel"
                           required
                           dir="ltr"
-                          className="text-end"
-                          placeholder="010XXXXXXXX"
+                          className={isArabic ? "text-end" : "text-start"}
+                          placeholder={t.contact.phonePlaceholder}
                           value={formData.phone}
                           error={touched.phone ? errors.phone : undefined}
                           onChange={(e) => {
@@ -328,12 +350,12 @@ export default function ContactPage() {
 
                       {/* Email (Optional) */}
                       <Input
-                        label="البريد الإلكتروني"
+                        label={t.contact.emailLabel}
                         type="email"
                         dir="ltr"
-                        className="text-end"
-                        placeholder="name@example.com"
-                        hint="(اختياري)"
+                        className={isArabic ? "text-end" : "text-start"}
+                        placeholder={t.contact.emailPlaceholder}
+                        hint={t.ui.optionalField}
                         value={formData.email}
                         error={touched.email ? errors.email : undefined}
                         onChange={(e) => {
@@ -348,17 +370,17 @@ export default function ContactPage() {
                       {/* Message Textarea */}
                       <div className="flex flex-col gap-1.5">
                         <label className="text-xs font-bold text-forest">
-                          تفاصيل الاستفسار <span className="text-rose-500">*</span>
+                          {t.contact.messageLabel} <span className="text-rose-500">*</span>
                         </label>
                         <textarea
                           required
                           rows={4}
                           placeholder={
                             category === 'code'
-                              ? 'اكتب اسم المادة واسم المعلم والمرحلة الدراسية...'
+                              ? (isArabic ? 'اكتب اسم المادة واسم المعلم والمرحلة الدراسية...' : 'Specify subject, teacher, and grade...')
                               : category === 'teacher'
-                              ? 'اكتب مادتك التعليمية، سنوات الخبرة، والمحافظة...'
-                              : 'كيف يمكن لفريق نُـخبة مساعدتك اليوم؟'
+                              ? (isArabic ? 'اكتب مادتك التعليمية، سنوات الخبرة، والمحافظة...' : 'Specify subject, years of experience, and governorate...')
+                              : t.contact.messagePlaceholder
                           }
                           value={formData.message}
                           onChange={(e) => {
@@ -385,7 +407,7 @@ export default function ContactPage() {
                       {/* Submit CTA */}
                       <div className="pt-3 border-t border-black/5 flex flex-col sm:flex-row items-center justify-between gap-4">
                         <span className="text-[11px] text-forest/60 font-medium">
-                          🔒 معلوماتك محمية وتُستخدم فقط للتواصل الأكاديمي.
+                          🔒 {isArabic ? 'معلوماتك محمية وتُستخدم فقط للتواصل الأكاديمي.' : 'Your information is protected and used strictly for academic support.'}
                         </span>
                         
                         <Button
@@ -393,7 +415,7 @@ export default function ContactPage() {
                           icon={<PaperPlaneRight size={16} weight="fill" />}
                           className="w-full sm:w-auto px-8 py-3 font-bold text-xs sm:text-sm whitespace-nowrap shadow-md"
                         >
-                          إرسال الاستفسار
+                          {t.contact.sendButton}
                         </Button>
                       </div>
 
@@ -405,7 +427,7 @@ export default function ContactPage() {
             </div>
           </motion.div>
 
-          {/* RIGHT / CHANNELS COLUMN (5 cols): Official Contacts & WhatsApp Direct */}
+          {/* RIGHT / CHANNELS COLUMN (5 cols) */}
           <motion.div 
             initial={{ opacity: 0, y: 28 }}
             animate={{ opacity: 1, y: 0 }}
@@ -420,15 +442,15 @@ export default function ContactPage() {
                 <div className="relative z-10 flex flex-col gap-4">
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-gold text-xs font-bold border border-white/10 w-fit">
                     <ShieldCheck size={16} weight="bold" />
-                    <span>قنوات التواصل المعتمدة</span>
+                    <span>{t.contact.infoTitle}</span>
                   </div>
 
                   <div>
                     <h3 className="font-display font-bold text-2xl sm:text-3xl text-white mb-1.5 leading-tight">
-                      تواصل مباشر وسريع
+                      {isArabic ? 'تواصل مباشر وسريع' : 'Direct & Fast Support'}
                     </h3>
                     <p className="text-white/75 text-xs sm:text-sm leading-relaxed font-normal">
-                      اختر القناة الأنسب لك للحصول على استجابة فورية من مسؤولي الدعم والأكاديمية.
+                      {t.contact.infoDesc}
                     </p>
                   </div>
 
@@ -446,41 +468,47 @@ export default function ContactPage() {
                         <WhatsappLogo size={22} weight="fill" />
                       </div>
                       <div className="text-start min-w-0">
-                        <span className="text-[11px] text-white/60 block font-medium">مكتب تفعيل الأكواد والاستفسارات الفورية</span>
+                        <span className="text-[11px] text-white/60 block font-medium">
+                          {t.contact.whatsappTitle}
+                        </span>
                         <span className="text-xs sm:text-sm font-bold text-white tracking-wide font-mono" dir="ltr">
-                          +20 100 123 4567
+                          {t.contact.whatsappVal}
                         </span>
                       </div>
                     </a>
 
                     {/* Channel 2: Phone Hotline */}
                     <a
-                      href="tel:+201001234567"
+                      href="tel:19000"
                       className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/15 transition-all duration-300 group cursor-pointer"
                     >
                       <div className="w-10 h-10 rounded-xl bg-gold/20 text-gold flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                         <Phone size={20} weight="bold" />
                       </div>
                       <div className="text-start min-w-0">
-                        <span className="text-[11px] text-white/60 block font-medium">الخط الساخن للطلاب وأولياء الأمور</span>
+                        <span className="text-[11px] text-white/60 block font-medium">
+                          {t.contact.phoneTitle}
+                        </span>
                         <span className="text-xs sm:text-sm font-bold text-white tracking-wide font-mono" dir="ltr">
-                          0100 123 4567
+                          {t.contact.phoneVal}
                         </span>
                       </div>
                     </a>
 
                     {/* Channel 3: Official Email */}
                     <a
-                      href="mailto:support@nokhba.academy"
+                      href="mailto:support@nokhba.eg"
                       className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/15 transition-all duration-300 group cursor-pointer"
                     >
                       <div className="w-10 h-10 rounded-xl bg-white/15 text-white flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                         <EnvelopeSimple size={20} weight="bold" />
                       </div>
                       <div className="text-start min-w-0">
-                        <span className="text-[11px] text-white/60 block font-medium">البريد الإلكتروني الرسمي</span>
+                        <span className="text-[11px] text-white/60 block font-medium">
+                          {t.contact.emailTitle}
+                        </span>
                         <span className="text-xs sm:text-sm font-bold text-white tracking-wide font-mono" dir="ltr">
-                          support@nokhba.academy
+                          {t.contact.emailVal}
                         </span>
                       </div>
                     </a>
@@ -491,9 +519,11 @@ export default function ContactPage() {
                         <MapPin size={20} weight="bold" />
                       </div>
                       <div className="min-w-0">
-                        <span className="text-[11px] text-white/60 block font-medium">المقر الرئيسي واستوديوهات الإنتاج</span>
+                        <span className="text-[11px] text-white/60 block font-medium">
+                          {isArabic ? 'المقر الرئيسي واستوديوهات الإنتاج' : 'HQ & Production Studios'}
+                        </span>
                         <span className="text-xs sm:text-sm font-semibold text-white">
-                          القاهرة، جمهورية مصر العربية
+                          {isArabic ? 'القاهرة، جمهورية مصر العربية' : 'Cairo, Arab Republic of Egypt'}
                         </span>
                       </div>
                     </div>
@@ -504,13 +534,13 @@ export default function ContactPage() {
                 {/* Direct Action Link */}
                 <div className="pt-3 border-t border-white/10">
                   <a
-                    href="https://wa.me/201001234567"
+                    href="https://wa.me/201000000000"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-full inline-flex items-center justify-center gap-2 py-3 px-6 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs sm:text-sm shadow-md transition-all transform active:scale-95 cursor-pointer"
                   >
                     <WhatsappLogo size={18} weight="fill" />
-                    <span>محادثة فورية عبر الواتساب</span>
+                    <span>{isArabic ? 'محادثة فورية عبر الواتساب' : 'Instant Chat on WhatsApp'}</span>
                   </a>
                 </div>
 
@@ -522,7 +552,7 @@ export default function ContactPage() {
       </section>
 
       {/* ------------------------------------------------------------- */}
-      {/* 3. FULL-WIDTH KNOWLEDGE BASE & QUICK FAQS: Symmetrical Cards */}
+      {/* 3. FULL-WIDTH QUICK FAQS */}
       {/* ------------------------------------------------------------- */}
       <motion.section 
         initial={{ opacity: 0, y: 30 }}
@@ -539,23 +569,27 @@ export default function ContactPage() {
                 <Question size={22} weight="fill" />
               </div>
               <div>
-                <h3 className="font-display font-bold text-lg sm:text-xl text-forest">الأسئلة الأكثر تكراراً والدعم الأكاديمي</h3>
-                <p className="text-xs text-forest/60">إجابات سريعة على أهم استفسارات الطلاب وأولياء الأمور</p>
+                <h3 className="font-display font-bold text-lg sm:text-xl text-forest">
+                  {isArabic ? 'الأسئلة الأكثر تكراراً والدعم الأكاديمي' : 'Frequently Asked Questions'}
+                </h3>
+                <p className="text-xs text-forest/60">
+                  {isArabic ? 'إجابات سريعة على أهم استفسارات الطلاب وأولياء الأمور' : 'Quick answers to top inquiries'}
+                </p>
               </div>
             </div>
 
             <a 
-              href="https://wa.me/201001234567"
+              href="https://wa.me/201000000000"
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs font-bold text-gold hover:underline inline-flex items-center gap-1.5 shrink-0"
             >
               <Headset size={16} weight="bold" />
-              <span>تواصل مع الدعم الفني</span>
+              <span>{isArabic ? 'تواصل مع الدعم الفني' : 'Contact Support Desk'}</span>
             </a>
           </div>
 
-          {/* 3-Column Symmetrical Cards with Staggered Entrance & Micro-Hover */}
+          {/* 3-Column Symmetrical Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {QUICK_FAQS.map((faq, idx) => (
               <motion.div 
@@ -569,13 +603,13 @@ export default function ContactPage() {
               >
                 <div className="flex flex-col gap-2">
                   <span className="w-fit text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-forest text-gold">
-                    {faq.tag}
+                    {faq.tag[lang]}
                   </span>
                   <h4 className="font-bold text-xs sm:text-sm text-forest leading-snug">
-                    {faq.q}
+                    {faq.q[lang]}
                   </h4>
                   <p className="text-xs text-forest/70 leading-relaxed mt-1">
-                    {faq.a}
+                    {faq.a[lang]}
                   </p>
                 </div>
               </motion.div>

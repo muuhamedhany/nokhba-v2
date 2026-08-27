@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X } from '@phosphor-icons/react';
 import { Button } from './Button';
 import { Input } from './Input';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface PromptModalProps {
   isOpen: boolean;
@@ -24,14 +25,18 @@ export function PromptModal({
   description,
   placeholder = '',
   initialValue = '',
-  confirmText = 'إضافة',
-  cancelText = 'إلغاء',
+  confirmText,
+  cancelText,
   onConfirm,
   onCancel
 }: PromptModalProps) {
+  const { t, isArabic } = useLanguage();
   const [value, setValue] = useState(initialValue);
   const [error, setError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const effectiveConfirmText = confirmText || (isArabic ? 'إضافة' : 'Confirm');
+  const effectiveCancelText = cancelText || t.ui.cancel;
 
   useEffect(() => {
     if (isOpen) {
@@ -47,7 +52,7 @@ export function PromptModal({
     e.preventDefault();
     const trimmed = value.trim();
     if (!trimmed) {
-      setError('يرجى إدخال النص المطلوب');
+      setError(isArabic ? 'يرجى إدخال النص المطلوب' : 'Please enter required text');
       return;
     }
     onConfirm(trimmed);
@@ -109,13 +114,13 @@ export function PromptModal({
                   onClick={onCancel}
                   className="px-6 py-2 text-forest/70 hover:text-forest"
                 >
-                  {cancelText}
+                  {effectiveCancelText}
                 </Button>
                 <Button
                   type="submit"
                   className="px-6 py-2 bg-gold text-forest font-bold hover:bg-gold/90"
                 >
-                  {confirmText}
+                  {effectiveConfirmText}
                 </Button>
               </div>
             </form>

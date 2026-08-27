@@ -7,6 +7,7 @@ import { Button } from '@/components/common/Button';
 import type { QuizItem, Question } from '@/types';
 import { Plus, Trash, CheckCircle } from '@phosphor-icons/react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface QuizBuilderModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ interface QuizBuilderModalProps {
 }
 
 export function QuizBuilderModal({ isOpen, onClose, onSave, initialData }: QuizBuilderModalProps) {
+  const { t, isArabic } = useLanguage();
   const [title, setTitle] = useState('');
   const [questions, setQuestions] = useState<Omit<Question, 'id'>[]>([]);
 
@@ -63,12 +65,12 @@ export function QuizBuilderModal({ isOpen, onClose, onSave, initialData }: QuizB
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title) return alert('الرجاء إدخال عنوان الاختبار');
+    if (!title) return alert(isArabic ? 'الرجاء إدخال عنوان الاختبار' : 'Please provide quiz title');
     
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
-      if (!q.prompt) return alert(`السؤال رقم ${i + 1} لا يحتوي على نص`);
-      if (q.options.some(opt => !opt.trim())) return alert(`الرجاء إكمال جميع الخيارات في السؤال رقم ${i + 1}`);
+      if (!q.prompt) return alert(isArabic ? `السؤال رقم ${i + 1} لا يحتوي على نص` : `Question ${i + 1} is empty`);
+      if (q.options.some(opt => !opt.trim())) return alert(isArabic ? `الرجاء إكمال جميع الخيارات في السؤال رقم ${i + 1}` : `Please fill all options in Question ${i + 1}`);
     }
 
     const formattedQuestions: Question[] = questions.map((q, i) => ({
@@ -81,24 +83,24 @@ export function QuizBuilderModal({ isOpen, onClose, onSave, initialData }: QuizB
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={initialData ? "تعديل الاختبار" : "إضافة اختبار جديد"} className="max-w-4xl">
+    <Modal isOpen={isOpen} onClose={onClose} title={initialData ? (isArabic ? "تعديل الاختبار" : "Edit Quiz") : (isArabic ? "إضافة اختبار جديد" : "Add New Quiz")} className="max-w-4xl">
       <form onSubmit={handleSubmit} className="flex flex-col gap-8">
         
         <div className="bg-bone/50 p-6 rounded-2xl border border-black/5">
           <Input 
-            label="عنوان الاختبار" 
+            label={isArabic ? "عنوان الاختبار" : "Quiz Title"} 
             value={title}
             onChange={e => setTitle(e.target.value)}
-            placeholder="مثال: اختبار الوحدة الأولى"
+            placeholder={isArabic ? "مثال: اختبار الوحدة الأولى" : "e.g. Chapter 1 Quiz"}
             required
           />
         </div>
 
         <div className="flex flex-col gap-6">
           <div className="flex justify-between items-center border-b border-black/5 pb-2">
-            <h3 className="font-semibold text-lg text-forest">الأسئلة</h3>
+            <h3 className="font-semibold text-lg text-forest">{isArabic ? 'الأسئلة' : 'Questions'}</h3>
             <Button type="button" variant="ghost" onClick={handleAddQuestion} className="h-8 px-4 text-xs">
-              <Plus weight="bold" className="me-2" /> سؤال جديد
+              <Plus weight="bold" className="me-2" /> {isArabic ? 'سؤال جديد' : 'Add Question'}
             </Button>
           </div>
 
@@ -118,7 +120,7 @@ export function QuizBuilderModal({ isOpen, onClose, onSave, initialData }: QuizB
                     </span>
                     <div className="flex-1">
                       <Input 
-                        placeholder="اكتب السؤال هنا..."
+                        placeholder={isArabic ? "اكتب السؤال هنا..." : "Write question prompt here..."}
                         value={q.prompt}
                         onChange={e => updateQuestion(qIndex, { prompt: e.target.value })}
                         required
@@ -146,7 +148,7 @@ export function QuizBuilderModal({ isOpen, onClose, onSave, initialData }: QuizB
                         <input
                           type="text"
                           className={`flex-1 bg-black/5 rounded-xl px-4 py-2 text-sm text-forest transition-colors outline-none border ${q.correctOptionIndex === optIndex ? 'border-gold bg-white font-medium' : 'border-transparent focus:border-gold focus:bg-white'}`}
-                          placeholder={`الخيار ${optIndex + 1}`}
+                          placeholder={isArabic ? `الخيار ${optIndex + 1}` : `Option ${optIndex + 1}`}
                           value={opt}
                           onChange={e => updateOption(qIndex, optIndex, e.target.value)}
                           required
@@ -161,8 +163,8 @@ export function QuizBuilderModal({ isOpen, onClose, onSave, initialData }: QuizB
         </div>
 
         <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-black/5">
-          <Button variant="ghost" onClick={onClose} type="button">إلغاء</Button>
-          <Button type="submit">حفظ الاختبار</Button>
+          <Button variant="ghost" onClick={onClose} type="button">{t.ui.cancel}</Button>
+          <Button type="submit">{isArabic ? 'حفظ الاختبار' : 'Save Quiz'}</Button>
         </div>
 
       </form>

@@ -2,14 +2,13 @@
 
 import { motion } from 'motion/react';
 import Link from 'next/link';
-import { strings } from '@/locales/ar';
+import { useLanguage } from '@/context/LanguageContext';
 import { Button } from '../common/Button';
 import { 
   SealCheck, 
-  Star, 
-  Users, 
-  ArrowLeft, 
-  ChalkboardTeacher 
+  ChalkboardTeacher,
+  ArrowLeft,
+  ArrowRight
 } from '@phosphor-icons/react';
 
 interface TeacherItem {
@@ -72,6 +71,8 @@ const FEATURED_TEACHERS: TeacherItem[] = [
 ];
 
 export function TeacherShowcase() {
+  const { t, isArabic } = useLanguage();
+
   return (
     <section id="teachers" className="w-full bg-[#F2F0EB] py-16 md:py-24 relative border-y border-black/5 overflow-hidden text-start">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col gap-12">
@@ -81,19 +82,23 @@ export function TeacherShowcase() {
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 rounded-full px-3.5 py-1 text-xs font-bold bg-forest/5 text-forest border border-forest/10 mb-3">
               <ChalkboardTeacher size={16} weight="duotone" className="text-gold" />
-              <span>نخبة الكوادر التعليمية</span>
+              <span>{isArabic ? 'نخبة الكوادر التعليمية' : 'Elite Educational Cadres'}</span>
             </div>
             <h2 className="font-display font-bold text-3xl sm:text-4xl md:text-5xl text-forest tracking-tight">
-              تعلم مع صفوة معلمي الثانوية العامة
+              {t.teachers.title}
             </h2>
             <p className="text-forest/75 text-sm sm:text-base leading-relaxed mt-2">
-              نخبة من كبار الأساتذة المعتمدين أصحاب أعلى معدلات تفوق وتخريج أوائل الجمهورية سنوياً.
+              {t.teachers.subtitle}
             </p>
           </div>
 
           <Link href="/lessons" className="shrink-0">
-            <Button variant="ghost" className="px-5 py-2.5 text-xs font-bold text-forest bg-white border border-black/5 hover:border-black/15 shadow-xs" icon={<ArrowLeft size={14} weight="bold" />}>
-              استعراض كافة المناهج
+            <Button 
+              variant="ghost" 
+              className="px-5 py-2.5 text-xs font-bold text-forest bg-white border border-black/5 hover:border-black/15 shadow-xs" 
+              icon={isArabic ? <ArrowLeft size={14} weight="bold" /> : <ArrowRight size={14} weight="bold" />}
+            >
+              {isArabic ? 'استعراض كافة المناهج' : 'Browse All Curricula'}
             </Button>
           </Link>
         </div>
@@ -152,18 +157,22 @@ export function TeacherShowcase() {
                   <div className="grid grid-cols-2 gap-2 py-2 px-3 rounded-xl bg-[#F7F6F3] border border-black/5 text-center text-xs mb-4">
                     <div className="flex flex-col">
                       <span className="font-display font-bold text-forest">{teacher.studentsCount}</span>
-                      <span className="text-[10px] text-forest/60">طالب مسجل</span>
+                      <span className="text-[10px] text-forest/60">{t.teachers.studentsEnrolled}</span>
                     </div>
                     <div className="flex flex-col border-s border-black/5">
-                      <span className="font-display font-bold text-forest">{teacher.coursesCount} كورسات</span>
-                      <span className="text-[10px] text-forest/60">مناهج دراسية</span>
+                      <span className="font-display font-bold text-forest">{teacher.coursesCount}</span>
+                      <span className="text-[10px] text-forest/60">{t.teachers.coursesCount}</span>
                     </div>
                   </div>
 
                   {/* Profile CTA Button */}
                   <Link href={`/teachers/${teacher.id}`} className="block">
-                    <Button variant="ghost" className="w-full py-2.5 text-xs font-bold text-forest border border-black/10 hover:border-forest/30 bg-black/5 hover:bg-black/10" icon={<ArrowLeft size={14} weight="bold" />}>
-                      عرض ملف الأستاذ
+                    <Button 
+                      variant="ghost" 
+                      className="w-full py-2.5 text-xs font-bold text-forest border border-black/10 hover:border-forest/30 bg-black/5 hover:bg-black/10" 
+                      icon={isArabic ? <ArrowLeft size={14} weight="bold" /> : <ArrowRight size={14} weight="bold" />}
+                    >
+                      {t.teachers.exploreTeacher}
                     </Button>
                   </Link>
                 </div>
@@ -179,18 +188,18 @@ export function TeacherShowcase() {
           whileInView={{ opacity: 1, y: 0, scale: 1 }}
           viewport={{ once: true, amount: 0.2 }}
           transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-6 bg-forest text-white rounded-[2rem] p-8 md:p-12 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8 shadow-xl"
+          className="mt-6 bg-forest text-white rounded-[2rem] p-8 md:p-12 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8 shadow-xl text-start"
         >
           <div className="max-w-2xl relative z-10">
             <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold bg-white/10 text-gold mb-3">
               <ChalkboardTeacher size={16} weight="bold" />
-              <span>انضمام المعلمين</span>
+              <span>{isArabic ? 'انضمام المعلمين' : 'Teacher Recruitment'}</span>
             </div>
             <h3 className="font-display font-bold text-2xl md:text-3xl text-white mb-2">
-              {strings.teachers.joinCtaTitle}
+              {t.teachers.joinCtaTitle}
             </h3>
             <p className="text-white/75 text-sm md:text-base leading-relaxed">
-              {strings.teachers.joinCtaDesc}
+              {t.teachers.joinCtaDesc}
             </p>
           </div>
 
@@ -199,9 +208,9 @@ export function TeacherShowcase() {
               <Button 
                 variant="glass"
                 className="w-full md:w-auto px-8 py-3.5 font-bold text-sm"
-                icon={<ArrowLeft size={16} weight="bold" />}
+                icon={isArabic ? <ArrowLeft size={16} weight="bold" /> : <ArrowRight size={16} weight="bold" />}
               >
-                {strings.teachers.joinCtaButton}
+                {t.teachers.joinCtaButton}
               </Button>
             </Link>
           </div>

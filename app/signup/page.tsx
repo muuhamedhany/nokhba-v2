@@ -4,6 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useStore } from '@/store';
+import { useLanguage } from '@/context/LanguageContext';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { motion, AnimatePresence } from 'motion/react';
@@ -11,22 +12,23 @@ import { Spinner, Check, ChalkboardTeacher, Student, WarningCircle } from '@phos
 import { validateFullName, validatePhone, validateParentPhone, validatePassword } from '@/utils/validators';
 
 const SUBJECT_OPTIONS = [
-  'الجغرافيا',
-  'التاريخ',
-  'الفيزياء',
-  'الكيمياء',
-  'الرياضيات',
-  'الأحياء',
-  'اللغة العربية',
-  'اللغة الإنجليزية',
-  'اللغة الفرنسية',
-  'الفلسفة والمنطق',
+  { key: 'geography', ar: 'الجغرافيا', en: 'Geography' },
+  { key: 'history', ar: 'التاريخ', en: 'History' },
+  { key: 'physics', ar: 'الفيزياء', en: 'Physics' },
+  { key: 'chemistry', ar: 'الكيمياء', en: 'Chemistry' },
+  { key: 'math', ar: 'الرياضيات', en: 'Mathematics' },
+  { key: 'biology', ar: 'الأحياء', en: 'Biology' },
+  { key: 'arabic', ar: 'اللغة العربية', en: 'Arabic Language' },
+  { key: 'english', ar: 'اللغة الإنجليزية', en: 'English Language' },
+  { key: 'french', ar: 'اللغة الفرنسية', en: 'French Language' },
+  { key: 'philosophy', ar: 'الفلسفة والمنطق', en: 'Philosophy & Logic' },
 ];
 
 function SignupContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setCurrentUser, currentUser } = useStore();
+  const { t, lang, isArabic } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [role, setRole] = useState<'student' | 'teacher'>('student');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -82,29 +84,29 @@ function SignupContent() {
   const validateField = (field: string, value: string) => {
     switch (field) {
       case 'name': {
-        const res = validateFullName(value, role === 'teacher');
+        const res = validateFullName(value, role === 'teacher', isArabic);
         return res.isValid ? undefined : res.message;
       }
       case 'phone': {
-        const res = validatePhone(value, 'رقم الهاتف');
+        const res = validatePhone(value, isArabic, isArabic ? 'رقم الهاتف' : 'Phone number');
         return res.isValid ? undefined : res.message;
       }
       case 'password': {
-        const res = validatePassword(value);
+        const res = validatePassword(value, isArabic);
         return res.isValid ? undefined : res.message;
       }
       case 'confirmPassword': {
         if (!value) {
-          return 'يرجى تأكيد كلمة المرور';
+          return isArabic ? 'يرجى تأكيد كلمة المرور' : 'Please confirm your password';
         }
         if (value !== formData.password) {
-          return 'كلمتا المرور غير متطابقتين';
+          return isArabic ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match';
         }
         return undefined;
       }
       case 'parentPhone': {
         if (role === 'student') {
-          const res = validateParentPhone(value, formData.phone);
+          const res = validateParentPhone(value, formData.phone, isArabic);
           return res.isValid ? undefined : res.message;
         }
         return undefined;
@@ -124,7 +126,10 @@ function SignupContent() {
     let next: string[];
     if (selectedSubjects.includes(subjectName)) {
       if (selectedSubjects.length === 1) {
-        setErrors((prev) => ({ ...prev, subjects: 'يرجى اختيار مادة دراسية واحدة على الأقل' }));
+        setErrors((prev) => ({ 
+          ...prev, 
+          subjects: isArabic ? 'يرجى اختيار مادة دراسية واحدة على الأقل' : 'Please select at least one subject' 
+        }));
         return;
       }
       next = selectedSubjects.filter((s) => s !== subjectName);
@@ -144,7 +149,9 @@ function SignupContent() {
     const passErr = validateField('password', formData.password);
     const confirmPassErr = validateField('confirmPassword', formData.confirmPassword);
     const parentPhoneErr = role === 'student' ? validateField('parentPhone', formData.parentPhone) : undefined;
-    const subjectsErr = role === 'teacher' && selectedSubjects.length === 0 ? 'يرجى اختيار مادة دراسية واحدة على الأقل' : undefined;
+    const subjectsErr = role === 'teacher' && selectedSubjects.length === 0 
+      ? (isArabic ? 'يرجى اختيار مادة دراسية واحدة على الأقل' : 'Please select at least one subject') 
+      : undefined;
 
     setTouched({ name: true, phone: true, password: true, confirmPassword: true, parentPhone: true });
     setErrors({
@@ -157,7 +164,7 @@ function SignupContent() {
     });
 
     if (nameErr || phoneErr || passErr || confirmPassErr || parentPhoneErr || subjectsErr) {
-      setErrorMessage('يرجى تصحيح الأخطاء الموضحة في النموذج قبل المتابعة.');
+      setErrorMessage(isArabic ? 'يرجى تصحيح الأخطاء الموضحة في النموذج قبل المتابعة.' : 'Please resolve form errors before proceeding.');
       return;
     }
 
@@ -192,11 +199,11 @@ function SignupContent() {
           router.push('/student/dashboard');
         }
       } else {
-        setErrorMessage(data.message || 'حدث خطأ أثناء إنشاء الحساب، يرجى المحاولة مرة أخرى.');
+        setErrorMessage(data.message || (isArabic ? 'حدث خطأ أثناء إنشاء الحساب، يرجى المحاولة مرة أخرى.' : 'Error creating account. Please try again.'));
       }
     } catch (err) {
       console.error('Signup submit error:', err);
-      setErrorMessage('تعذر الاتصال بالسيرفر، تأكد من اتصالك بالإنترنت.');
+      setErrorMessage(isArabic ? 'تعذر الاتصال بالسيرفر، تأكد من اتصالك بالإنترنت.' : 'Connection error. Please check your internet.');
     } finally {
       setIsLoading(false);
     }
@@ -215,10 +222,10 @@ function SignupContent() {
           {/* Header */}
           <div className="text-center">
             <h1 className="font-display font-bold text-2xl sm:text-3xl md:text-4xl text-forest mb-2">
-              إنشاء حساب جديد
+              {t.auth.signupTitle}
             </h1>
             <p className="text-forest/70 text-xs sm:text-sm">
-              انضم إلى منصة نُـخبة وابدأ رحلتك فوراً كطالب أو كمعلم معتمد.
+              {t.auth.signupSubtitle}
             </p>
           </div>
 
@@ -238,7 +245,7 @@ function SignupContent() {
               }`}
             >
               <Student size={18} weight={role === 'student' ? 'fill' : 'regular'} />
-              <span>طالب</span>
+              <span>{t.auth.roleStudent}</span>
             </button>
             <button
               type="button"
@@ -254,7 +261,7 @@ function SignupContent() {
               }`}
             >
               <ChalkboardTeacher size={18} weight={role === 'teacher' ? 'fill' : 'regular'} />
-              <span>معلم</span>
+              <span>{t.auth.roleTeacher}</span>
             </button>
           </div>
 
@@ -278,9 +285,12 @@ function SignupContent() {
             
             {/* Full Name */}
             <Input
-              label="الاسم الكامل"
+              label={t.auth.fullName}
               required
-              placeholder={role === 'teacher' ? 'مثال: أ. محمد أحمد المنشاوي' : 'مثال: أحمد محمد علي حسن'}
+              placeholder={role === 'teacher' 
+                ? (isArabic ? 'مثال: أ. محمد أحمد المنشاوي' : 'e.g. Dr. Mohamed Ahmed')
+                : (isArabic ? 'مثال: أحمد محمد علي حسن' : 'e.g. Ahmed Mohamed Ali')
+              }
               value={formData.name}
               error={touched.name ? errors.name : undefined}
               onChange={(e) => {
@@ -294,11 +304,11 @@ function SignupContent() {
 
             {/* Phone */}
             <Input
-              label="رقم الهاتف"
+              label={t.auth.phone}
               type="tel"
               required
               dir="ltr"
-              className="text-end"
+              className={isArabic ? "text-end" : "text-start"}
               placeholder="010XXXXXXXX"
               value={formData.phone}
               error={touched.phone ? errors.phone : undefined}
@@ -313,11 +323,11 @@ function SignupContent() {
 
             {/* Password */}
             <Input
-              label="كلمة المرور"
+              label={t.auth.password}
               type="password"
               required
               dir="ltr"
-              className="text-end"
+              className={isArabic ? "text-end" : "text-start"}
               placeholder="••••••••"
               value={formData.password}
               error={touched.password ? errors.password : undefined}
@@ -329,7 +339,7 @@ function SignupContent() {
                     ...prev,
                     password: validateField('password', newPassword),
                     confirmPassword: touched.confirmPassword && formData.confirmPassword
-                      ? (newPassword !== formData.confirmPassword ? 'كلمتا المرور غير متطابقتين' : undefined)
+                      ? (newPassword !== formData.confirmPassword ? (isArabic ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match') : undefined)
                       : prev.confirmPassword
                   }));
                 }
@@ -339,11 +349,11 @@ function SignupContent() {
 
             {/* Confirm Password */}
             <Input
-              label="تأكيد كلمة المرور"
+              label={t.auth.confirmPassword}
               type="password"
               required
               dir="ltr"
-              className="text-end"
+              className={isArabic ? "text-end" : "text-start"}
               placeholder="••••••••"
               value={formData.confirmPassword}
               error={touched.confirmPassword ? errors.confirmPassword : undefined}
@@ -353,7 +363,7 @@ function SignupContent() {
                 if (touched.confirmPassword) {
                   setErrors((prev) => ({
                     ...prev,
-                    confirmPassword: newConfirmPassword !== formData.password ? 'كلمتا المرور غير متطابقتين' : undefined
+                    confirmPassword: newConfirmPassword !== formData.password ? (isArabic ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match') : undefined
                   }));
                 }
               }}
@@ -365,7 +375,7 @@ function SignupContent() {
                 {/* Grade */}
                 <div className="flex flex-col gap-1.5 w-full">
                   <label className="text-xs font-bold text-forest">
-                    الصف الدراسي <span className="text-rose-500">*</span>
+                    {t.auth.grade} <span className="text-rose-500">*</span>
                   </label>
                   <select
                     className="w-full bg-[#F7F6F3] focus:bg-white rounded-xl px-4 py-3 text-xs sm:text-sm text-forest border border-transparent focus:border-gold/60 outline-none transition-all shadow-inner cursor-pointer"
@@ -373,22 +383,22 @@ function SignupContent() {
                     onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
                     required
                   >
-                    <option value="sec3">الصف الثالث الثانوي (الشهادة العامة)</option>
-                    <option value="sec2">الصف الثاني الثانوي</option>
-                    <option value="sec1">الصف الأول الثانوي</option>
-                    <option value="prep3">الصف الثالث الإعدادي</option>
+                    <option value="sec3">{t.grades.sec3}</option>
+                    <option value="sec2">{t.grades.sec2}</option>
+                    <option value="sec1">{t.grades.sec1}</option>
+                    <option value="prep3">{t.grades.prep3}</option>
                   </select>
                 </div>
 
                 {/* Parent Phone */}
                 <Input
-                  label="رقم هاتف ولي الأمر"
+                  label={t.auth.parentPhone}
                   type="tel"
                   required
                   dir="ltr"
-                  className="text-end"
+                  className={isArabic ? "text-end" : "text-start"}
                   placeholder="010XXXXXXXX"
-                  hint="(للمتابعة والتقارير)"
+                  hint={isArabic ? '(للمتابعة والتقارير)' : '(For reports & sync)'}
                   value={formData.parentPhone}
                   error={touched.parentPhone ? errors.parentPhone : undefined}
                   onChange={(e) => {
@@ -406,19 +416,21 @@ function SignupContent() {
                 <div className="flex flex-col gap-2 md:col-span-2">
                   <label className="text-xs font-bold text-forest flex items-center justify-between">
                     <span>
-                      المواد التي تدرسها <span className="text-rose-500">*</span>
+                      {t.auth.subjectsTeaching} <span className="text-rose-500">*</span>
                     </span>
-                    <span className="text-[11px] text-forest/40 font-normal">(اختر واحدة أو أكثر)</span>
+                    <span className="text-[11px] text-forest/40 font-normal">
+                      {isArabic ? '(اختر واحدة أو أكثر)' : '(Select one or more)'}
+                    </span>
                   </label>
                   
                   <div className="flex flex-wrap gap-2">
                     {SUBJECT_OPTIONS.map((sub) => {
-                      const isSelected = selectedSubjects.includes(sub);
+                      const isSelected = selectedSubjects.includes(sub.ar) || selectedSubjects.includes(sub.en);
                       return (
                         <button
-                          key={sub}
+                          key={sub.key}
                           type="button"
-                          onClick={() => toggleSubject(sub)}
+                          onClick={() => toggleSubject(sub.ar)}
                           className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
                             isSelected
                               ? 'bg-forest text-gold border-forest shadow-sm'
@@ -426,7 +438,7 @@ function SignupContent() {
                           }`}
                         >
                           {isSelected && <Check size={14} weight="bold" className="text-gold" />}
-                          <span>{sub}</span>
+                          <span>{sub[lang]}</span>
                         </button>
                       );
                     })}
@@ -443,12 +455,12 @@ function SignupContent() {
                 {/* Teacher Bio */}
                 <div className="flex flex-col gap-1.5 md:col-span-2">
                   <label className="text-xs font-bold text-forest">
-                    نبذة تعريفية ومؤهلاتك التدريسية <span className="text-forest/40 text-[11px] font-normal">(اختياري)</span>
+                    {t.auth.bio} <span className="text-forest/40 text-[11px] font-normal">{t.ui.optionalField}</span>
                   </label>
                   <textarea
                     rows={3}
                     className="w-full bg-[#F7F6F3] focus:bg-white rounded-xl px-4 py-3 text-xs sm:text-sm text-forest border border-transparent focus:border-gold/60 outline-none transition-all shadow-inner resize-none"
-                    placeholder="مثال: خبير تدريس مادة الفيزياء، ماجستير الفيزياء التطبيقية بخبرة تتجاوز 12 عاماً..."
+                    placeholder={isArabic ? 'مثال: خبير تدريس مادة الفيزياء بخبرة تتجاوز 12 عاماً...' : 'e.g. Physics educator with 12+ years experience...'}
                     value={formData.bio}
                     onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                   />
@@ -461,18 +473,18 @@ function SignupContent() {
                 {isLoading ? (
                   <Spinner className="animate-spin" size={20} />
                 ) : role === 'teacher' ? (
-                  'إنشاء حساب معلم والبدء فوراً'
+                  (isArabic ? 'إنشاء حساب معلم والبدء فوراً' : 'Create Teacher Account')
                 ) : (
-                  'إنشاء حساب طالب والبدء فوراً'
+                  (isArabic ? 'إنشاء حساب طالب والبدء فوراً' : 'Create Student Account')
                 )}
               </Button>
             </div>
           </form>
 
           <p className="text-center text-forest/70 text-xs sm:text-sm">
-            لديك حساب بالفعل؟{' '}
+            {t.auth.alreadyHaveAccount}{' '}
             <Link href="/login" className="text-gold font-bold hover:underline">
-              تسجيل الدخول
+              {t.auth.loginBtn}
             </Link>
           </p>
         </div>

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useStore } from '@/store';
+import { useLanguage } from '@/context/LanguageContext';
 import { 
   PlayCircle, 
   Question, 
@@ -29,6 +30,7 @@ function CourseViewContent() {
   const params = useParams();
   const id = params.id as string;
   const router = useRouter();
+  const { t, isArabic } = useLanguage();
   const { 
     courses, 
     currentUser, 
@@ -142,7 +144,6 @@ function CourseViewContent() {
   }, [allItems, activeVideoItem]);
 
   const nextItem = currentItemIndex >= 0 && currentItemIndex < allItems.length - 1 ? allItems[currentItemIndex + 1] : null;
-  const prevItem = currentItemIndex > 0 ? allItems[currentItemIndex - 1] : null;
 
   // Progress calculations including both videos & completed quizzes
   const totalItemsCount = allItems.length;
@@ -205,9 +206,9 @@ function CourseViewContent() {
   if (!course) {
     return (
       <div className="p-12 text-center text-forest">
-        <p className="text-lg font-bold mb-2">الكورس غير موجود</p>
+        <p className="text-lg font-bold mb-2">{isArabic ? 'الكورس غير موجود' : 'Course Not Found'}</p>
         <Button onClick={() => router.push(isTeacherPreview ? '/teacher/courses' : '/lessons')}>
-          العودة للقائمة
+          {isArabic ? 'العودة للقائمة' : 'Return to List'}
         </Button>
       </div>
     );
@@ -230,15 +231,15 @@ function CourseViewContent() {
                 </div>
                 <div>
                   <span className="text-xs font-bold text-forest/50 uppercase tracking-wider block">
-                    محتوى تعليمي محمي
+                    {isArabic ? 'محتوى تعليمي محمي' : 'Protected Curriculum'}
                   </span>
                   <h1 className="font-display font-bold text-xl text-forest">
-                    يتطلب كود تفعيل للمشاهدة
+                    {isArabic ? 'يتطلب كود تفعيل للمشاهدة' : 'Requires Access Code'}
                   </h1>
                 </div>
               </div>
               <span className="bg-forest/5 text-forest text-xs font-bold px-3 py-1 rounded-full border border-black/5">
-                كورس مدفوع
+                {isArabic ? 'كورس مدفوع' : 'Paid Course'}
               </span>
             </div>
 
@@ -258,7 +259,7 @@ function CourseViewContent() {
                   {course.description}
                 </p>
                 <div className="flex items-center gap-2 text-[11px] font-bold text-forest/60">
-                  <span>المعلم: {course.teacher?.name || 'أستاذ المادة'}</span>
+                  <span>{isArabic ? 'المعلم:' : 'Educator:'} {course.teacher?.name || (isArabic ? 'أستاذ المادة' : 'Teacher')}</span>
                 </div>
               </div>
             </div>
@@ -266,7 +267,9 @@ function CourseViewContent() {
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2">
                 <Ticket size={18} weight="fill" className="text-gold" />
-                <h2 className="font-bold text-sm text-forest">أدخل كود الحصة لفتح الكورس فوراً:</h2>
+                <h2 className="font-bold text-sm text-forest">
+                  {isArabic ? 'أدخل كود الحصة لفتح الكورس فوراً:' : 'Enter code to unlock course instantly:'}
+                </h2>
               </div>
 
               <form onSubmit={handleRedeemCode} className="flex flex-col gap-3">
@@ -285,7 +288,7 @@ function CourseViewContent() {
                     disabled={isRedeeming || redeemInput.trim().length < 4}
                     className="px-6 py-3.5 text-xs sm:text-sm font-bold shrink-0 hover:bg-forest shadow-md"
                   >
-                    {isRedeeming ? 'جاري التفعيل...' : 'تفعيل الكورس'}
+                    {isRedeeming ? t.student.redeeming : (isArabic ? 'تفعيل الكورس' : 'Unlock Course')}
                   </Button>
                 </div>
 
@@ -322,7 +325,9 @@ function CourseViewContent() {
                   : cleanDigits.startsWith('0')
                     ? `2${cleanDigits}`
                     : `20${cleanDigits}`;
-                const waText = `أود شراء أو طلب كود تفعيل كورس ${course.title} - الأستاذ ${course.teacher?.name || ''}`;
+                const waText = isArabic 
+                  ? `أود شراء أو طلب كود تفعيل كورس ${course.title} - الأستاذ ${course.teacher?.name || ''}`
+                  : `Inquiry regarding access code for ${course.title} - ${course.teacher?.name || ''}`;
 
                 return (
                   <a
@@ -332,14 +337,14 @@ function CourseViewContent() {
                     className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition-colors cursor-pointer"
                   >
                     <WhatsappLogo size={18} weight="fill" className="text-emerald-600" />
-                    <span>طلب الكود عبر واتساب ({course.teacher?.name || 'أستاذ المادة'})</span>
+                    <span>{isArabic ? `طلب الكود عبر واتساب (${course.teacher?.name || 'أستاذ المادة'})` : 'Request Code on WhatsApp'}</span>
                   </a>
                 );
               })()}
 
               <Link href="/lessons" className="w-full sm:w-auto">
                 <Button variant="ghost" className="w-full sm:w-auto px-4 py-2.5 text-xs font-bold text-forest/70 hover:text-forest">
-                  العودة لمكتبة الكورسات
+                  {isArabic ? 'العودة لمكتبة الكورسات' : 'Back to Library'}
                 </Button>
               </Link>
             </div>
@@ -360,15 +365,15 @@ function CourseViewContent() {
               href={isTeacherPreview ? '/teacher/courses' : '/student/dashboard'}
               className="p-2 rounded-xl bg-forest/5 hover:bg-forest/10 text-forest text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer shrink-0"
             >
-              <ArrowRight size={16} />
-              <span>لوحة التحكم</span>
+              {isArabic ? <ArrowRight size={16} /> : <ArrowLeft size={16} />}
+              <span>{isArabic ? 'لوحة التحكم' : 'Dashboard'}</span>
             </Link>
 
             <div className="h-4 w-px bg-black/10 shrink-0" />
 
             <div className="min-w-0">
               <span className="text-[10px] font-bold text-forest/50 uppercase tracking-wider block">
-                {course.subject} • {course.grade}
+                {t.subjects[course.subject as keyof typeof t.subjects] || course.subject} • {t.grades[course.grade as keyof typeof t.grades] || course.grade}
               </span>
               <h1 className="font-display font-bold text-xs sm:text-base text-forest truncate">
                 {course.title}
@@ -378,8 +383,8 @@ function CourseViewContent() {
 
           <div className="flex items-center gap-3 self-end sm:self-auto">
             <div className="flex items-center gap-1.5 bg-[#F7F6F3] px-3 py-1.5 rounded-xl border border-black/5 text-xs font-bold text-forest/70">
-              <span>المعلم:</span>
-              <span className="text-forest font-extrabold">{course.teacher?.name || 'أستاذ المادة'}</span>
+              <span>{isArabic ? 'المعلم:' : 'Educator:'}</span>
+              <span className="text-forest font-extrabold">{course.teacher?.name || (isArabic ? 'أستاذ المادة' : 'Teacher')}</span>
             </div>
           </div>
         </div>
@@ -389,10 +394,12 @@ function CourseViewContent() {
           <div className="bg-forest text-gold px-4 py-2.5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs font-bold shadow-xs">
             <div className="flex items-center gap-2">
               <Eye size={18} weight="fill" className="text-gold shrink-0" />
-              <span>وضع معاينة الطالب (Student Preview) — يمكنك تجربة مشاهدة المحاضرات وحل الاختبارات.</span>
+              <span>{isArabic ? 'وضع معاينة الطالب — يمكنك تجربة مشاهدة المحاضرات وحل الاختبارات.' : 'Student Preview Mode — You can test lectures and take quizzes.'}</span>
             </div>
             <Link href={`/teacher/courses/${id}`}>
-              <span className="text-white hover:text-gold underline cursor-pointer shrink-0">العودة لتعديل الكورس</span>
+              <span className="text-white hover:text-gold underline cursor-pointer shrink-0">
+                {isArabic ? 'العودة لتعديل الكورس' : 'Return to Course Editor'}
+              </span>
             </Link>
           </div>
         )}
@@ -402,7 +409,7 @@ function CourseViewContent() {
         {/* ------------------------------------------------------------- */}
         <div className="flex flex-col lg:flex-row gap-6 items-start">
           
-          {/* Main Stage (Video + Quick Actions + Lecture Notes) */}
+          {/* Main Stage (Video + Quick Actions) */}
           <div className="flex-1 flex flex-col gap-5 w-full">
             
             {/* Secure Video Player with Double-Bezel Frame */}
@@ -412,14 +419,16 @@ function CourseViewContent() {
                   <SecureVideoPlayer
                     url={activeVideoItem.url || 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'}
                     title={activeVideoItem.title}
-                    studentName={currentUser?.name || 'طالب نُـخبة'}
+                    studentName={currentUser?.name || (isArabic ? 'طالب نُـخبة' : 'Student')}
                     studentPhone={currentUser?.phone || ''}
                     onEnded={handleMarkComplete}
                   />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center text-white/50 gap-3 p-6 text-center">
                     <PlayCircle size={64} weight="thin" className="text-gold animate-pulse" />
-                    <p className="text-sm font-semibold">اختر درساً من قائمة المحتوى لبدء المشاهدة</p>
+                    <p className="text-sm font-semibold">
+                      {isArabic ? 'اختر درساً من قائمة المحتوى لبدء المشاهدة' : 'Select a lesson from curriculum to start playback'}
+                    </p>
                   </div>
                 )}
               </div>
@@ -430,10 +439,10 @@ function CourseViewContent() {
               <div className="flex flex-col gap-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="bg-gold/20 text-forest text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded">
-                    الدرس الحالي
+                    {t.coursePlayer.currentLesson}
                   </span>
                   <span className="text-xs text-forest/50 font-mono">
-                    {progressPercent}% من إجمالي المنهج
+                    {progressPercent}% {isArabic ? 'من إجمالي المنهج' : 'of curriculum completed'}
                   </span>
                 </div>
                 <h2 className="font-display font-bold text-base sm:text-xl text-forest truncate">
@@ -448,7 +457,7 @@ function CourseViewContent() {
                   isCurrentCompleted ? (
                     <div className="flex items-center justify-center gap-2 text-emerald-700 bg-emerald-50 border border-emerald-200 px-4 py-2.5 rounded-xl text-xs font-bold shadow-xs">
                       <CheckCircle size={18} weight="fill" className="text-emerald-600" />
-                      <span>تم إكمال هذا الدرس</span>
+                      <span>{t.coursePlayer.completed}</span>
                     </div>
                   ) : (
                     <Button
@@ -457,7 +466,7 @@ function CourseViewContent() {
                       icon={<CheckCircle size={18} weight="bold" />}
                       className="px-5 py-2.5 text-xs font-bold shadow-md cursor-pointer justify-center"
                     >
-                      {isMarking ? 'جاري الحفظ...' : 'حفظ التقدم وإكمال الدرس'}
+                      {isMarking ? t.ui.loading : t.coursePlayer.markCompleted}
                     </Button>
                   )
                 )}
@@ -470,8 +479,8 @@ function CourseViewContent() {
                     className="px-4 py-2.5 rounded-xl bg-forest hover:bg-forest/90 text-gold text-xs font-bold transition-all inline-flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
                     title={nextItem.title}
                   >
-                    <span>الدرس التالي</span>
-                    <ArrowLeft size={16} />
+                    <span>{t.coursePlayer.nextLesson}</span>
+                    {isArabic ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}
                   </button>
                 )}
               </div>
@@ -487,17 +496,17 @@ function CourseViewContent() {
               <div className="flex items-center justify-between border-b border-black/5 pb-3.5 mb-4">
                 <div className="flex items-center gap-2">
                   <BookOpen size={20} weight="fill" className="text-gold" />
-                  <h3 className="font-display font-bold text-base text-forest">فهرس المحاضرات</h3>
+                  <h3 className="font-display font-bold text-base text-forest">{t.coursePlayer.curriculum}</h3>
                 </div>
                 <span className="text-xs font-mono font-bold text-forest/60 bg-[#F7F6F3] px-2.5 py-1 rounded-full">
-                  {totalItemsCount} دروس
+                  {totalItemsCount} {t.courses.lessons}
                 </span>
               </div>
 
               {/* Progress Bar */}
               <div className="mb-4">
                 <div className="flex items-center justify-between text-xs font-bold text-forest/70 mb-1.5">
-                  <span>نسبة إنجازك في المنهج:</span>
+                  <span>{isArabic ? 'نسبة إنجازك في المنهج:' : 'Your Progress:'}</span>
                   <span className="font-mono text-forest">{progressPercent}%</span>
                 </div>
                 <div className="w-full h-2 bg-black/5 rounded-full overflow-hidden">
@@ -513,7 +522,9 @@ function CourseViewContent() {
                 {sections.length === 0 ? (
                   <div className="p-8 text-center bg-[#F7F6F3] rounded-2xl border border-black/5">
                     <BookOpen size={32} className="text-forest/30 mx-auto mb-2" />
-                    <p className="text-xs text-forest/50 font-semibold">المعلم يجهز محتوى الكورس حالياً.</p>
+                    <p className="text-xs text-forest/50 font-semibold">
+                      {isArabic ? 'المعلم يجهز محتوى الكورس حالياً.' : 'Instructor is preparing course content.'}
+                    </p>
                   </div>
                 ) : (
                   sections.map((section: any, sIdx: number) => {
@@ -542,7 +553,7 @@ function CourseViewContent() {
                                 {section.title}
                               </h4>
                               <span className="text-[10px] text-forest/50 font-medium block">
-                                {sectionCompleted} من {sectionTotal} مكتمل
+                                {sectionCompleted} {isArabic ? 'من' : 'of'} {sectionTotal} {isArabic ? 'مكتمل' : 'completed'}
                               </span>
                             </div>
                           </div>
@@ -625,14 +636,14 @@ function CourseViewContent() {
 
                                       <div className="shrink-0 text-[10px] font-mono text-end opacity-70">
                                         {item.type === 'video' ? (
-                                          <span>{Math.round((item.duration || 1800) / 60)} دقيقة</span>
+                                          <span>{Math.round((item.duration || 1800) / 60)} {isArabic ? 'دقيقة' : 'min'}</span>
                                         ) : isCompleted ? (
                                           <span className="bg-emerald-100 text-emerald-800 border border-emerald-200 px-1.5 py-0.5 rounded font-bold">
-                                            {userSubmission ? `${userSubmission.score}%` : 'تم الاجتياز'}
+                                            {userSubmission ? `${userSubmission.score}%` : (isArabic ? 'تم الاجتياز' : 'Passed')}
                                           </span>
                                         ) : (
                                           <span className="bg-gold/20 text-forest px-1.5 py-0.5 rounded font-bold">
-                                            اختبار
+                                            {isArabic ? 'اختبار' : 'Quiz'}
                                           </span>
                                         )}
                                       </div>

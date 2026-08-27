@@ -18,6 +18,7 @@ import {
   Check
 } from '@phosphor-icons/react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface SecureVideoPlayerProps {
   url: string;
@@ -37,19 +38,22 @@ declare global {
   }
 }
 
-const DEFAULT_SAMPLE_VIDEO = 'https://www.youtube.com/watch?v=LdA-wGOdqmA ';
+const DEFAULT_SAMPLE_VIDEO = 'https://www.youtube.com/watch?v=LdA-wGOdqmA';
 const PLAYBACK_SPEEDS = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
 
 export function SecureVideoPlayer({
   url,
   title,
-  studentName = 'طالب نُـخبة',
+  studentName,
   studentPhone = '',
   onEnded,
   onProgress,
   isTheaterMode = false,
   onToggleTheater,
 }: SecureVideoPlayerProps) {
+  const { t, isArabic } = useLanguage();
+  const effectiveStudentName = studentName || (isArabic ? 'طالب نُـخبة' : 'Student');
+
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const ytPlayerRef = useRef<any>(null);
@@ -121,9 +125,7 @@ export function SecureVideoPlayer({
     setShowSpeedMenu(false);
   }, [url]);
 
-  // -------------------------------------------------------------
-  // YouTube IFrame API Integration (Bespoke Concealed Driver)
-  // -------------------------------------------------------------
+  // YouTube IFrame API Integration
   useEffect(() => {
     if (!isYouTube || !youtubeId) return;
 
@@ -138,9 +140,7 @@ export function SecureVideoPlayer({
       if (ytPlayerRef.current && typeof ytPlayerRef.current.destroy === 'function') {
         try {
           ytPlayerRef.current.destroy();
-        } catch (e) {
-          // ignore
-        }
+        } catch (e) {}
       }
 
       ytPlayerRef.current = new window.YT.Player(ytContainerId.current, {
@@ -169,7 +169,6 @@ export function SecureVideoPlayer({
           },
           onStateChange: (event: any) => {
             if (!isSubscribed) return;
-            // YT.PlayerState: -1: unstarted, 0: ended, 1: playing, 2: paused, 3: buffering, 5: cued
             if (event.data === 1) {
               setIsPlaying(true);
               setIsBuffering(false);
@@ -212,7 +211,7 @@ export function SecureVideoPlayer({
         } catch (e) {}
       }
     };
-  }, [isYouTube, youtubeId]);
+  }, [isYouTube, youtubeId, isMuted, playbackSpeed, volume, onEnded]);
 
   // YouTube polling interval for time progress
   useEffect(() => {
@@ -243,9 +242,6 @@ export function SecureVideoPlayer({
     };
   }, [isYouTube, isPlaying, duration, onProgress]);
 
-  // -------------------------------------------------------------
-  // Controls Handlers
-  // -------------------------------------------------------------
   const togglePlay = useCallback(() => {
     if (hasError) return;
 
@@ -369,7 +365,6 @@ export function SecureVideoPlayer({
     }
   };
 
-  // Auto-hide controls timeout
   const handleMouseMove = () => {
     setShowControls(true);
     if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
@@ -380,10 +375,8 @@ export function SecureVideoPlayer({
     }, 3500);
   };
 
-  // Keyboard Shortcuts Handler
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't intercept if user is typing in an input or textarea
       if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
 
       if (e.code === 'Space') {
@@ -420,13 +413,11 @@ export function SecureVideoPlayer({
       onMouseMove={handleMouseMove}
       onMouseLeave={() => isPlaying && !showSpeedMenu && setShowControls(false)}
       onContextMenu={(e) => e.preventDefault()}
-      className={`relative w-full aspect-video bg-[#0C1510]  overflow-hidden select-none group transition-all duration-300 shadow-2xl ${
+      className={`relative w-full aspect-video bg-[#0C1510] overflow-hidden select-none group transition-all duration-300 shadow-2xl ${
         isFullscreen ? 'rounded-none' : ''
       }`}
     >
-      {/* ------------------------------------------------------------- */}
-      {/* LAYER 1: VIDEO STREAM ENGINE (YouTube or HTML5) */}
-      {/* ------------------------------------------------------------- */}
+      {/* LAYER 1: Video Stream Engine */}
       {isYouTube ? (
         <div className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden">
           <div
@@ -460,19 +451,15 @@ export function SecureVideoPlayer({
         />
       )}
 
-      {/* ------------------------------------------------------------- */}
-      {/* LAYER 2: TRANSPARENT CLICK-SHIELD & TAP INTERCEPTION */}
-      {/* ------------------------------------------------------------- */}
+      {/* LAYER 2: Transparent Click Shield */}
       <div
         onClick={togglePlay}
         onDoubleClick={toggleFullscreen}
         className="absolute inset-0 z-10 cursor-pointer"
-        title="انقر للتشغيل أو الإيقاف المؤقت (مسافة)"
+        title={isArabic ? "انقر للتشغيل أو الإيقاف المؤقت (مسافة)" : "Click to play/pause (Space)"}
       />
 
-      {/* ------------------------------------------------------------- */}
-      {/* LAYER 3: DYNAMIC ANTI-PIRACY FLOATING WATERMARK */}
-      {/* ------------------------------------------------------------- */}
+      {/* LAYER 3: Watermark */}
       <motion.div
         animate={{
           left: `${watermarkPos.x}%`,
@@ -486,14 +473,12 @@ export function SecureVideoPlayer({
       >
         <div className="bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 text-[10px] md:text-xs font-mono text-white/90 shadow-lg flex items-center gap-1.5 whitespace-nowrap">
           <ShieldCheck size={14} className="text-gold" />
-          <span>{studentName}</span>
+          <span>{effectiveStudentName}</span>
           {studentPhone && <span className="text-white/60">({studentPhone})</span>}
         </div>
       </motion.div>
 
-      {/* ------------------------------------------------------------- */}
-      {/* LAYER 4: CENTER PLAY / BUFFERING STATE */}
-      {/* ------------------------------------------------------------- */}
+      {/* LAYER 4: Center Play / Buffering */}
       <AnimatePresence>
         {!isPlaying && !hasError && (
           <motion.div
@@ -520,17 +505,18 @@ export function SecureVideoPlayer({
         {hasError && (
           <div className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-forest/95 text-white p-6 text-center">
             <WarningCircle size={48} className="text-amber-400 mb-3" weight="duotone" />
-            <h4 className="font-bold text-lg mb-1">تعذر تشغيل هذا الدرس</h4>
+            <h4 className="font-bold text-lg mb-1">{isArabic ? 'تعذر تشغيل هذا الدرس' : 'Failed to Play Video'}</h4>
             <p className="text-xs text-white/60 max-w-sm">
-              يرجى التحقق من اتصالك بالإنترنت أو إبلاغ المعلم لتحديث رابط الفيديو.
+              {isArabic 
+                ? 'يرجى التحقق من اتصالك بالإنترنت أو إبلاغ المعلم لتحديث رابط الفيديو.'
+                : 'Please check your internet connection or contact the instructor.'
+              }
             </p>
           </div>
         )}
       </AnimatePresence>
 
-      {/* ------------------------------------------------------------- */}
-      {/* LAYER 5: BESPOKE NOKHBA CONTROLS BAR */}
-      {/* ------------------------------------------------------------- */}
+      {/* LAYER 5: Controls Bar */}
       <div
         className={`absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-12 pb-3 px-4 md:px-6 transition-all duration-400 ease-out z-30 ${
           showControls ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
@@ -579,27 +565,27 @@ export function SecureVideoPlayer({
               type="button"
               onClick={togglePlay}
               className="p-2 sm:p-1.5 hover:text-gold transition-colors focus:outline-none cursor-pointer"
-              title={isPlaying ? 'إيقاف مؤقت (Space)' : 'تشغيل (Space)'}
+              title={isPlaying ? (isArabic ? 'إيقاف مؤقت (Space)' : 'Pause (Space)') : (isArabic ? 'تشغيل (Space)' : 'Play (Space)')}
             >
               {isPlaying ? <Pause size={22} weight="fill" /> : <Play size={22} weight="fill" />}
             </button>
 
-            {/* Jump Backward 10s (hidden on very small screens) */}
+            {/* Jump Backward 10s */}
             <button
               type="button"
               onClick={() => seekRelative(-10)}
               className="p-1.5 hover:text-gold transition-colors focus:outline-none cursor-pointer hidden md:inline-flex"
-              title="رجوع 10 ثواني (سهم يسار)"
+              title={isArabic ? "رجوع 10 ثواني" : "Rewind 10s"}
             >
               <ArrowCounterClockwise size={18} weight="bold" />
             </button>
 
-            {/* Jump Forward 10s (hidden on very small screens) */}
+            {/* Jump Forward 10s */}
             <button
               type="button"
               onClick={() => seekRelative(10)}
               className="p-1.5 hover:text-gold transition-colors focus:outline-none cursor-pointer hidden md:inline-flex"
-              title="تقديم 10 ثواني (سهم يمين)"
+              title={isArabic ? "تقديم 10 ثواني" : "Forward 10s"}
             >
               <ArrowClockwise size={18} weight="bold" />
             </button>
@@ -610,7 +596,7 @@ export function SecureVideoPlayer({
                 type="button"
                 onClick={toggleMute}
                 className="p-1.5 hover:text-gold transition-colors focus:outline-none cursor-pointer"
-                title={isMuted ? 'إلغاء الكتم (M)' : 'كتم الصوت (M)'}
+                title={isMuted ? (isArabic ? 'إلغاء الكتم (M)' : 'Unmute (M)') : (isArabic ? 'كتم الصوت (M)' : 'Mute (M)')}
               >
                 {isMuted || volume === 0 ? (
                   <SpeakerX size={18} weight="bold" />
@@ -637,7 +623,7 @@ export function SecureVideoPlayer({
             </span>
           </div>
 
-          {/* Right Controls (Speed, Theater, Fullscreen) */}
+          {/* Right Controls */}
           <div className="flex items-center gap-1.5 sm:gap-2.5">
             {/* Speed Selector Menu */}
             <div className="relative">
@@ -645,7 +631,7 @@ export function SecureVideoPlayer({
                 type="button"
                 onClick={() => setShowSpeedMenu(!showSpeedMenu)}
                 className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-[11px] sm:text-xs font-mono transition-colors flex items-center gap-1 focus:outline-none cursor-pointer"
-                title="سرعة التشغيل"
+                title={isArabic ? "سرعة التشغيل" : "Playback Speed"}
               >
                 <span>{playbackSpeed}x</span>
                 <Gear size={12} className="hidden sm:inline" />
@@ -660,7 +646,7 @@ export function SecureVideoPlayer({
                     className="absolute bottom-full end-0 mb-2 bg-forest/95 backdrop-blur-xl border border-white/10 rounded-xl p-1.5 shadow-2xl min-w-[110px] sm:min-w-[120px] z-50"
                   >
                     <div className="text-[10px] text-white/50 px-2 py-1 uppercase tracking-wider font-semibold border-b border-white/10 mb-1">
-                      سرعة التشغيل
+                      {isArabic ? 'سرعة التشغيل' : 'Speed'}
                     </div>
                     {PLAYBACK_SPEEDS.map((speed) => (
                       <button
@@ -682,7 +668,7 @@ export function SecureVideoPlayer({
               </AnimatePresence>
             </div>
 
-            {/* Theater Mode Toggle (Desktop only) */}
+            {/* Theater Mode Toggle */}
             {onToggleTheater && (
               <button
                 type="button"
@@ -690,7 +676,7 @@ export function SecureVideoPlayer({
                 className={`p-1.5 hover:text-gold transition-colors focus:outline-none cursor-pointer hidden md:inline-flex ${
                   isTheaterMode ? 'text-gold' : 'text-white/80'
                 }`}
-                title={isTheaterMode ? 'الخروج من وضع المسرح' : 'وضع المسرح'}
+                title={isTheaterMode ? (isArabic ? 'الخروج من وضع المسرح' : 'Exit Theater Mode') : (isArabic ? 'وضع المسرح' : 'Theater Mode')}
               >
                 <Television size={18} weight={isTheaterMode ? 'fill' : 'bold'} />
               </button>
@@ -701,7 +687,7 @@ export function SecureVideoPlayer({
               type="button"
               onClick={toggleFullscreen}
               className="p-2 sm:p-1.5 hover:text-gold transition-colors focus:outline-none cursor-pointer"
-              title={isFullscreen ? 'الخروج من ملء الشاشة (F)' : 'ملء الشاشة (F)'}
+              title={isFullscreen ? (isArabic ? 'الخروج من ملء الشاشة (F)' : 'Exit Fullscreen (F)') : (isArabic ? 'ملء الشاشة (F)' : 'Fullscreen (F)')}
             >
               {isFullscreen ? <CornersIn size={18} weight="bold" /> : <CornersOut size={18} weight="bold" />}
             </button>

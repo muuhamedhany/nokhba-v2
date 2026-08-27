@@ -7,8 +7,10 @@ import { PageTitleManager } from '@/components/common/PageTitleManager';
 
 const cairo = Cairo({
   subsets: ['arabic', 'latin'],
+  weight: ['400', '500', '600', '700', '800', '900'],
   variable: '--font-cairo',
   display: 'swap',
+  adjustFontFallback: false,
 });
 
 const ibmPlex = IBM_Plex_Sans_Arabic({
@@ -16,12 +18,15 @@ const ibmPlex = IBM_Plex_Sans_Arabic({
   weight: ['400', '500', '600', '700'],
   variable: '--font-ibm-plex',
   display: 'swap',
+  adjustFontFallback: false,
 });
 
 const outfit = Outfit({
   subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800', '900'],
   variable: '--font-outfit',
   display: 'swap',
+  adjustFontFallback: false,
 });
 
 export const metadata: Metadata = {
@@ -48,6 +53,7 @@ export const metadata: Metadata = {
 };
 
 import { Suspense } from 'react';
+import { LanguageProvider } from '@/context/LanguageContext';
 
 export default function RootLayout({
   children,
@@ -56,14 +62,24 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ar" dir="rtl" className={`${cairo.variable} ${ibmPlex.variable} ${outfit.variable}`}>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link 
+          href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap" 
+          rel="stylesheet" 
+        />
+      </head>
       <body className="antialiased bg-bone text-forest">
-        <AuthInitializer />
-        <Suspense fallback={null}>
-          <PageTitleManager />
-        </Suspense>
-        <MainLayout>
-          {children}
-        </MainLayout>
+        <LanguageProvider>
+          <AuthInitializer />
+          <Suspense fallback={null}>
+            <PageTitleManager />
+          </Suspense>
+          <MainLayout>
+            {children}
+          </MainLayout>
+        </LanguageProvider>
       </body>
     </html>
   );

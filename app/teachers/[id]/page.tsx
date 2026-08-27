@@ -12,19 +12,21 @@ import {
   WhatsappLogo, 
   GraduationCap, 
   ArrowRight,
-  Sparkle,
-  ChalkboardTeacher,
-  Clock,
-  User
+  ArrowLeft,
+  Sparkle, 
+  ChalkboardTeacher, 
+  Clock, 
+  User 
 } from '@phosphor-icons/react';
 import { Button } from '@/components/common/Button';
-import { strings } from '@/locales/ar';
+import { useLanguage } from '@/context/LanguageContext';
 import { useStore } from '@/store';
 
 export default function TeacherProfile() {
   const params = useParams();
   const id = params.id as string;
   const { currentUser, enrollments, fetchEnrollments } = useStore();
+  const { t, isArabic } = useLanguage();
 
   const [teacher, setTeacher] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -57,7 +59,7 @@ export default function TeacherProfile() {
       <div className="w-full min-h-[90dvh] py-16 px-4 bg-bone flex items-center justify-center text-start">
         <div className="flex flex-col items-center gap-4 text-forest font-bold">
           <div className="w-12 h-12 border-3 border-gold border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm">جاري تحميل ملف المعلم والمقررات...</p>
+          <p className="text-sm">{isArabic ? 'جاري تحميل ملف المعلم والمقررات...' : 'Loading teacher profile...'}</p>
         </div>
       </div>
     );
@@ -71,13 +73,13 @@ export default function TeacherProfile() {
             <div className="w-16 h-16 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center">
               <ChalkboardTeacher size={36} weight="duotone" />
             </div>
-            <h1 className="font-display font-bold text-2xl text-forest">المعلم غير موجود</h1>
+            <h1 className="font-display font-bold text-2xl text-forest">{isArabic ? 'المعلم غير موجود' : 'Teacher Not Found'}</h1>
             <p className="text-sm text-forest/70 leading-relaxed">
-              لم نتمكن من العثور على المعلم المطلوب، قد يكون الرابط غير صحيح أو تم تحديث الحساب.
+              {isArabic ? 'لم نتمكن من العثور على المعلم المطلوب، قد يكون الرابط غير صحيح أو تم تحديث الحساب.' : 'The requested educator could not be found.'}
             </p>
             <Link href="/lessons" className="w-full mt-2">
               <Button className="w-full py-3 font-bold text-sm">
-                استعراض مكتبة الكورسات
+                {isArabic ? 'استعراض مكتبة الكورسات' : 'Browse Course Library'}
               </Button>
             </Link>
           </div>
@@ -93,7 +95,10 @@ export default function TeacherProfile() {
   const rawPhone = teacher.phone || '01000000001';
   const cleanDigits = rawPhone.replace(/\D/g, '');
   const waNumber = cleanDigits.startsWith('20') ? cleanDigits : (cleanDigits.startsWith('0') ? `2${cleanDigits}` : `20${cleanDigits}`);
-  const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(`مرحباً أستاذ ${teacher.name}، أود الاستفسار والتواصل بخصوص المنهج الدراسي عبر منصة نُـخبة.`)}`;
+  const waText = isArabic
+    ? `مرحباً أستاذ ${teacher.name}، أود الاستفسار والتواصل بخصوص المنهج الدراسي عبر منصة نُـخبة.`
+    : `Hello ${teacher.name}, I would like to inquire regarding courses on Nokhba.`;
+  const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(waText)}`;
 
   return (
     <main className="w-full min-h-screen py-10 md:py-16 bg-bone overflow-x-hidden text-start">
@@ -105,8 +110,8 @@ export default function TeacherProfile() {
             href="/lessons"
             className="inline-flex items-center gap-2 text-xs font-bold text-forest/70 hover:text-forest bg-white/60 hover:bg-white px-4 py-2 rounded-full border border-black/5 shadow-xs transition-all"
           >
-            <ArrowRight size={14} weight="bold" />
-            <span>العودة إلى مكتبة الكورسات والمناهج</span>
+            {isArabic ? <ArrowRight size={14} weight="bold" /> : <ArrowLeft size={14} weight="bold" />}
+            <span>{isArabic ? 'العودة إلى مكتبة الكورسات والمناهج' : 'Back to Course Library'}</span>
           </Link>
         </div>
 
@@ -140,7 +145,7 @@ export default function TeacherProfile() {
 
                 <div
                   className="absolute -bottom-2 -right-2 bg-gold text-forest p-2 rounded-full shadow-md ring-4 ring-white"
-                  title="معلم معتمد وموثق في نُـخبة"
+                  title={isArabic ? "معلم معتمد وموثق في نُـخبة" : "Verified Nokhba Faculty"}
                 >
                   <SealCheck size={22} weight="fill" />
                 </div>
@@ -150,10 +155,10 @@ export default function TeacherProfile() {
               <div className="flex flex-col gap-3 max-w-2xl">
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
                   <span className="bg-forest text-gold text-xs font-bold px-3 py-1 rounded-full shadow-xs">
-                    معلم معتمد
+                    {isArabic ? 'معلم معتمد' : 'Verified Faculty'}
                   </span>
                   <span className="bg-gold/15 text-forest border border-gold/30 text-xs font-bold px-3 py-1 rounded-full">
-                    {teacher.subject || 'المواد الدراسية للثانوية'}
+                    {teacher.subject || (isArabic ? 'المواد الدراسية للثانوية' : 'Secondary Curriculum')}
                   </span>
                 </div>
 
@@ -162,8 +167,9 @@ export default function TeacherProfile() {
                 </h1>
 
                 <p className="text-forest/75 text-sm sm:text-base leading-relaxed mt-1">
-                  {teacher.bio ||
-                    'خبير تدريس المناهج الدراسية للثانوية العامة بموقع نُـخبة مع إعداد مذكرات تفاعلية، امتحانات دورية، وشروحات مبسطة لجميع مستويات الطلاب.'}
+                  {teacher.bio || (isArabic
+                    ? 'خبير تدريس المناهج الدراسية للثانوية العامة بموقع نُـخبة مع إعداد مذكرات تفاعلية، امتحانات دورية، وشروحات مبسطة لجميع مستويات الطلاب.'
+                    : 'Expert high school curriculum educator on Nokhba with interactive notes and dedicated exams.')}
                 </p>
 
                 {/* WhatsApp Action Hotline */}
@@ -175,7 +181,7 @@ export default function TeacherProfile() {
                     className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-emerald-700/20 transition-all cursor-pointer"
                   >
                     <WhatsappLogo size={20} weight="fill" />
-                    <span>تواصل عبر واتساب الأستاذ</span>
+                    <span>{isArabic ? 'تواصل عبر واتساب الأستاذ' : 'Contact via WhatsApp'}</span>
                   </a>
 
                   <span className="text-xs font-bold text-forest/50 font-mono" dir="ltr">
@@ -192,7 +198,7 @@ export default function TeacherProfile() {
               <div className="bg-[#F7F6F3] p-4 rounded-2xl border border-black/5 flex flex-col gap-1">
                 <div className="flex items-center gap-2 text-forest/60 text-xs font-bold">
                   <Books size={18} weight="duotone" className="text-gold" />
-                  <span>الكورسات</span>
+                  <span>{isArabic ? 'الكورسات' : 'Courses'}</span>
                 </div>
                 <span className="font-display font-bold text-2xl text-forest">
                   {teacherCourses.length}
@@ -202,7 +208,7 @@ export default function TeacherProfile() {
               <div className="bg-[#F7F6F3] p-4 rounded-2xl border border-black/5 flex flex-col gap-1">
                 <div className="flex items-center gap-2 text-forest/60 text-xs font-bold">
                   <VideoCamera size={18} weight="duotone" className="text-gold" />
-                  <span>المحاضرات</span>
+                  <span>{t.courses.lessons}</span>
                 </div>
                 <span className="font-display font-bold text-2xl text-forest">
                   {totalVideos}
@@ -212,7 +218,7 @@ export default function TeacherProfile() {
               <div className="bg-[#F7F6F3] p-4 rounded-2xl border border-black/5 flex flex-col gap-1">
                 <div className="flex items-center gap-2 text-forest/60 text-xs font-bold">
                   <Exam size={18} weight="duotone" className="text-gold" />
-                  <span>الاختبارات</span>
+                  <span>{t.courses.quizzes}</span>
                 </div>
                 <span className="font-display font-bold text-2xl text-forest">
                   {totalQuizzes}
@@ -222,7 +228,7 @@ export default function TeacherProfile() {
               <div className="bg-[#F7F6F3] p-4 rounded-2xl border border-black/5 flex flex-col gap-1">
                 <div className="flex items-center gap-2 text-forest/60 text-xs font-bold">
                   <Sparkle size={18} weight="duotone" className="text-gold" />
-                  <span>التقييم</span>
+                  <span>{isArabic ? 'التقييم' : 'Rating'}</span>
                 </div>
                 <span className="font-display font-bold text-2xl text-forest">
                   4.95 / 5
@@ -241,29 +247,29 @@ export default function TeacherProfile() {
             <div>
               <div className="inline-flex items-center gap-1.5 text-gold text-xs font-bold uppercase tracking-wider mb-1">
                 <GraduationCap size={16} weight="fill" />
-                <span>المناهج والبرامج التعليمية</span>
+                <span>{isArabic ? 'المناهج والبرامج التعليمية' : 'Curricula & Educational Programs'}</span>
               </div>
               <h2 className="font-display font-bold text-2xl sm:text-3xl text-forest">
-                كورسات {teacher.name}
+                {isArabic ? `كورسات ${teacher.name}` : `Courses by ${teacher.name}`}
               </h2>
             </div>
 
             <span className="text-xs font-bold text-forest/60 bg-white px-3.5 py-1.5 rounded-full border border-black/5 shadow-xs">
-              {teacherCourses.length} كورس متاح حالياً
+              {teacherCourses.length} {isArabic ? 'كورس متاح حالياً' : 'courses available'}
             </span>
           </div>
 
           {teacherCourses.length === 0 ? (
             <div className="w-full p-12 text-center bg-white rounded-3xl border border-black/5 shadow-xs flex flex-col items-center gap-3">
               <Books size={48} weight="duotone" className="text-forest/30" />
-              <p className="font-bold text-forest text-base">لا توجد كورسات متاحة حالياً لهذا المعلم.</p>
-              <p className="text-xs text-forest/60">سيتم إضافة المحاضرات والمناهج الجديدة قريباً.</p>
+              <p className="font-bold text-forest text-base">{isArabic ? 'لا توجد كورسات متاحة حالياً لهذا المعلم.' : 'No courses currently available.'}</p>
+              <p className="text-xs text-forest/60">{isArabic ? 'سيتم إضافة المحاضرات والمناهج الجديدة قريباً.' : 'New lectures will be added soon.'}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch">
               {teacherCourses.map((course: any) => {
-                const subjectLabel = strings.subjects[course.subject as keyof typeof strings.subjects] || course.subject;
-                const gradeLabel = strings.grades[course.grade as keyof typeof strings.grades] || course.grade;
+                const subjectLabel = t.subjects[course.subject as keyof typeof t.subjects] || course.subject;
+                const gradeLabel = t.grades[course.grade as keyof typeof t.grades] || course.grade;
                 const courseItems = (course.sections || []).flatMap((s: any) => s.items || []);
                 const videoCount = courseItems.filter((i: any) => i.type === 'video').length;
                 const quizCount = courseItems.filter((i: any) => i.type === 'quiz').length;
@@ -271,8 +277,8 @@ export default function TeacherProfile() {
                   .filter((i: any) => i.type === 'video')
                   .reduce((acc: number, curr: any) => acc + (curr.duration || 1800), 0) / 60;
                 const formattedDuration = totalMinutes >= 60 
-                  ? `${(totalMinutes / 60).toFixed(1)} ساعة` 
-                  : `${Math.round(totalMinutes)} دقيقة`;
+                  ? (isArabic ? `${(totalMinutes / 60).toFixed(1)} ساعة` : `${(totalMinutes / 60).toFixed(1)} hrs`) 
+                  : (isArabic ? `${Math.round(totalMinutes)} دقيقة` : `${Math.round(totalMinutes)} min`);
 
                 const isEnrolled =
                   course.isFree ||
@@ -311,15 +317,15 @@ export default function TeacherProfile() {
                               </span>
                               {course.isFree ? (
                                 <span className="bg-gold text-forest font-bold px-2.5 py-1 rounded-full text-xs shadow-sm">
-                                  {strings.courses.free}
+                                  {t.courses.free}
                                 </span>
                               ) : isEnrolled ? (
                                 <span className="bg-emerald-600 text-white font-bold px-2.5 py-1 rounded-full text-xs shadow-sm">
-                                  مفعل
+                                  {isArabic ? 'مفعل' : 'Active'}
                                 </span>
                               ) : (
                                 <span className="bg-forest/80 text-gold font-bold px-2.5 py-1 rounded-full text-xs shadow-sm">
-                                  يتطلب كود
+                                  {isArabic ? 'يتطلب كود' : 'Code Required'}
                                 </span>
                               )}
                             </div>
@@ -341,12 +347,12 @@ export default function TeacherProfile() {
                         <div className="flex items-center gap-3 text-xs text-forest/70 pb-4 border-b border-black/5 font-medium">
                           <span className="inline-flex items-center gap-1">
                             <VideoCamera size={15} weight="duotone" className="text-gold" />
-                            <span>{videoCount} محاضرات</span>
+                            <span>{videoCount} {t.courses.lessons}</span>
                           </span>
                           <span>•</span>
                           <span className="inline-flex items-center gap-1">
                             <Exam size={15} weight="duotone" className="text-gold" />
-                            <span>{quizCount} اختبارات</span>
+                            <span>{quizCount} {t.courses.quizzes}</span>
                           </span>
                           <span>•</span>
                           <span className="inline-flex items-center gap-1">
@@ -360,13 +366,16 @@ export default function TeacherProfile() {
                       <div className="pt-4 flex items-center justify-between gap-2.5">
                         <Link href={`/courses/${course.id}`} className="flex-1">
                           <Button variant="ghost" className="w-full py-2.5 px-3 text-xs font-bold text-forest border border-black/5 hover:border-black/15 bg-black/5 hover:bg-black/10">
-                            تفاصيل الكورس
+                            {isArabic ? 'تفاصيل الكورس' : 'Course Details'}
                           </Button>
                         </Link>
 
                         <Link href={currentUser ? `/student/course/${course.id}` : `/login`} className="flex-1">
                           <Button className="w-full py-2.5 px-3 text-xs font-bold shadow-md shadow-forest/10">
-                            {isEnrolled ? (course.isFree ? 'دخول المحاضرة' : 'متابعة المذاكرة') : 'دخول الكورس'}
+                            {isEnrolled 
+                              ? (course.isFree ? (isArabic ? 'دخول المحاضرة' : 'Watch Lecture') : (isArabic ? 'متابعة المذاكرة' : 'Continue')) 
+                              : (isArabic ? 'دخول الكورس' : 'Enroll Now')
+                            }
                           </Button>
                         </Link>
                       </div>

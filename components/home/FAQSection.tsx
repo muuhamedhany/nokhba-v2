@@ -2,18 +2,19 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { strings } from '@/locales/ar';
+import { useLanguage } from '@/context/LanguageContext';
 import { Plus, Minus, Question } from '@phosphor-icons/react';
 
 export function FAQSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const { t } = useLanguage();
 
   const toggle = (i: number) => {
     setOpenIndex(openIndex === i ? null : i);
   };
 
   return (
-    <section className="w-full bg-[#F7F6F3] py-24 md:py-32 relative border-t border-black/5 overflow-hidden">
+    <section className="w-full bg-[#F7F6F3] py-24 md:py-32 relative border-t border-black/5 overflow-hidden text-start">
       <div className="max-w-4xl mx-auto px-4 md:px-8">
         
         {/* Header with Scroll Entrance */}
@@ -26,7 +27,7 @@ export function FAQSection() {
             className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wider bg-forest/5 text-forest border border-forest/10 mb-4 shadow-sm"
           >
             <Question size={16} weight="bold" className="text-gold" />
-            <span>{strings.faq.badge}</span>
+            <span>{t.faq.badge}</span>
           </motion.div>
           
           <motion.h2 
@@ -36,7 +37,7 @@ export function FAQSection() {
             transition={{ delay: 0.1, duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
             className="font-display font-bold text-3xl md:text-5xl text-forest tracking-tight leading-tight"
           >
-            {strings.faq.title}
+            {t.faq.title}
           </motion.h2>
 
           <motion.p 
@@ -46,7 +47,7 @@ export function FAQSection() {
             transition={{ delay: 0.2, duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
             className="mt-3 text-base md:text-lg text-forest/70 max-w-xl mx-auto leading-relaxed"
           >
-            {strings.faq.subtitle}
+            {t.faq.subtitle}
           </motion.p>
         </div>
 
@@ -64,7 +65,7 @@ export function FAQSection() {
           }}
           className="flex flex-col divide-y divide-black/10 border-y border-black/10"
         >
-          {strings.faq.items.map((item, index) => {
+          {t.faq.items.map((item, index) => {
             const isOpen = openIndex === index;
 
             return (

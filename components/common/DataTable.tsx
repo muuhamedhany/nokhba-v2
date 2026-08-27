@@ -1,5 +1,8 @@
+'use client';
+
 import React from 'react';
 import { cn } from '@/utils/cn';
+import { useLanguage } from '@/context/LanguageContext';
 
 export interface Column<T> {
   header: string;
@@ -15,11 +18,14 @@ interface DataTableProps<T> {
   className?: string;
 }
 
-export function DataTable<T>({ data, columns, keyExtractor, emptyMessage = 'لا يوجد بيانات', className }: DataTableProps<T>) {
+export function DataTable<T>({ data, columns, keyExtractor, emptyMessage, className }: DataTableProps<T>) {
+  const { isArabic } = useLanguage();
+  const effectiveEmptyMessage = emptyMessage || (isArabic ? 'لا توجد بيانات' : 'No data available');
+
   if (data.length === 0) {
     return (
       <div className="w-full py-12 flex items-center justify-center border border-black/5 rounded-2xl bg-white/50">
-        <p className="text-forest/50">{emptyMessage}</p>
+        <p className="text-forest/50">{effectiveEmptyMessage}</p>
       </div>
     );
   }

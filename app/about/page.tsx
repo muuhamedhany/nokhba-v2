@@ -1,26 +1,18 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { motion, useInView, AnimatePresence } from 'motion/react';
-import { strings } from '@/locales/ar';
+import { motion, AnimatePresence } from 'motion/react';
+import { useLanguage } from '@/context/LanguageContext';
 import { Button } from '@/components/common/Button';
 import { 
-  Sparkle, 
-  GraduationCap, 
-  SealCheck, 
   VideoCamera, 
   Brain, 
   ShieldCheck, 
   UsersThree, 
   ArrowLeft, 
+  ArrowRight,
   ChalkboardTeacher, 
-  BookOpen, 
-  Atom, 
-  Flask, 
-  Translate, 
-  GlobeHemisphereEast, 
-  Star, 
   CheckCircle, 
   X as CloseIcon, 
   Certificate, 
@@ -33,62 +25,98 @@ const ACADEMIC_PILLARS = [
   {
     id: 'p1',
     icon: VideoCamera,
-    tag: 'التجربة البصرية',
-    title: 'شروحات سينمائية فائقة الجودة',
-    desc: 'تصوير استوديوهات متقدم بجودة 4K مع رسومات ثلاثية الأبعاد وتجارب تفاعلية تجعل المعرفة مجسمة وممتعة.',
+    tag: { ar: 'التجربة البصرية', en: 'Visual Experience' },
+    title: { ar: 'شروحات سينمائية فائقة الجودة', en: 'Cinematic High-Definition Lectures' },
+    desc: {
+      ar: 'تصوير استوديوهات متقدم بجودة 4K مع رسومات ثلاثية الأبعاد وتجارب تفاعلية تجعل المعرفة مجسمة وممتعة.',
+      en: 'Advanced 4K studio production with 3D models and interactive simulations that bring concepts to life.',
+    },
     cols: 'lg:col-span-7',
-    badge: 'استوديو 4K',
+    badge: { ar: 'استوديو 4K', en: '4K Studio' },
   },
   {
     id: 'p2',
     icon: Brain,
-    tag: 'التدريب التكيفي',
-    title: 'بنوك أسئلة تحاكي الامتحانات الوزارية',
-    desc: 'آلاف الأسئلة المتدرجة وفق نواتج التعلم الحديثة مع تصحيح ذكي فوري وشرح تفصيلي لكل فكرة ومسألة.',
+    tag: { ar: 'التدريب التكيفي', en: 'Adaptive Training' },
+    title: { ar: 'بنوك أسئلة تحاكي الامتحانات الوزارية', en: 'Standardized Exam Question Banks' },
+    desc: {
+      ar: 'آلاف الأسئلة المتدرجة وفق نواتج التعلم الحديثة مع تصحيح ذكي فوري وشرح تفصيلي لكل فكرة ومسألة.',
+      en: 'Thousands of graded questions tailored to modern ministerial standards with instant AI grading.',
+    },
     cols: 'lg:col-span-5',
-    badge: 'ذكاء اصطناعي',
+    badge: { ar: 'ذكاء اصطناعي', en: 'AI Powered' },
   },
   {
     id: 'p3',
     icon: ShieldCheck,
-    tag: 'الجودة والنزاهة',
-    title: 'تدقيق أكاديمي صارم',
-    desc: 'يخضع كل درس وملزمة لمراجعة دقيقة من لجان أكاديمية متخصصة لضمان مطابقتها التامة لأحدث التعديلات الوزارية.',
+    tag: { ar: 'الجودة والنزاهة', en: 'Quality & Rigor' },
+    title: { ar: 'تدقيق أكاديمي صارم', en: 'Rigorous Academic Review' },
+    desc: {
+      ar: 'يخضع كل درس وملزمة لمراجعة دقيقة من لجان أكاديمية متخصصة لضمان مطابقتها التامة لأحدث التعديلات الوزارية.',
+      en: 'Every lecture and workbook undergoes rigorous audit by specialized academic boards for total syllabus alignment.',
+    },
     cols: 'lg:col-span-5',
-    badge: '100% معتمد',
+    badge: { ar: '100% معتمد', en: '100% Certified' },
   },
   {
     id: 'p4',
     icon: UsersThree,
-    tag: 'الشراكة الثلاثية',
-    title: 'منظومة متابعة تربوية متكاملة',
-    desc: 'ربط لحظي بين الطالب وولي الأمر والمعلم عبر تقارير حضور وامتحانات دورية تصلك فوراً عبر الواتساب.',
+    tag: { ar: 'الشراكة الثلاثية', en: 'Tripartite Synergy' },
+    title: { ar: 'منظومة متابعة تربوية متكاملة', en: 'Comprehensive Mentorship Ecosystem' },
+    desc: {
+      ar: 'ربط لحظي بين الطالب وولي الأمر والمعلم عبر تقارير حضور وامتحانات دورية تصلك فوراً عبر الواتساب.',
+      en: 'Instant synchronization between student, parent, and teacher through automatic WhatsApp progress updates.',
+    },
     cols: 'lg:col-span-7',
-    badge: 'متابعة لحظية',
+    badge: { ar: 'متابعة لحظية', en: 'Real-time Tracking' },
   },
 ];
 
 // Comparison Matrix Data
 const COMPARISON_POINTS = [
   {
-    topic: 'طريقة استيعاب وفهم المادة',
-    traditional: 'تلقين لفظي وحفظ صامت للمصطلحات بلا ربط بالمفاهيم أو سياقها.',
-    nokhba: 'شروحات سينمائية وتجارب بصرية تفاعلية تفكك أعمق الأفكار وتجعلها بديهية.',
+    topic: { ar: 'طريقة استيعاب وفهم المادة', en: 'Comprehension & Understanding Method' },
+    traditional: {
+      ar: 'تلقين لفظي وحفظ صامت للمصطلحات بلا ربط بالمفاهيم أو سياقها.',
+      en: 'Rote memorization and passive lectures without deep conceptual grounding.',
+    },
+    nokhba: {
+      ar: 'شروحات سينمائية وتجارب بصرية تفاعلية تفكك أعمق الأفكار وتجعلها بديهية.',
+      en: 'Cinematic visual breakdowns and interactive experiments that make complex topics intuitive.',
+    },
   },
   {
-    topic: 'التدريب ونماذج الامتحانات',
-    traditional: 'أسئلة نمطية مكررة لا تواكب تعقيد وتريكات الامتحانات الوزارية الحديثة.',
-    nokhba: 'بنوك أسئلة متدرجة تقيس نواتج التعلم الحقيقية مع تصحيح ذكي فوري.',
+    topic: { ar: 'التدريب ونماذج الامتحانات', en: 'Exam Practice & Assessment' },
+    traditional: {
+      ar: 'أسئلة نمطية مكررة لا تواكب تعقيد وتريكات الامتحانات الوزارية الحديثة.',
+      en: 'Repetitive standard questions that fall short of modern ministerial exam nuances.',
+    },
+    nokhba: {
+      ar: 'بنوك أسئلة متدرجة تقيس نواتج التعلم الحقيقية مع تصحيح ذكي فوري.',
+      en: 'Progressive question banks measuring authentic learning outcomes with instant smart grading.',
+    },
   },
   {
-    topic: 'متابعة الأداء وولي الأمر',
-    traditional: 'غياب تام لولي الأمر حتى صدمة نتيجة نصف العام أو الامتحان النهائي.',
-    nokhba: 'تقارير حضور ودرجات تفصيلية دورية تصل لولي الأمر عبر الواتساب لحظة بلحظة.',
+    topic: { ar: 'متابعة الأداء وولي الأمر', en: 'Performance Tracking & Parent Updates' },
+    traditional: {
+      ar: 'غياب تام لولي الأمر حتى صدمة نتيجة نصف العام أو الامتحان النهائي.',
+      en: 'Zero parent visibility until unexpected final exam grade releases.',
+    },
+    nokhba: {
+      ar: 'تقارير حضور ودرجات تفصيلية دورية تصل لولي الأمر عبر الواتساب لحظة بلحظة.',
+      en: 'Detailed attendance and quiz reports delivered directly to parents via WhatsApp.',
+    },
   },
   {
-    topic: 'بيئة التعلم والتركيز',
-    traditional: 'تشتت بين ملازم متعددة ومصادر غير موثوقة ومواعيد سناتر مرهقة.',
-    nokhba: 'منصة واحدة جامعة لكل المواد مع أكواد تفعيل فورية ودعم أكاديمي متواصل.',
+    topic: { ar: 'بيئة التعلم والتركيز', en: 'Learning Environment & Focus' },
+    traditional: {
+      ar: 'تشتت بين ملازم متعددة ومصادر غير موثوقة ومواعيد سناتر مرهقة.',
+      en: 'Dispersed printed notes, unverified sources, and exhausting commute between tutoring centers.',
+    },
+    nokhba: {
+      ar: 'منصة واحدة جامعة لكل المواد مع أكواد تفعيل فورية ودعم أكاديمي متواصل.',
+      en: 'A unified single hub for all academic subjects with instant activation and dedicated support.',
+    },
   },
 ];
 
@@ -96,31 +124,43 @@ const COMPARISON_POINTS = [
 const MILESTONES = [
   {
     year: '2021',
-    badge: 'البداية والتأسيس',
-    title: 'انطلاق الفكرة وتجمع الرواد',
-    desc: 'اجتمع نخبة من كبار معلمي الجمهورية في القاهرة بهدف صياغة نموذج تعليمي مبتكر يفك عقدة الثانوية العامة وينقل الشرح من التلقين إلى الفهم البصري العميق.',
-    stats: '3 معلمين مؤسسين · 500 طالب تجريبي',
+    badge: { ar: 'البداية والتأسيس', en: 'Inception & Founding' },
+    title: { ar: 'انطلاق الفكرة وتجمع الرواد', en: 'Idea Genesis & Founding Pioneers' },
+    desc: {
+      ar: 'اجتمع نخبة من كبار معلمي الجمهورية في القاهرة بهدف صياغة نموذج تعليمي مبتكر يفك عقدة الثانوية العامة وينقل الشرح من التلقين إلى الفهم البصري العميق.',
+      en: 'Elite educators gathered in Cairo to pioneer an innovative educational framework shifting learning from memorization to deep visual mastery.',
+    },
+    stats: { ar: '3 معلمين مؤسسين · 500 طالب تجريبي', en: '3 Founding Mentors · 500 Pilot Students' },
   },
   {
     year: '2023',
-    badge: 'الإنتاج السينمائي',
-    title: 'تأسيس استوديوهات 4K وبنوك الأسئلة',
-    desc: 'بناء أول استوديو تصوير تعليمي متخصص واستحداث نظام بنوك الأسئلة الذكية التي تحاكي نظام الامتحانات الوزارية الجديد بدقة رياضية متناهية.',
-    stats: '15,000+ طالب · 8 مواد دراسية',
+    badge: { ar: 'الإنتاج السينمائي', en: 'Cinematic Production' },
+    title: { ar: 'تأسيس استوديوهات 4K وبنوك الأسئلة', en: '4K Studio Inception & Smart Question Banks' },
+    desc: {
+      ar: 'بناء أول استوديو تصوير تعليمي متخصص واستحداث نظام بنوك الأسئلة الذكية التي تحاكي نظام الامتحانات الوزارية الجديد بدقة رياضية متناهية.',
+      en: 'Building the nation\'s premier dedicated educational studio and launching standardized question banks with mathematical precision.',
+    },
+    stats: { ar: '15,000+ طالب · 8 مواد دراسية', en: '15,000+ Students · 8 Academic Subjects' },
   },
   {
     year: '2025',
-    badge: 'الانتشار القومي',
-    title: 'تغطية 27 محافظة وربط أولياء الأمور',
-    desc: 'توسيع نطاق المنصة لتصل إلى كل قرية ومدينة في مصر، مع إطلاق بوابة ولي الأمر ونظام تقارير المتابعة الدورية الفورية عبر الواتساب.',
-    stats: '50,000+ طالب · 99.2% نسبة رضا',
+    badge: { ar: 'الانتشار القومي', en: 'Nationwide Expansion' },
+    title: { ar: 'تغطية 27 محافظة وربط أولياء الأمور', en: 'Covering 27 Governorates & Parent Sync' },
+    desc: {
+      ar: 'توسيع نطاق المنصة لتصل إلى كل قرية ومدينة في مصر، مع إطلاق بوابة ولي الأمر ونظام تقارير المتابعة الدورية الفورية عبر الواتساب.',
+      en: 'Expanding across every Egyptian governorate, launching the Parent Portal, and integrating automated WhatsApp periodic progress alerts.',
+    },
+    stats: { ar: '50,000+ طالب · 99.2% نسبة رضا', en: '50,000+ Students · 99.2% Satisfaction' },
   },
   {
     year: '2026',
-    badge: 'العصر الذكي',
-    title: 'منظومة نُـخبة 2.0 والتحليل التكيفي',
-    desc: 'تدشين الواجهة الحديثة وتطبيق تقنيات الفهم التكيفي، لتصبح نُـخبة الصرح الأكاديمي الأكثر تكاملاً وموثوقية في مصر.',
-    stats: 'الريادة الأكاديمية الأولى في الجمهورية',
+    badge: { ar: 'العصر الذكي', en: 'Smart Era' },
+    title: { ar: 'منظومة نُـخبة 2.0 والتحليل التكيفي', en: 'Nokhba 2.0 & Adaptive Analytics' },
+    desc: {
+      ar: 'تدشين الواجهة الحديثة وتطبيق تقنيات الفهم التكيفي، لتصبح نُـخبة الصرح الأكاديمي الأكثر تكاملاً وموثوقية في مصر.',
+      en: 'Launching the next-gen platform architecture with adaptive learning analysis, making Nokhba Egypt\'s most trusted academic benchmark.',
+    },
+    stats: { ar: 'الريادة الأكاديمية الأولى في الجمهورية', en: 'The #1 Academic Benchmark Nationwide' },
   },
 ];
 
@@ -129,34 +169,47 @@ const CHARTER_PRINCIPLES = [
   {
     id: 'c1',
     num: 'I',
-    title: 'الدقة الأكاديمية الصارمة',
-    desc: 'نلتزم بأن كل كلمة، سؤال، وتفسير علمي يمر عبر لجان تدقيق متخصصة مطابقة 100% لمواصفات وزارة التربية والتعليم.',
+    title: { ar: 'الدقة الأكاديمية الصارمة', en: 'Uncompromising Academic Rigor' },
+    desc: {
+      ar: 'نلتزم بأن كل كلمة، سؤال، وتفسير علمي يمر عبر لجان تدقيق متخصصة مطابقة 100% لمواصفات وزارة التربية والتعليم.',
+      en: 'We pledge that every concept, question, and scientific model passes rigorous board audits matching 100% of ministerial requirements.',
+    },
   },
   {
     id: 'c2',
     num: 'II',
-    title: 'حق الوصول المعرفي',
-    desc: 'إتاحة المحاضرات التأسيسية ونماذج التقييم مجاناً لكل طالب في جمهورية مصر العربية دون أي عوائق مادية.',
+    title: { ar: 'حق الوصول المعرفي', en: 'Universal Access to Knowledge' },
+    desc: {
+      ar: 'إتاحة المحاضرات التأسيسية ونماذج التقييم مجاناً لكل طالب في جمهورية مصر العربية دون أي عوائق مادية.',
+      en: 'Providing foundational preview lectures and assessment mockups freely to every student nationwide without obstacles.',
+    },
   },
   {
     id: 'c3',
     num: 'III',
-    title: 'الشفافية والمسؤولية التربوية',
-    desc: 'نقل صورة صادقة تماماً لمستوى الطالب ونقاط ضعفه وقوته دون تجميل أو تضليل ليتم علاجها مبكراً.',
+    title: { ar: 'الشفافية والمسؤولية التربوية', en: 'Pedagogical Integrity & Transparency' },
+    desc: {
+      ar: 'نقل صورة صادقة تماماً لمستوى الطالب ونقاط ضعفه وقوته دون تجميل أو تضليل ليتم علاجها مبكراً.',
+      en: 'Delivering an unvarnished, accurate evaluation of student progress and growth points for early remediation.',
+    },
   },
   {
     id: 'c4',
     num: 'IV',
-    title: 'الاستدامة حتى قاعة الامتحان',
-    desc: 'الوقوف مع الطالب وتقديم المراجعات المكثفة وبنوك الأسئلة المتوقعة حتى آخر لحظة قبل دخول لجان الامتحان.',
+    title: { ar: 'الاستدامة حتى قاعة الامتحان', en: 'Perpetual Guidance to Exam Day' },
+    desc: {
+      ar: 'الوقوف مع الطالب وتقديم المراجعات المكثفة وبنوك الأسئلة المتوقعة حتى آخر لحظة قبل دخول لجان الامتحان.',
+      en: 'Standing shoulder-to-shoulder with students through intensive final reviews and predicted exam banks up to the last hour.',
+    },
   },
 ];
 
 export default function AboutPage() {
   const [activeMilestoneIndex, setActiveMilestoneIndex] = useState<number>(3); // 2026 active
+  const { lang, isArabic } = useLanguage();
 
   return (
-    <div className="w-full min-h-screen bg-bone pb-28 overflow-x-hidden">
+    <div className="w-full min-h-screen bg-bone pb-28 overflow-x-hidden text-start">
 
       {/* ------------------------------------------------------------- */}
       {/* 2. FOUR ACADEMIC PILLARS: Double-Bezel Bento Grid */}
@@ -172,7 +225,7 @@ export default function AboutPage() {
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="inline-block rounded-full px-3.5 py-1 text-xs font-bold uppercase tracking-wider bg-forest/5 text-forest border border-forest/10 mb-4"
           >
-            ركائز التميز الأكاديمي
+            {isArabic ? 'ركائز التميز الأكاديمي' : 'Pillars of Academic Excellence'}
           </motion.div>
 
           <motion.h2
@@ -182,7 +235,7 @@ export default function AboutPage() {
             transition={{ duration: 0.75, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="font-display font-bold text-3xl md:text-5xl text-forest tracking-tight leading-tight"
           >
-            المنهجية التي تضمن تفوقك
+            {isArabic ? 'المنهجية التي تضمن تفوقك' : 'The Methodology That Ensures Your Excellence'}
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -191,7 +244,10 @@ export default function AboutPage() {
             transition={{ duration: 0.75, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="mt-3 text-base md:text-lg text-forest/70 max-w-2xl leading-relaxed"
           >
-            بنينا منصة نُـخبة على أربع ركائز جوهرية تضمن تحقيق أعلى درجات الاستيعاب والجاهزية التامة للاختبارات النهائية.
+            {isArabic 
+              ? 'بنينا منصة نُـخبة على أربع ركائز جوهرية تضمن تحقيق أعلى درجات الاستيعاب والجاهزية التامة للاختبارات النهائية.'
+              : 'We engineered Nokhba on four foundational pillars ensuring maximum comprehension and absolute readiness for final exams.'
+            }
           </motion.p>
         </div>
 
@@ -232,24 +288,24 @@ export default function AboutPage() {
                         <Icon size={26} weight="duotone" />
                       </div>
                       <span className="text-xs font-bold text-forest bg-[#F7F6F3] px-3 py-1 rounded-full border border-black/5">
-                        {pillar.badge}
+                        {pillar.badge[lang]}
                       </span>
                     </div>
 
                     <span className="text-xs font-bold text-gold bg-forest px-3 py-0.5 rounded-full inline-block mb-2">
-                      {pillar.tag}
+                      {pillar.tag[lang]}
                     </span>
                     <h3 className="font-display font-bold text-2xl text-forest mb-3 leading-snug">
-                      {pillar.title}
+                      {pillar.title[lang]}
                     </h3>
                     <p className="text-forest/75 text-sm sm:text-base leading-relaxed">
-                      {pillar.desc}
+                      {pillar.desc[lang]}
                     </p>
                   </div>
 
                   <div className="mt-8 pt-4 border-t border-black/5 flex items-center gap-2 text-xs font-bold text-forest/60">
                     <CheckCircle size={16} weight="fill" className="text-gold" />
-                    <span>متاح لجميع المواد والمراحل</span>
+                    <span>{isArabic ? 'متاح لجميع المواد والمراحل' : 'Available for all subjects and stages'}</span>
                   </div>
                 </div>
               </motion.div>
@@ -273,7 +329,7 @@ export default function AboutPage() {
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="inline-block rounded-full px-3.5 py-1 text-xs font-bold uppercase tracking-wider bg-forest/5 text-forest border border-forest/10 mb-4"
           >
-            الفارق المنهجي
+            {isArabic ? 'الفارق المنهجي' : 'Methodological Paradigm'}
           </motion.div>
 
           <motion.h2
@@ -283,7 +339,11 @@ export default function AboutPage() {
             transition={{ duration: 0.75, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="font-display font-bold text-3xl md:text-5xl text-forest tracking-tight leading-tight"
           >
-            التعليم التقليدي مقابل <span className="text-gold">منهجية نُـخبة</span>
+            {isArabic ? (
+              <>التعليم التقليدي مقابل <span className="text-gold">منهجية نُـخبة</span></>
+            ) : (
+              <>Traditional Tutoring vs. <span className="text-gold">Nokhba Methodology</span></>
+            )}
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -292,7 +352,10 @@ export default function AboutPage() {
             transition={{ duration: 0.75, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="mt-3 text-base md:text-lg text-forest/70 max-w-2xl leading-relaxed"
           >
-            جدول مقارنة يوضح النقلة النوعية التي تقدمها نُـخبة في كل ركن من أركان العملية التعليمية.
+            {isArabic 
+              ? 'جدول مقارنة يوضح النقلة النوعية التي تقدمها نُـخبة في كل ركن من أركان العملية التعليمية.'
+              : 'A detailed breakdown illustrating the paradigm shift Nokhba brings to modern education.'
+            }
           </motion.p>
         </div>
 
@@ -310,15 +373,17 @@ export default function AboutPage() {
               <div className="double-bezel-inner p-6 sm:p-7 bg-white shadow-sm flex flex-col justify-between h-full gap-5">
                 <div>
                   <span className="text-xs font-mono font-bold text-gold bg-forest px-3 py-1 rounded-full inline-block mb-3">
-                    المحور {idx + 1}: {pt.topic}
+                    {isArabic ? `المحور ${idx + 1}: ${pt.topic.ar}` : `Axis ${idx + 1}: ${pt.topic.en}`}
                   </span>
 
                   {/* Traditional Box */}
                   <div className="p-4 rounded-2xl bg-rose-50/70 border border-rose-200/80 mb-3 text-xs sm:text-sm text-rose-950 flex items-start gap-3">
                     <CloseIcon size={18} weight="bold" className="text-rose-600 shrink-0 mt-0.5" />
                     <div>
-                      <span className="font-bold block text-rose-800 text-xs mb-0.5">الأسلوب التقليدي:</span>
-                      <p className="leading-relaxed opacity-90">{pt.traditional}</p>
+                      <span className="font-bold block text-rose-800 text-xs mb-0.5">
+                        {isArabic ? 'الأسلوب التقليدي:' : 'Traditional Approach:'}
+                      </span>
+                      <p className="leading-relaxed opacity-90">{pt.traditional[lang]}</p>
                     </div>
                   </div>
 
@@ -326,8 +391,10 @@ export default function AboutPage() {
                   <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 text-xs sm:text-sm text-emerald-950 flex items-start gap-3">
                     <Check size={18} weight="bold" className="text-emerald-700 shrink-0 mt-0.5" />
                     <div>
-                      <span className="font-bold block text-emerald-800 text-xs mb-0.5">معيار نُـخبة الذكي:</span>
-                      <p className="leading-relaxed font-semibold opacity-95">{pt.nokhba}</p>
+                      <span className="font-bold block text-emerald-800 text-xs mb-0.5">
+                        {isArabic ? 'معيار نُـخبة الذكي:' : 'Nokhba Smart Standard:'}
+                      </span>
+                      <p className="leading-relaxed font-semibold opacity-95">{pt.nokhba[lang]}</p>
                     </div>
                   </div>
                 </div>
@@ -352,7 +419,7 @@ export default function AboutPage() {
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="inline-block rounded-full px-3.5 py-1 text-xs font-bold uppercase tracking-wider bg-forest/5 text-forest border border-forest/10 mb-4"
           >
-            مسار النمو والإنجاز
+            {isArabic ? 'مسار النمو والإنجاز' : 'Growth & Milestones'}
           </motion.div>
 
           <motion.h2
@@ -362,7 +429,7 @@ export default function AboutPage() {
             transition={{ duration: 0.75, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="font-display font-bold text-3xl md:text-5xl text-forest tracking-tight leading-tight"
           >
-            خارطة التأسيس والتطور (2021 — 2026)
+            {isArabic ? 'خارطة التأسيس والتطور (2021 — 2026)' : 'Foundational Roadmap (2021 — 2026)'}
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -371,12 +438,15 @@ export default function AboutPage() {
             transition={{ duration: 0.75, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="mt-3 text-base md:text-lg text-forest/70 max-w-2xl leading-relaxed"
           >
-            انقر على أي عام لاستعراض المحطات الفارقة التي صنعت ريادة نُـخبة كأكبر صرح تعليمي في مصر.
+            {isArabic 
+              ? 'انقر على أي عام لاستعراض المحطات الفارقة التي صنعت ريادة نُـخبة كأكبر صرح تعليمي في مصر.'
+              : 'Select any year to explore the pivotal milestones that established Nokhba\'s leadership in Egypt.'
+            }
           </motion.p>
         </div>
 
         {/* Interactive Selector Pill Bar */}
-        <div className="flex items-center gap-2 sm:gap-4 p-2 bg-white rounded-2xl border border-black/10 shadow-sm mb-8 overflow-x-auto">
+        <div className="flex items-center gap-2 sm:gap-4 p-2 bg-white rounded-2xl border border-black/10 shadow-sm mb-8 overflow-x-auto" dir="ltr">
           {MILESTONES.map((item, idx) => {
             const isSelected = activeMilestoneIndex === idx;
             return (
@@ -394,7 +464,7 @@ export default function AboutPage() {
                   {item.year}
                 </span>
                 <span className="text-[11px] block truncate opacity-80">
-                  {item.badge}
+                  {item.badge[lang]}
                 </span>
               </button>
             );
@@ -417,20 +487,20 @@ export default function AboutPage() {
               <div className="max-w-2xl text-start">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-gold text-xs font-mono font-bold mb-3 border border-white/10">
                   <ChartLineUp size={16} weight="bold" />
-                  <span>محطة عام {MILESTONES[activeMilestoneIndex].year}</span>
+                  <span>{isArabic ? `محطة عام ${MILESTONES[activeMilestoneIndex].year}` : `Milestone ${MILESTONES[activeMilestoneIndex].year}`}</span>
                 </div>
                 <h3 className="font-display font-bold text-2xl sm:text-3xl md:text-4xl text-white mb-4 leading-tight">
-                  {MILESTONES[activeMilestoneIndex].title}
+                  {MILESTONES[activeMilestoneIndex].title[lang]}
                 </h3>
                 <p className="text-white/80 text-sm sm:text-base md:text-lg leading-relaxed">
-                  {MILESTONES[activeMilestoneIndex].desc}
+                  {MILESTONES[activeMilestoneIndex].desc[lang]}
                 </p>
               </div>
 
               <div className="p-6 rounded-2xl bg-white/5 border border-white/15 backdrop-blur-md text-center md:text-start shrink-0">
-                <span className="text-xs text-gold font-mono block mb-1">مؤشر الإنجاز</span>
+                <span className="text-xs text-gold font-mono block mb-1">{isArabic ? 'مؤشر الإنجاز' : 'Key Metric'}</span>
                 <span className="font-display font-bold text-base sm:text-lg text-white">
-                  {MILESTONES[activeMilestoneIndex].stats}
+                  {MILESTONES[activeMilestoneIndex].stats[lang]}
                 </span>
               </div>
             </motion.div>
@@ -453,7 +523,7 @@ export default function AboutPage() {
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="inline-block rounded-full px-3.5 py-1 text-xs font-bold uppercase tracking-wider bg-forest/5 text-forest border border-forest/10 mb-4"
           >
-            ميثاق الشرف الأكاديمي
+            {isArabic ? 'ميثاق الشرف الأكاديمي' : 'Academic Honor Charter'}
           </motion.div>
 
           <motion.h2
@@ -463,7 +533,7 @@ export default function AboutPage() {
             transition={{ duration: 0.75, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="font-display font-bold text-3xl md:text-5xl text-forest tracking-tight leading-tight"
           >
-            العهود الأربعة لأعضاء هيئة التدريس
+            {isArabic ? 'العهود الأربعة لأعضاء هيئة التدريس' : 'The Four Pledges of Faculty & Educators'}
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -472,7 +542,10 @@ export default function AboutPage() {
             transition={{ duration: 0.75, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="mt-3 text-base md:text-lg text-forest/70 max-w-2xl leading-relaxed"
           >
-            مبادئ مهنية وأخلاقية يوقع عليها كل أستاذ ومراجع ينضم لشبكة نُـخبة لضمان أعلى معايير النزاهة والمسؤولية.
+            {isArabic 
+              ? 'مبادئ مهنية وأخلاقية يوقع عليها كل أستاذ ومراجع ينضم لشبكة نُـخبة لضمان أعلى معايير النزاهة والمسؤولية.'
+              : 'Ethical and professional covenants signed by every educator and reviewer joining Nokhba.'
+            }
           </motion.p>
         </div>
 
@@ -493,16 +566,16 @@ export default function AboutPage() {
 
                 <div>
                   <h3 className="font-display font-bold text-2xl text-forest mb-2">
-                    {principle.title}
+                    {principle.title[lang]}
                   </h3>
                   <p className="text-forest/75 text-sm sm:text-base leading-relaxed">
-                    {principle.desc}
+                    {principle.desc[lang]}
                   </p>
                 </div>
 
                 <div className="pt-3 border-t border-black/5 flex items-center gap-2 text-xs font-semibold text-emerald-800">
                   <ShieldCheck size={16} weight="fill" className="text-emerald-600" />
-                  <span>معتمد وموثق رسمياً</span>
+                  <span>{isArabic ? 'معتمد وموثق رسمياً' : 'Officially Certified & Pledged'}</span>
                 </div>
               </div>
             </div>
@@ -529,23 +602,26 @@ export default function AboutPage() {
           <div className="max-w-2xl relative z-10 text-start">
             <div className="inline-flex items-center gap-2 rounded-full px-3.5 py-1 text-xs font-bold bg-white/10 text-gold mb-4 border border-white/10">
               <ChalkboardTeacher size={16} weight="bold" />
-              <span>ابدأ رحلة التفوق اليوم</span>
+              <span>{isArabic ? 'ابدأ رحلة التفوق اليوم' : 'Begin Your Journey to Mastery Today'}</span>
             </div>
             <h3 className="font-display font-bold text-3xl sm:text-4xl md:text-5xl text-white mb-4 leading-tight">
-              هل أنت جاهز لتكون من أوائل الجمهورية؟
+              {isArabic ? 'هل أنت جاهز لتكون من أوائل الجمهورية؟' : 'Ready to Become One of Egypt\'s Top Achievers?'}
             </h3>
             <p className="text-white/75 text-base md:text-lg leading-relaxed">
-              انضم إلى آلاف الطلاب واستمتع بتجربة تعليمية تجمع بين الشرح السينمائي والمتابعة الذكية مع نخبة معلمي مصر.
+              {isArabic 
+                ? 'انضم إلى آلاف الطلاب واستمتع بتجربة تعليمية تجمع بين الشرح السينمائي والمتابعة الذكية مع نخبة معلمي مصر.'
+                : 'Join thousands of students and experience high-definition lectures with dedicated mentor tracking.'
+              }
             </p>
           </div>
 
           <div className="relative z-10 flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto shrink-0">
             <Link href="/login" className="w-full sm:w-auto">
               <Button
-                icon={<ArrowLeft size={16} weight="bold" />}
+                icon={isArabic ? <ArrowLeft size={16} weight="bold" /> : <ArrowRight size={16} weight="bold" />}
                 className="w-full sm:w-auto px-8 py-4 font-bold text-base shadow-xl"
               >
-                إنشاء حساب طالب
+                {isArabic ? 'إنشاء حساب طالب' : 'Create Student Account'}
               </Button>
             </Link>
             <Link href="/signup?role=teacher" className="w-full sm:w-auto">
@@ -553,7 +629,7 @@ export default function AboutPage() {
                 variant="glass"
                 className="w-full sm:w-auto px-8 py-4 font-bold text-base"
               >
-                سجل كمعلم في المنصة
+                {isArabic ? 'سجل كمعلم في المنصة' : 'Register as Teacher'}
               </Button>
             </Link>
           </div>

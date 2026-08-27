@@ -4,9 +4,12 @@ import React from 'react';
 import Link from 'next/link';
 import { motion } from 'motion/react';
 import { Button } from '@/components/common/Button';
-import { House, Compass, ArrowLeft } from '@phosphor-icons/react';
+import { House, Compass, ArrowLeft, ArrowRight } from '@phosphor-icons/react';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function NotFound() {
+  const { t, isArabic } = useLanguage();
+
   return (
     <main className="w-full min-h-[80dvh] flex items-center justify-center px-4 sm:px-6 py-16 bg-bone text-forest overflow-x-hidden">
       
@@ -37,10 +40,13 @@ export default function NotFound() {
           {/* Academic Headline & Copy */}
           <div className="flex flex-col gap-2 max-w-md">
             <h1 className="font-display font-bold text-2xl sm:text-3xl text-forest">
-              الصفحة غير موجودة
+              {isArabic ? 'الصفحة غير موجودة' : 'Page Not Found'}
             </h1>
             <p className="text-forest/70 text-xs sm:text-sm leading-relaxed">
-              يبدو أنك وصلت إلى رابط غير متاح أو تم نقله. لا تقلق، يمكنك العودة مباشرة إلى المنصة واستكمال مسيرتك التعليمية.
+              {isArabic 
+                ? 'يبدو أنك وصلت إلى رابط غير متاح أو تم نقله. لا تقلق، يمكنك العودة مباشرة إلى المنصة واستكمال مسيرتك التعليمية.'
+                : 'The page you requested could not be found or has been moved. You can return to the platform to continue learning.'
+              }
             </p>
           </div>
 
@@ -51,7 +57,7 @@ export default function NotFound() {
                 className="w-full sm:w-auto px-8 py-3 font-bold text-xs sm:text-sm shadow-md"
                 icon={<House size={18} weight="fill" />}
               >
-                العودة للصفحة الرئيسية
+                {isArabic ? 'العودة للصفحة الرئيسية' : 'Return to Home'}
               </Button>
             </Link>
 
@@ -59,8 +65,8 @@ export default function NotFound() {
               href="/lessons" 
               className="text-xs font-bold text-forest/60 hover:text-gold transition-colors inline-flex items-center gap-1.5 pt-1"
             >
-              <span>استكشاف الكورسات والمحاضرات</span>
-              <ArrowLeft size={14} weight="bold" />
+              <span>{isArabic ? 'استكشاف الكورسات والمحاضرات' : 'Explore Courses & Lectures'}</span>
+              {isArabic ? <ArrowLeft size={14} weight="bold" /> : <ArrowRight size={14} weight="bold" />}
             </Link>
           </div>
 

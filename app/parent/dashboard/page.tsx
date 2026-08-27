@@ -2,16 +2,11 @@
 
 import React, { useEffect } from 'react';
 import { useStore } from '@/store';
-import { motion } from 'motion/react';
+import { useLanguage } from '@/context/LanguageContext';
 import { 
-  ChartLineUp, 
   BookOpen, 
   CheckCircle, 
-  WarningCircle, 
-  Sparkle, 
-  User, 
   WhatsappLogo, 
-  Phone, 
   GraduationCap, 
   CalendarCheck,
   TrendUp
@@ -21,9 +16,9 @@ import { Button } from '@/components/common/Button';
 import Link from 'next/link';
 import { ParentDashboardSkeleton } from '@/components/common/Skeleton';
 
-
 function ParentDashboardContent() {
   const { currentUser, users, enrollments, courses, submissions, fetchCourses, fetchEnrollments, fetchSubmissions, isLoading } = useStore();
+  const { t, isArabic } = useLanguage();
 
   useEffect(() => {
     fetchCourses();
@@ -59,14 +54,19 @@ function ParentDashboardContent() {
           <GraduationCap size={40} weight="fill" />
         </div>
         <div className="max-w-md">
-          <h1 className="font-display font-bold text-2xl text-forest mb-2">مرحباً بك، {currentUser?.name || 'ولي الأمر'}</h1>
+          <h1 className="font-display font-bold text-2xl text-forest mb-2">
+            {isArabic ? `مرحباً بك، ${currentUser?.name || 'ولي الأمر'}` : `Welcome, ${currentUser?.name || 'Parent'}`}
+          </h1>
           <p className="text-sm text-forest/70 leading-relaxed">
-            لم يتم ربط حساب أي طالب برقم هاتفك حتى الآن. عند قيام الطالب بالتسجيل برقم ولي أمره، ستظهر جميع بياناته وتقاريره الأكاديمية هنا مباشرة.
+            {isArabic 
+              ? 'لم يتم ربط حساب أي طالب برقم هاتفك حتى الآن. عند قيام الطالب بالتسجيل برقم ولي أمره، ستظهر جميع بياناته وتقاريره الأكاديمية هنا مباشرة.'
+              : 'No student account is linked to your phone number yet. Once your student registers with your parent phone number, their academic performance will sync here directly.'
+            }
           </p>
         </div>
         <Link href="/contact">
           <Button className="text-xs font-bold py-3 px-6 shadow-md">
-            التواصل مع الدعم الفني
+            {isArabic ? 'التواصل مع الدعم الفني' : 'Contact Support Desk'}
           </Button>
         </Link>
       </div>
@@ -80,10 +80,13 @@ function ParentDashboardContent() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-black/5 pb-8">
         <div>
           <h1 className="font-display font-bold text-2xl sm:text-3xl md:text-4xl text-forest mb-1">
-            مرحباً بك، {currentUser?.name || 'ولي الأمر'}
+            {isArabic ? `مرحباً بك، ${currentUser?.name || 'ولي الأمر'}` : `Welcome, ${currentUser?.name || 'Parent'}`}
           </h1>
           <p className="text-forest/70 text-xs sm:text-sm">
-            تقرير المتابعة الحية لمستوى والتزام الطالب: <span className="font-bold text-forest">{student.name}</span>
+            {isArabic 
+              ? <>تقرير المتابعة الحية لمستوى والتزام الطالب: <span className="font-bold text-forest">{student.name}</span></>
+              : <>Live student performance and progress tracking: <span className="font-bold text-forest">{student.name}</span></>
+            }
           </p>
         </div>
 
@@ -95,7 +98,7 @@ function ParentDashboardContent() {
           <div>
             <span className="font-bold text-xs sm:text-sm text-forest block">{student.name}</span>
             <span className="text-[11px] text-forest/50 font-mono">
-              {student.grade === 'sec3' ? 'الصف الثالث الثانوي' : 'المرحلة الدراسية'}
+              {t.grades[student.grade as keyof typeof t.grades] || student.grade}
             </span>
           </div>
         </div>
@@ -108,8 +111,8 @@ function ParentDashboardContent() {
             <BookOpen size={24} weight="fill" />
           </div>
           <div>
-            <span className="text-xs text-forest/60 block">الكورسات المتابعة</span>
-            <span className="font-display font-bold text-xl text-forest">{activeCourses.length} مواد</span>
+            <span className="text-xs text-forest/60 block">{t.parent.enrolledCourses}</span>
+            <span className="font-display font-bold text-xl text-forest">{activeCourses.length} {isArabic ? 'مواد' : 'Courses'}</span>
           </div>
         </div>
 
@@ -118,8 +121,8 @@ function ParentDashboardContent() {
             <CheckCircle size={24} weight="fill" />
           </div>
           <div>
-            <span className="text-xs text-forest/60 block">الدروس المشاهدة</span>
-            <span className="font-display font-bold text-xl text-forest">{totalLessonsCompleted} محاضرة</span>
+            <span className="text-xs text-forest/60 block">{isArabic ? 'الدروس المشاهدة' : 'Watched Lectures'}</span>
+            <span className="font-display font-bold text-xl text-forest">{totalLessonsCompleted} {isArabic ? 'محاضرة' : 'Lectures'}</span>
           </div>
         </div>
 
@@ -128,8 +131,8 @@ function ParentDashboardContent() {
             <TrendUp size={24} weight="bold" />
           </div>
           <div>
-            <span className="text-xs text-forest/60 block">متوسط درجات الاختبارات</span>
-            <span className="font-display font-bold text-xl text-forest">{avgScore > 0 ? `${avgScore}%` : 'لا يوجد'}</span>
+            <span className="text-xs text-forest/60 block">{t.parent.quizAvg}</span>
+            <span className="font-display font-bold text-xl text-forest">{avgScore > 0 ? `${avgScore}%` : (isArabic ? 'لا يوجد' : 'None')}</span>
           </div>
         </div>
 
@@ -138,7 +141,7 @@ function ParentDashboardContent() {
             <CalendarCheck size={24} weight="fill" className="text-gold" />
           </div>
           <div>
-            <span className="text-xs text-forest/60 block">نسبة الالتزام والنشاط</span>
+            <span className="text-xs text-forest/60 block">{isArabic ? 'نسبة الالتزام والنشاط' : 'Activity & Discipline'}</span>
             <span className="font-display font-bold text-xl text-forest">
               {totalLessonsCompleted > 0 ? `${Math.min(100, totalLessonsCompleted * 20)}%` : '0%'}
             </span>
@@ -146,24 +149,24 @@ function ParentDashboardContent() {
         </div>
       </div>
 
-      {/* 3. Main Split View: Courses Progress & Recent Tests */}
+      {/* 3. Main Split View */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Left 2 Cols: Course Completion Progress */}
         <div className="lg:col-span-2 flex flex-col gap-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-display font-bold text-xl text-forest">المقررات الدراسية ومعدل الإنجاز</h2>
-              <p className="text-xs text-forest/60">نسبة مشاهدة المحاضرات وحل الواجبات المقررة</p>
+              <h2 className="font-display font-bold text-xl text-forest">{t.parent.progressRate}</h2>
+              <p className="text-xs text-forest/60">{isArabic ? 'نسبة مشاهدة المحاضرات وحل الواجبات المقررة' : 'Lecture completion and homework status'}</p>
             </div>
             <span className="text-xs font-bold bg-forest/5 text-forest px-3 py-1 rounded-full border border-forest/10">
-              {activeCourses.length} مادة
+              {activeCourses.length} {isArabic ? 'مادة' : 'Courses'}
             </span>
           </div>
 
           {activeCourses.length === 0 ? (
             <div className="bg-white rounded-3xl p-8 border border-black/5 text-center text-forest/60 text-xs">
-              لم يقم الطالب بالتسجيل في أي كورسات حتى الآن.
+              {isArabic ? 'لم يقم الطالب بالتسجيل في أي كورسات حتى الآن.' : 'Student has not enrolled in any courses yet.'}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -180,8 +183,8 @@ function ParentDashboardContent() {
                   >
                     <div className="flex flex-col gap-2.5">
                       <div className="flex items-center justify-between text-xs text-forest/60 font-medium">
-                        <span>{course.teacher?.name || 'أستاذ المادة'}</span>
-                        <span className="font-mono text-emerald-700 font-bold">{progress}% مكتمل</span>
+                        <span>{course.teacher?.name || (isArabic ? 'أستاذ المادة' : 'Educator')}</span>
+                        <span className="font-mono text-emerald-700 font-bold">{progress}% {isArabic ? 'مكتمل' : 'completed'}</span>
                       </div>
 
                       <h3 className="font-display font-bold text-base text-forest line-clamp-1">
@@ -198,8 +201,8 @@ function ParentDashboardContent() {
                         />
                       </div>
                       <div className="flex justify-between text-[10px] text-forest/50 font-mono">
-                        <span>{completedCount} دروس مكتملة</span>
-                        <span>إجمالي {totalCourseItems} دروس</span>
+                        <span>{completedCount} {isArabic ? 'دروس مكتملة' : 'completed'}</span>
+                        <span>{isArabic ? 'إجمالي' : 'Total'} {totalCourseItems} {isArabic ? 'دروس' : 'lessons'}</span>
                       </div>
                     </div>
                   </div>
@@ -216,19 +219,23 @@ function ParentDashboardContent() {
                   <WhatsappLogo size={24} weight="fill" />
                 </div>
                 <div>
-                  <h3 className="font-display font-bold text-sm text-forest">خط التواصل المباشر مع المعلمين والمشرفين</h3>
-                  <p className="text-xs text-forest/60">للاستفسار عن الواجبات الدورية أو حضور الطالب وسلوكه الأكاديمي.</p>
+                  <h3 className="font-display font-bold text-sm text-forest">
+                    {isArabic ? 'خط التواصل المباشر مع المعلمين والمشرفين' : 'Direct Academic Supervisor Channel'}
+                  </h3>
+                  <p className="text-xs text-forest/60">
+                    {isArabic ? 'للاستفسار عن الواجبات الدورية أو حضور الطالب وسلوكه الأكاديمي.' : 'Inquire regarding attendance, assignments, and discipline.'}
+                  </p>
                 </div>
               </div>
 
               <a 
-                href="https://wa.me/201004899845" 
+                href="https://wa.me/201000000000" 
                 target="_blank" 
                 rel="noreferrer"
                 className="shrink-0"
               >
                 <Button className="py-2.5 px-5 text-xs font-bold shadow-xs">
-                  مراسلة المشرف الأكاديمي
+                  {isArabic ? 'مراسلة المشرف الأكاديمي' : 'Message Supervisor'}
                 </Button>
               </a>
             </div>
@@ -238,15 +245,15 @@ function ParentDashboardContent() {
         {/* Right Col: Recent Quizzes & Grades */}
         <div className="flex flex-col gap-6">
           <div>
-            <h2 className="font-display font-bold text-xl text-forest">نتائج الاختبارات</h2>
-            <p className="text-xs text-forest/60">سجل درجات الطالب في الاختبارات الدورية</p>
+            <h2 className="font-display font-bold text-xl text-forest">{t.parent.quizReports}</h2>
+            <p className="text-xs text-forest/60">{isArabic ? 'سجل درجات الطالب في الاختبارات الدورية' : 'Historical scores in assessments'}</p>
           </div>
 
           <div className="bg-white rounded-3xl p-6 border border-black/5 shadow-xs flex flex-col gap-4">
             <div className="flex flex-col gap-3">
               {studentSubmissions.length === 0 ? (
                 <p className="text-xs text-forest/50 text-center py-6">
-                  لا توجد نتائج اختبارات مسجلة للطالب حتى الآن.
+                  {isArabic ? 'لا توجد نتائج اختبارات مسجلة للطالب حتى الآن.' : 'No recorded quiz results yet.'}
                 </p>
               ) : (
                 studentSubmissions.map((item: any, idx: number) => {
@@ -255,15 +262,18 @@ function ParentDashboardContent() {
 
                   return (
                     <div 
-                      key={item.id || idx}
+                      key={item.id || idx} 
                       className="p-3.5 rounded-2xl bg-[#F7F6F3] border border-black/5 flex items-center justify-between gap-3"
                     >
                       <div className="flex flex-col gap-0.5">
                         <span className="text-xs font-bold text-forest line-clamp-1">
-                          {item.quizTitle || item.quiz?.title || 'اختبار تقييم الدرس'}
+                          {item.quizTitle || item.quiz?.title || (isArabic ? 'اختبار تقييم الدرس' : 'Lesson Quiz')}
                         </span>
                         <span className="text-[10px] text-forest/50 font-mono">
-                          {item.submittedAt ? new Date(item.submittedAt).toLocaleDateString('ar-EG') : new Date().toLocaleDateString('ar-EG')}
+                          {item.submittedAt 
+                            ? new Date(item.submittedAt).toLocaleDateString(isArabic ? 'ar-EG' : 'en-US') 
+                            : new Date().toLocaleDateString(isArabic ? 'ar-EG' : 'en-US')
+                          }
                         </span>
                       </div>
 

@@ -4,20 +4,17 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useStore } from '@/store';
+import { useLanguage } from '@/context/LanguageContext';
 import { 
   CheckCircle, 
   XCircle, 
   ArrowRight, 
-  Trophy, 
-  Sparkle, 
+  ArrowLeft,
   ArrowClockwise, 
-  BookOpen,
-  ChartBar,
-  Question
+  ChartBar
 } from '@phosphor-icons/react';
 import { Button } from '@/components/common/Button';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { motion } from 'motion/react';
 
 interface ParsedReviewQuestion {
   id: string;
@@ -32,13 +29,14 @@ function QuizResultsContent() {
   const quizId = params.quizId as string;
   const submissionId = params.submissionId as string;
   const router = useRouter();
+  const { t, isArabic } = useLanguage();
 
   const { submissions, courses } = useStore();
   const course = courses.find((c) => c.id === id);
   const submission = submissions.find((s) => s.id === submissionId);
 
   const [reviewQuestions, setReviewQuestions] = useState<ParsedReviewQuestion[]>([]);
-  const [quizTitle, setQuizTitle] = useState('اختبار تقييم الدرس');
+  const [quizTitle, setQuizTitle] = useState(isArabic ? 'اختبار تقييم الدرس' : 'Lesson Quiz');
   const [isLoading, setIsLoading] = useState(true);
 
   // Fetch real quiz questions strictly from database for model review
@@ -55,7 +53,7 @@ function QuizResultsContent() {
                                allItems.find((i: any) => i.type === 'quiz');
 
             if (targetQuiz) {
-              setQuizTitle(targetQuiz.title || 'اختبار تقييم الدرس');
+              setQuizTitle(targetQuiz.title || (isArabic ? 'اختبار تقييم الدرس' : 'Lesson Quiz'));
               if (targetQuiz.questions && targetQuiz.questions.length > 0) {
                 const parsed: ParsedReviewQuestion[] = targetQuiz.questions.map((q: any, idx: number) => {
                   let opts: string[] = [];
@@ -90,7 +88,7 @@ function QuizResultsContent() {
     if (id) {
       loadReviewQuestions();
     }
-  }, [id, quizId]);
+  }, [id, quizId, isArabic]);
 
   const score = submission?.score !== undefined ? submission.score : 100;
   const answers = submission?.answers || [];
@@ -109,8 +107,8 @@ function QuizResultsContent() {
                 href={`/student/course/${id}`} 
                 className="inline-flex items-center gap-1.5 text-forest/70 hover:text-forest text-xs font-bold bg-[#F7F6F3] px-3 py-1.5 rounded-full transition-colors"
               >
-                <ArrowRight size={14} weight="bold" />
-                <span>العودة للكورس</span>
+                {isArabic ? <ArrowRight size={14} weight="bold" /> : <ArrowLeft size={14} weight="bold" />}
+                <span>{isArabic ? 'العودة للكورس' : 'Back to Course'}</span>
               </Link>
             </div>
 
@@ -123,17 +121,23 @@ function QuizResultsContent() {
               }`}>
                 <span className="font-display font-bold text-3xl sm:text-4xl">{score}%</span>
                 <span className="text-[10px] font-bold uppercase tracking-wider">
-                  {isPassed ? 'تم الاجتياز' : 'يحتاج إعادة'}
+                  {isPassed ? (isArabic ? 'تم الاجتياز' : 'Passed') : (isArabic ? 'يحتاج إعادة' : 'Retake Needed')}
                 </span>
               </div>
             </div>
 
             <div className="flex flex-col gap-1.5 max-w-md">
               <h1 className="font-display font-bold text-2xl sm:text-3xl text-forest">
-                {isPassed ? 'أحسنت يا بطل! إنجاز متميز' : 'نتيجة قابلة للتحسين والمراجعة'}
+                {isPassed 
+                  ? (isArabic ? 'أحسنت يا بطل! إنجاز متميز' : 'Great Job! Outstanding Result') 
+                  : (isArabic ? 'نتيجة قابلة للتحسين والمراجعة' : 'Opportunity to Review & Improve')
+                }
               </h1>
               <p className="text-forest/70 text-xs sm:text-sm">
-                تم تسجيل محاولتك بنجاح في مادة <span className="font-bold text-forest">{course?.title || 'المادة الدراسية'}</span>
+                {isArabic 
+                  ? <>تم تسجيل محاولتك بنجاح في مادة <span className="font-bold text-forest">{course?.title || 'المادة الدراسية'}</span></>
+                  : <>Your score was recorded for <span className="font-bold text-forest">{course?.title || 'Course'}</span></>
+                }
               </p>
             </div>
 
@@ -141,7 +145,7 @@ function QuizResultsContent() {
             <div className="flex flex-wrap items-center justify-center gap-3 pt-2 w-full max-w-md">
               <Link href={`/student/course/${id}`} className="flex-1 min-w-[140px]">
                 <Button className="w-full py-3 text-xs font-bold shadow-md">
-                  متابعة المنهج
+                  {isArabic ? 'متابعة المنهج' : 'Continue Course'}
                 </Button>
               </Link>
 
@@ -151,7 +155,7 @@ function QuizResultsContent() {
                   className="w-full py-3 px-4 rounded-xl bg-[#F7F6F3] hover:bg-black/5 text-forest font-bold text-xs transition-colors inline-flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <ArrowClockwise size={16} weight="bold" />
-                  <span>إعادة المحاولة</span>
+                  <span>{isArabic ? 'إعادة المحاولة' : 'Retake Quiz'}</span>
                 </button>
               </Link>
             </div>
@@ -164,17 +168,23 @@ function QuizResultsContent() {
           <div className="flex items-center justify-between border-b border-black/5 pb-4">
             <div className="flex items-center gap-2">
               <ChartBar size={20} weight="fill" className="text-gold" />
-              <h2 className="font-display font-bold text-lg text-forest">مراجعة الإجابات والنموذج الإرشادي</h2>
+              <h2 className="font-display font-bold text-lg text-forest">
+                {isArabic ? 'مراجعة الإجابات والنموذج الإرشادي' : 'Answer Key & Model Solutions'}
+              </h2>
             </div>
             <span className="text-xs text-forest/50 font-mono">
-              {reviewQuestions.length} أسئلة
+              {reviewQuestions.length} {isArabic ? 'أسئلة' : 'Questions'}
             </span>
           </div>
 
           {isLoading ? (
-            <div className="py-8 text-center text-forest/50 text-xs">جاري تحميل الأسئلة النموذجية...</div>
+            <div className="py-8 text-center text-forest/50 text-xs">
+              {isArabic ? 'جاري تحميل الأسئلة النموذجية...' : 'Loading model answers...'}
+            </div>
           ) : reviewQuestions.length === 0 ? (
-            <div className="py-8 text-center text-forest/50 text-xs">لا توجد أسئلة مسجلة لعرض نموذج الإجابة.</div>
+            <div className="py-8 text-center text-forest/50 text-xs">
+              {isArabic ? 'لا توجد أسئلة مسجلة لعرض نموذج الإجابة.' : 'No questions recorded for review.'}
+            </div>
           ) : (
             <div className="flex flex-col gap-5">
               {reviewQuestions.map((q, idx) => {
@@ -200,12 +210,12 @@ function QuizResultsContent() {
                         {isCorrect ? (
                           <div className="flex items-center gap-1 text-emerald-700 text-xs font-bold bg-emerald-100 px-2 py-1 rounded-lg">
                             <CheckCircle size={16} weight="fill" />
-                            <span>صحيحة</span>
+                            <span>{isArabic ? 'صحيحة' : 'Correct'}</span>
                           </div>
                         ) : (
                           <div className="flex items-center gap-1 text-rose-700 text-xs font-bold bg-rose-100 px-2 py-1 rounded-lg">
                             <XCircle size={16} weight="fill" />
-                            <span>غير صحيحة</span>
+                            <span>{isArabic ? 'غير صحيحة' : 'Incorrect'}</span>
                           </div>
                         )}
                       </div>
@@ -227,7 +237,11 @@ function QuizResultsContent() {
                         return (
                           <div key={oIdx} className={`p-3 rounded-xl border text-xs flex items-center justify-between ${optClasses}`}>
                             <span>{opt}</span>
-                            {isModelAnswer && <span className="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded font-bold">الإجابة النموذجية</span>}
+                            {isModelAnswer && (
+                              <span className="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded font-bold">
+                                {isArabic ? 'الإجابة النموذجية' : 'Model Answer'}
+                              </span>
+                            )}
                           </div>
                         );
                       })}

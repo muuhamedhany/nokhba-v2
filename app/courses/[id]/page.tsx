@@ -10,26 +10,25 @@ import {
   Exam, 
   Clock, 
   WhatsappLogo, 
-  GraduationCap, 
-  ArrowRight, 
-  ArrowLeft,
+  ArrowLeft, 
+  ArrowRight,
   SealCheck, 
   CaretDown, 
   User, 
-  CheckCircle,
-  PlayCircle,
-  ShieldCheck,
-  Sparkle,
-  ChalkboardTeacher
+  CheckCircle, 
+  PlayCircle, 
+  ShieldCheck, 
+  ChalkboardTeacher 
 } from '@phosphor-icons/react';
 import { Button } from '@/components/common/Button';
-import { strings } from '@/locales/ar';
+import { useLanguage } from '@/context/LanguageContext';
 import { useStore } from '@/store';
 
 export default function CourseLandingPage() {
   const params = useParams();
   const id = params.id as string;
   const { currentUser, enrollments, fetchEnrollments } = useStore();
+  const { t, isArabic } = useLanguage();
 
   const [course, setCourse] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -78,7 +77,7 @@ export default function CourseLandingPage() {
       <div className="w-full min-h-[90dvh] py-16 px-4 bg-bone flex items-center justify-center text-start">
         <div className="flex flex-col items-center gap-4 text-forest font-bold">
           <div className="w-12 h-12 border-3 border-gold border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm">جاري تحميل تفاصيل ومحتوى الكورس...</p>
+          <p className="text-sm">{isArabic ? 'جاري تحميل تفاصيل ومحتوى الكورس...' : 'Loading course details...'}</p>
         </div>
       </div>
     );
@@ -92,13 +91,13 @@ export default function CourseLandingPage() {
             <div className="w-16 h-16 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center">
               <Books size={36} weight="duotone" />
             </div>
-            <h1 className="font-display font-bold text-2xl text-forest">الكورس غير موجود</h1>
+            <h1 className="font-display font-bold text-2xl text-forest">{isArabic ? 'الكورس غير موجود' : 'Course Not Found'}</h1>
             <p className="text-sm text-forest/70 leading-relaxed">
-              لم يتم العثور على الكورس المطلوب، قد يكون تم نقله أو حذفه.
+              {isArabic ? 'لم يتم العثور على الكورس المطلوب، قد يكون تم نقله أو حذفه.' : 'The requested course could not be found.'}
             </p>
             <Link href="/lessons" className="w-full mt-2">
               <Button className="w-full py-3 font-bold text-sm">
-                العودة لمكتبة الكورسات
+                {isArabic ? 'العودة لمكتبة الكورسات' : 'Return to Course Library'}
               </Button>
             </Link>
           </div>
@@ -115,11 +114,11 @@ export default function CourseLandingPage() {
 
   const totalMinutes = videoItems.reduce((acc: number, curr: any) => acc + (curr.duration || 1800), 0) / 60;
   const formattedDuration = totalMinutes >= 60 
-    ? `${(totalMinutes / 60).toFixed(1)} ساعة` 
-    : `${Math.round(totalMinutes)} دقيقة`;
+    ? (isArabic ? `${(totalMinutes / 60).toFixed(1)} ساعة` : `${(totalMinutes / 60).toFixed(1)} hrs`) 
+    : (isArabic ? `${Math.round(totalMinutes)} دقيقة` : `${Math.round(totalMinutes)} min`);
 
-  const subjectLabel = strings.subjects[course.subject as keyof typeof strings.subjects] || course.subject;
-  const gradeLabel = strings.grades[course.grade as keyof typeof strings.grades] || course.grade;
+  const subjectLabel = t.subjects[course.subject as keyof typeof t.subjects] || course.subject;
+  const gradeLabel = t.grades[course.grade as keyof typeof t.grades] || course.grade;
 
   const isEnrolled =
     course.isFree ||
@@ -129,7 +128,10 @@ export default function CourseLandingPage() {
   const rawPhone = teacher?.phone || '01000000001';
   const cleanDigits = rawPhone.replace(/\D/g, '');
   const waNumber = cleanDigits.startsWith('20') ? cleanDigits : (cleanDigits.startsWith('0') ? `2${cleanDigits}` : `20${cleanDigits}`);
-  const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(`أود الاستفسار عن تفاصيل أو كود تفعيل كورس ${course.title} - الأستاذ ${teacher?.name || ''}`)}`;
+  const waText = isArabic
+    ? `أود الاستفسار عن تفاصيل أو كود تفعيل كورس ${course.title} - الأستاذ ${teacher?.name || ''}`
+    : `Inquiry regarding course access code for ${course.title} - ${teacher?.name || ''}`;
+  const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(waText)}`;
 
   return (
     <main className="w-full min-h-screen py-10 md:py-16 bg-bone overflow-x-hidden text-start">
@@ -138,7 +140,7 @@ export default function CourseLandingPage() {
         {/* Top Breadcrumb Navigation */}
         <div className="flex items-center gap-2 text-xs font-bold text-forest/70">
           <Link href="/lessons" className="hover:text-forest transition-colors">
-            المكتبة والمناهج
+            {isArabic ? 'المكتبة والمناهج' : 'Curriculum Library'}
           </Link>
           <span>/</span>
           <span className="text-forest/50">{subjectLabel}</span>
@@ -168,15 +170,15 @@ export default function CourseLandingPage() {
                 </span>
                 {course.isFree ? (
                   <span className="bg-gold text-forest font-bold px-3 py-1 rounded-full text-xs shadow-xs">
-                    محاضرة مجانية
+                    {t.courses.free}
                   </span>
                 ) : isEnrolled ? (
                   <span className="bg-emerald-600 text-white font-bold px-3 py-1 rounded-full text-xs shadow-xs">
-                    كورس مفعل بحسابك
+                    {isArabic ? 'كورس مفعل بحسابك' : 'Course Active in Account'}
                   </span>
                 ) : (
                   <span className="bg-forest/10 text-forest font-bold px-3 py-1 rounded-full text-xs border border-forest/15">
-                    تفعيل بكود الحصة
+                    {isArabic ? 'تفعيل بكود الحصة' : 'Activation Code'}
                   </span>
                 )}
               </div>
@@ -212,7 +214,7 @@ export default function CourseLandingPage() {
                       <SealCheck size={16} weight="fill" className="text-gold shrink-0" />
                     </div>
                     <span className="text-xs text-forest/60 block">
-                      {teacher.subject || 'معلم المادة'} • عرض الملف الشخصي
+                      {teacher.subject || (isArabic ? 'معلم المادة' : 'Educator')} • {isArabic ? 'عرض الملف الشخصي' : 'View Profile'}
                     </span>
                   </div>
                 </Link>
@@ -223,23 +225,23 @@ export default function CourseLandingPage() {
                 <div className="bg-[#F7F6F3] p-3.5 rounded-xl flex flex-col gap-1">
                   <span className="text-forest/60 text-xs font-medium flex items-center gap-1.5">
                     <VideoCamera size={16} weight="duotone" className="text-gold" />
-                    <span>المحاضرات</span>
+                    <span>{t.courses.lessons}</span>
                   </span>
-                  <span className="font-bold text-lg text-forest">{videoItems.length} فيديو</span>
+                  <span className="font-bold text-lg text-forest">{videoItems.length}</span>
                 </div>
 
                 <div className="bg-[#F7F6F3] p-3.5 rounded-xl flex flex-col gap-1">
                   <span className="text-forest/60 text-xs font-medium flex items-center gap-1.5">
                     <Exam size={16} weight="duotone" className="text-gold" />
-                    <span>الاختبارات</span>
+                    <span>{t.courses.quizzes}</span>
                   </span>
-                  <span className="font-bold text-lg text-forest">{quizItems.length} اختبار</span>
+                  <span className="font-bold text-lg text-forest">{quizItems.length}</span>
                 </div>
 
                 <div className="bg-[#F7F6F3] p-3.5 rounded-xl flex flex-col gap-1">
                   <span className="text-forest/60 text-xs font-medium flex items-center gap-1.5">
                     <Clock size={16} weight="duotone" className="text-gold" />
-                    <span>المدة الإجمالية</span>
+                    <span>{isArabic ? 'المدة الإجمالية' : 'Total Duration'}</span>
                   </span>
                   <span className="font-bold text-lg text-forest">{formattedDuration}</span>
                 </div>
@@ -252,10 +254,13 @@ export default function CourseLandingPage() {
                   className="flex-1 sm:flex-initial"
                 >
                   <Button
-                    icon={<ArrowLeft size={18} weight="bold" />}
+                    icon={isArabic ? <ArrowLeft size={18} weight="bold" /> : <ArrowRight size={18} weight="bold" />}
                     className="w-full sm:w-auto px-8 py-4 font-bold text-sm sm:text-base shadow-lg shadow-forest/15 cursor-pointer"
                   >
-                    {isEnrolled ? (course.isFree ? 'دخول قاعة المحاضرات' : 'متابعة المذاكرة') : 'دخول وتفعيل الكورس'}
+                    {isEnrolled 
+                      ? (course.isFree ? (isArabic ? 'دخول قاعة المحاضرات' : 'Enter Lecture Hall') : (isArabic ? 'متابعة المذاكرة' : 'Continue Course')) 
+                      : (isArabic ? 'دخول وتفعيل الكورس' : 'Enroll & Unlock')
+                    }
                   </Button>
                 </Link>
 
@@ -266,7 +271,7 @@ export default function CourseLandingPage() {
                   className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs sm:text-sm font-bold transition-all shadow-xs cursor-pointer"
                 >
                   <WhatsappLogo size={20} weight="fill" className="text-emerald-600 shrink-0" />
-                  <span>طلب كود التفعيل عبر واتساب</span>
+                  <span>{isArabic ? 'طلب كود التفعيل عبر واتساب' : 'Request Access Code on WhatsApp'}</span>
                 </a>
               </div>
 
@@ -284,10 +289,10 @@ export default function CourseLandingPage() {
                   <div className="flex items-center justify-between w-full text-white">
                     <div className="flex items-center gap-2 text-xs font-bold">
                       <PlayCircle size={22} weight="fill" className="text-gold" />
-                      <span>{sections.length} وحدات تدريبية متكاملة</span>
+                      <span>{sections.length} {isArabic ? 'وحدات تدريبية متكاملة' : 'Comprehensive Modules'}</span>
                     </div>
                     <span className="text-xs font-bold bg-white/20 backdrop-blur-md px-3 py-1 rounded-full">
-                      منصة نُـخبة
+                      {isArabic ? 'منصة نُـخبة' : 'Nokhba Academy'}
                     </span>
                   </div>
                 </div>
@@ -306,16 +311,18 @@ export default function CourseLandingPage() {
             <div className="flex items-center justify-between border-b border-black/5 pb-4">
               <div className="flex items-center gap-2 text-forest">
                 <Books size={24} weight="duotone" className="text-gold" />
-                <h2 className="font-display font-bold text-2xl text-forest">محتويات ومنهج الكورس</h2>
+                <h2 className="font-display font-bold text-2xl text-forest">
+                  {isArabic ? 'محتويات ومنهج الكورس' : 'Curriculum & Modules'}
+                </h2>
               </div>
               <span className="text-xs font-bold text-forest/60">
-                {sections.length} وحدات • {allItems.length} عناصر تدريبية
+                {sections.length} {isArabic ? 'وحدات' : 'Units'} • {allItems.length} {isArabic ? 'عناصر تدريبية' : 'Items'}
               </span>
             </div>
 
             {sections.length === 0 ? (
               <div className="p-8 bg-white rounded-2xl border border-black/5 text-center text-forest/60">
-                لا توجد وحدات أو محاضرات مضافة لهذا الكورس بعد.
+                {isArabic ? 'لا توجد وحدات أو محاضرات مضافة لهذا الكورس بعد.' : 'No modules or lectures added yet.'}
               </div>
             ) : (
               <div className="flex flex-col gap-4">
@@ -341,7 +348,7 @@ export default function CourseLandingPage() {
                           <div>
                             <h3 className="font-bold text-base text-forest">{section.title}</h3>
                             <span className="text-xs text-forest/55 block mt-0.5">
-                              {sItems.length} محاضرات واختبارات
+                              {sItems.length} {isArabic ? 'محاضرات واختبارات' : 'Lectures & Quizzes'}
                             </span>
                           </div>
                         </div>
@@ -384,13 +391,16 @@ export default function CourseLandingPage() {
                                       <div>
                                         <span className="font-bold text-forest block">{item.title}</span>
                                         <span className="text-forest/50 text-[11px]">
-                                          {isVideo ? `فيديو تعليمي • ${itemDurationMinutes} دقيقة` : `اختبار إلكتروني تقييمي`}
+                                          {isVideo 
+                                            ? (isArabic ? `فيديو تعليمي • ${itemDurationMinutes} دقيقة` : `Video Lecture • ${itemDurationMinutes} min`)
+                                            : (isArabic ? 'اختبار إلكتروني تقييمي' : 'Assessment Quiz')
+                                          }
                                         </span>
                                       </div>
                                     </div>
 
                                     <span className="text-[11px] font-bold text-forest/60 bg-white px-2.5 py-1 rounded-md border border-black/5 shadow-xs">
-                                      {isVideo ? 'محاضرة' : 'امتحان'}
+                                      {isVideo ? (isArabic ? 'محاضرة' : 'Lecture') : (isArabic ? 'امتحان' : 'Quiz')}
                                     </span>
                                   </div>
                                 );
@@ -417,7 +427,7 @@ export default function CourseLandingPage() {
                 <div className="double-bezel-inner p-6 bg-white flex flex-col gap-5">
                   <div className="flex items-center gap-2 text-gold text-xs font-bold uppercase tracking-wider">
                     <ChalkboardTeacher size={16} weight="bold" />
-                    <span>مدرس المادة</span>
+                    <span>{isArabic ? 'مدرس المادة' : 'Course Educator'}</span>
                   </div>
 
                   <div className="flex items-center gap-4">
@@ -430,18 +440,20 @@ export default function CourseLandingPage() {
                     </div>
                     <div>
                       <h4 className="font-bold text-lg text-forest">{teacher.name}</h4>
-                      <p className="text-xs text-gold font-bold">{teacher.subject || 'معلم معتمد'}</p>
+                      <p className="text-xs text-gold font-bold">{teacher.subject || (isArabic ? 'معلم معتمد' : 'Verified Faculty')}</p>
                     </div>
                   </div>
 
                   <p className="text-xs text-forest/75 leading-relaxed">
-                    {teacher.bio ||
-                      'نخبة من كبار معلمي الثانوية العامة لتبسيط المفاهيم وإعداد الطلاب للتفوق في الامتحانات الوزارية.'}
+                    {teacher.bio || (isArabic 
+                      ? 'نخبة من كبار معلمي الثانوية العامة لتبسيط المفاهيم وإعداد الطلاب للتفوق في الامتحانات الوزارية.'
+                      : 'Distinguished educators simplifying complex topics for ministerial exam excellence.'
+                    )}
                   </p>
 
                   <Link href={`/teachers/${teacher.id || course.teacherId}`} className="w-full mt-1">
                     <Button variant="ghost" className="w-full py-2.5 text-xs font-bold border border-black/10 hover:border-black/20">
-                      عرض الملف الشخصي للمعلم
+                      {isArabic ? 'عرض الملف الشخصي للمعلم' : 'View Teacher Profile'}
                     </Button>
                   </Link>
                 </div>
@@ -452,25 +464,25 @@ export default function CourseLandingPage() {
             <div className="bg-white p-6 rounded-2xl border border-black/5 shadow-xs flex flex-col gap-4">
               <h4 className="font-bold text-sm text-forest flex items-center gap-2">
                 <ShieldCheck size={18} weight="duotone" className="text-gold" />
-                <span>مميزات الدراسة في نُـخبة</span>
+                <span>{isArabic ? 'مميزات الدراسة في نُـخبة' : 'Nokhba Academy Perks'}</span>
               </h4>
 
               <ul className="flex flex-col gap-3 text-xs text-forest/80 font-medium">
                 <li className="flex items-center gap-2">
                   <CheckCircle size={16} weight="fill" className="text-emerald-600 shrink-0" />
-                  <span>مشاهدة المحاضرات بجودة فائقة بدون إعلانات</span>
+                  <span>{isArabic ? 'مشاهدة المحاضرات بجودة فائقة بدون إعلانات' : 'Ad-free high definition lecture playback'}</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle size={16} weight="fill" className="text-emerald-600 shrink-0" />
-                  <span>امتحانات دورية وتصحيح فوري للإجابات</span>
+                  <span>{isArabic ? 'امتحانات دورية وتصحيح فوري للإجابات' : 'Periodic quizzes with instant smart grading'}</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle size={16} weight="fill" className="text-emerald-600 shrink-0" />
-                  <span>تقارير تقدم أكاديمية مفصلة لولي الأمر</span>
+                  <span>{isArabic ? 'تقارير تقدم أكاديمية مفصلة لولي الأمر' : 'Detailed performance tracking for parents'}</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle size={16} weight="fill" className="text-emerald-600 shrink-0" />
-                  <span>دعم واستفسارات مباشرة مع المعلم</span>
+                  <span>{isArabic ? 'دعم واستفسارات مباشرة مع المعلم' : 'Direct academic guidance & support'}</span>
                 </li>
               </ul>
             </div>

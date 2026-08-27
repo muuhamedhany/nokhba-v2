@@ -2,22 +2,20 @@
 
 import React, { useEffect, useState } from 'react';
 import { useStore } from '@/store';
-import type { Submission } from '@/types';
+import { useLanguage } from '@/context/LanguageContext';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { TeacherSubmissionsSkeleton } from '@/components/common/Skeleton';
 import { 
   ClipboardText, 
-  Sparkle, 
   MagnifyingGlass, 
   CheckCircle, 
   XCircle, 
-  User, 
-  Funnel,
   TrendUp
 } from '@phosphor-icons/react';
 
 function SubmissionsContent() {
   const { submissions, users, fetchSubmissions, isLoading } = useStore();
+  const { t, isArabic } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'passed' | 'failed'>('all');
 
@@ -30,9 +28,9 @@ function SubmissionsContent() {
     const studentUser = users.find(u => u.id === sub.studentId);
     return {
       ...sub,
-      studentName: sub.studentName || sub.student?.name || studentUser?.name || 'طالب نُـخبة',
+      studentName: sub.studentName || sub.student?.name || studentUser?.name || (isArabic ? 'طالب نُـخبة' : 'Student'),
       studentPhone: sub.studentPhone || sub.student?.phone || studentUser?.phone || '—',
-      quizTitle: sub.quizTitle || sub.quizItem?.title || 'اختبار تقييمي',
+      quizTitle: sub.quizTitle || sub.quizItem?.title || (isArabic ? 'اختبار تقييمي' : 'Assessment Quiz'),
     };
   });
 
@@ -63,8 +61,15 @@ function SubmissionsContent() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-black/5 pb-6">
         <div>
-          <h1 className="font-display font-bold text-2xl sm:text-3xl text-forest">نتائج وتسليمات الطلاب</h1>
-          <p className="text-forest/70 text-xs sm:text-sm">متابعة درجات الاختبارات التقييمية ونسب اجتياز الطلاب للمحاضرات.</p>
+          <h1 className="font-display font-bold text-2xl sm:text-3xl text-forest">
+            {isArabic ? 'نتائج وتسليمات الطلاب' : 'Student Quiz Submissions'}
+          </h1>
+          <p className="text-forest/70 text-xs sm:text-sm">
+            {isArabic 
+              ? 'متابعة درجات الاختبارات التقييمية ونسب اجتياز الطلاب للمحاضرات.'
+              : 'Monitor student assessment scores and chapter completion analytics.'
+            }
+          </p>
         </div>
 
         {/* Stats Chips */}
@@ -74,8 +79,10 @@ function SubmissionsContent() {
               <ClipboardText size={18} weight="fill" />
             </div>
             <div>
-              <span className="text-[10px] text-forest/50 block">إجمالي التسليمات</span>
-              <span className="font-display font-bold text-sm text-forest">{enrichedSubmissions.length} محاولة</span>
+              <span className="text-[10px] text-forest/50 block">{isArabic ? 'إجمالي التسليمات' : 'Total Submissions'}</span>
+              <span className="font-display font-bold text-sm text-forest">
+                {enrichedSubmissions.length} {isArabic ? 'محاولة' : 'Attempts'}
+              </span>
             </div>
           </div>
 
@@ -84,7 +91,7 @@ function SubmissionsContent() {
               <TrendUp size={18} weight="bold" />
             </div>
             <div>
-              <span className="text-[10px] text-forest/50 block">متوسط درجات الطلاب</span>
+              <span className="text-[10px] text-forest/50 block">{isArabic ? 'متوسط درجات الطلاب' : 'Class Average'}</span>
               <span className="font-display font-bold text-sm text-forest">{avgClassScore}%</span>
             </div>
           </div>
@@ -99,7 +106,7 @@ function SubmissionsContent() {
           <MagnifyingGlass size={18} className="absolute start-3.5 top-1/2 -translate-y-1/2 text-forest/40" />
           <input
             type="text"
-            placeholder="بحث باسم الطالب أو رقم الهاتف..."
+            placeholder={isArabic ? 'بحث باسم الطالب أو رقم الهاتف...' : 'Search student or phone...'}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full bg-[#F7F6F3] rounded-xl ps-10 pe-4 py-2 text-xs sm:text-sm border border-transparent focus:border-gold/60 focus:bg-white outline-none"
@@ -114,7 +121,7 @@ function SubmissionsContent() {
               filterType === 'all' ? 'bg-forest text-gold shadow-xs' : 'bg-[#F7F6F3] text-forest/70 hover:bg-black/5'
             }`}
           >
-            الكل ({enrichedSubmissions.length})
+            {isArabic ? `الكل (${enrichedSubmissions.length})` : `All (${enrichedSubmissions.length})`}
           </button>
           <button
             onClick={() => setFilterType('passed')}
@@ -122,7 +129,7 @@ function SubmissionsContent() {
               filterType === 'passed' ? 'bg-emerald-700 text-white shadow-xs' : 'bg-[#F7F6F3] text-forest/70 hover:bg-black/5'
             }`}
           >
-            الناجحون (60%+)
+            {isArabic ? 'الناجحون (60%+)' : 'Passed (60%+)'}
           </button>
           <button
             onClick={() => setFilterType('failed')}
@@ -130,7 +137,7 @@ function SubmissionsContent() {
               filterType === 'failed' ? 'bg-rose-700 text-white shadow-xs' : 'bg-[#F7F6F3] text-forest/70 hover:bg-black/5'
             }`}
           >
-            بحاجة لمتابعة (&lt;60%)
+            {isArabic ? 'بحاجة لمتابعة (<60%)' : 'Needs Review (<60%)'}
           </button>
         </div>
 
@@ -142,11 +149,11 @@ function SubmissionsContent() {
           <table className="w-full text-start text-xs sm:text-sm">
             <thead className="bg-[#F7F6F3] border-b border-black/5 text-forest/60 font-medium">
               <tr>
-                <th className="py-3.5 px-6 text-start">الطالب</th>
-                <th className="py-3.5 px-6 text-start">رقم الهاتف</th>
-                <th className="py-3.5 px-6 text-start">اسم الاختبار</th>
-                <th className="py-3.5 px-6 text-start">تاريخ التسليم</th>
-                <th className="py-3.5 px-6 text-end">الدرجة والتقييم</th>
+                <th className="py-3.5 px-6 text-start">{isArabic ? 'الطالب' : 'Student'}</th>
+                <th className="py-3.5 px-6 text-start">{isArabic ? 'رقم الهاتف' : 'Phone'}</th>
+                <th className="py-3.5 px-6 text-start">{isArabic ? 'اسم الاختبار' : 'Quiz Title'}</th>
+                <th className="py-3.5 px-6 text-start">{isArabic ? 'تاريخ التسليم' : 'Submitted At'}</th>
+                <th className="py-3.5 px-6 text-end">{isArabic ? 'الدرجة والتقييم' : 'Score'}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-black/5 font-medium">
@@ -174,7 +181,7 @@ function SubmissionsContent() {
                       </td>
 
                       <td className="py-4 px-6 text-forest/50 font-mono text-xs">
-                        {new Date(sub.submittedAt).toLocaleDateString('ar-EG', {
+                        {new Date(sub.submittedAt).toLocaleDateString(isArabic ? 'ar-EG' : 'en-US', {
                           month: 'short',
                           day: 'numeric',
                           hour: '2-digit',
@@ -196,7 +203,7 @@ function SubmissionsContent() {
               ) : (
                 <tr>
                   <td colSpan={5} className="py-12 text-center text-forest/50">
-                    لا توجد تسليمات تطابق شروط البحث الحالية.
+                    {isArabic ? 'لا توجد تسليمات تطابق شروط البحث الحالية.' : 'No submissions match current filters.'}
                   </td>
                 </tr>
               )}

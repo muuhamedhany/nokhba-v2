@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
 import { usePathname } from 'next/navigation';
 import { hasIntroPlayed, markIntroPlayed } from '@/utils/entranceState';
+import { useLanguage } from '@/context/LanguageContext';
 
 export function EntranceAnimation() {
   const pathname = usePathname();
+  const { isArabic } = useLanguage();
   const [mounted, setMounted] = useState(false);
   const [stage, setStage] = useState<'animating' | 'docked' | 'exiting' | 'done'>('animating');
 
@@ -203,14 +205,14 @@ export function EntranceAnimation() {
               {/* Wordmark Container */}
               <div className="flex items-center gap-1.5 font-display font-black text-4xl sm:text-5xl text-white tracking-tight relative">
                 
-                {/* Main Name: "نُـخبة" */}
+                {/* Main Name */}
                 <motion.span
                   initial={{ y: 24, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.65, delay: 0.75, ease: [0.16, 1, 0.3, 1] }}
                   className="inline-block"
                 >
-                  نُـخبة
+                  {isArabic ? 'نُـخبة' : 'NOKHBA'}
                 </motion.span>
 
                 {/* Docking Gold Particle Dot */}
@@ -245,11 +247,11 @@ export function EntranceAnimation() {
               {/* Slogan Reveal */}
               <motion.div
                 initial={{ opacity: 0, y: 10, letterSpacing: '0.1em' }}
-                animate={{ opacity: 0.85, y: 0, letterSpacing: '0.22em' }}
+                animate={{ opacity: 0.85, y: 0, letterSpacing: isArabic ? '0.22em' : '0.15em' }}
                 transition={{ duration: 0.65, delay: 1.15, ease: [0.16, 1, 0.3, 1] }}
                 className="text-xs sm:text-sm font-semibold text-white/80 uppercase"
               >
-                صناعة الأوائل ليست صدفة
+                {isArabic ? 'صناعة الأوائل ليست صدفة' : 'Elite Education Crafted for Champions'}
               </motion.div>
 
             </div>
