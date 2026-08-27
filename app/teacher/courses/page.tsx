@@ -15,6 +15,7 @@ import {
 } from '@phosphor-icons/react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { TeacherCoursesPageSkeleton } from '@/components/common/Skeleton';
+import { SafeImage } from '@/components/common/SafeImage';
 
 function TeacherCourseListContent() {
   const { currentUser, courses, fetchCourses, deleteCourse, isLoading } = useStore();
@@ -91,12 +92,13 @@ function TeacherCourseListContent() {
             >
               <div className="flex flex-col gap-3.5 flex-1">
                 <div className="aspect-video w-full rounded-2xl overflow-hidden bg-forest/5 relative shrink-0">
-                  <img 
+                  <SafeImage 
                     src={course.coverImage} 
                     alt={course.title}
+                    fallbackType="course"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
-                  <div className="absolute top-3 start-3">
+                  <div className="absolute top-3 start-3 pointer-events-none z-10">
                     <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold shadow-xs ${
                       course.isFree ? 'bg-emerald-600 text-white' : 'bg-forest text-gold border border-gold/20'
                     }`}>

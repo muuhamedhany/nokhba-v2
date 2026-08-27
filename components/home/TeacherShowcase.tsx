@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 import { Button } from '../common/Button';
+import { SafeImage } from '../common/SafeImage';
 import { 
   SealCheck, 
   ChalkboardTeacher,
@@ -120,9 +121,10 @@ export function TeacherShowcase() {
                   {/* Teacher Avatar */}
                   <Link href={`/teachers/${teacher.id}`} className="relative mb-4 block group-hover:scale-105 transition-transform duration-500 cursor-pointer">
                     <div className="w-24 h-24 rounded-full bg-forest/5 p-1 ring-2 ring-forest/10 shadow-md overflow-hidden">
-                      <img
+                      <SafeImage
                         src={teacher.avatar}
                         alt={teacher.name}
+                        fallbackType="avatar"
                         className="w-full h-full object-cover rounded-full"
                       />
                     </div>

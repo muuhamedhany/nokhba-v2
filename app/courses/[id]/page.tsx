@@ -23,6 +23,7 @@ import {
 import { Button } from '@/components/common/Button';
 import { useLanguage } from '@/context/LanguageContext';
 import { useStore } from '@/store';
+import { SafeImage } from '@/components/common/SafeImage';
 
 export default function CourseLandingPage() {
   const params = useParams();
@@ -201,7 +202,7 @@ export default function CourseLandingPage() {
                 >
                   <div className="w-11 h-11 rounded-full bg-forest/10 border-2 border-white shadow-xs overflow-hidden flex items-center justify-center shrink-0">
                     {teacher.avatar ? (
-                      <img src={teacher.avatar} alt={teacher.name} className="w-full h-full object-cover" />
+                      <SafeImage src={teacher.avatar} alt={teacher.name} fallbackType="avatar" />
                     ) : (
                       <User size={22} weight="duotone" className="text-forest/40" />
                     )}
@@ -280,10 +281,10 @@ export default function CourseLandingPage() {
             {/* Right Col: Course Visual Card */}
             <div className="w-full lg:w-[420px] shrink-0">
               <div className="relative aspect-[16/11] rounded-3xl overflow-hidden shadow-xl ring-1 ring-black/5 bg-forest/5">
-                <img
+                <SafeImage
                   src={course.coverImage || 'https://picsum.photos/seed/edu/800/600'}
                   alt={course.title}
-                  className="w-full h-full object-cover"
+                  fallbackType="course"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-forest/80 via-transparent to-transparent flex items-end p-6">
                   <div className="flex items-center justify-between w-full text-white">

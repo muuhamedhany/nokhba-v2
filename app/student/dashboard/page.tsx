@@ -18,6 +18,7 @@ import Link from 'next/link';
 import { Button } from '@/components/common/Button';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { StudentDashboardSkeleton } from '@/components/common/Skeleton';
+import { SafeImage } from '@/components/common/SafeImage';
 
 function StudentDashboardContent() {
   const { courses, enrollments, submissions, currentUser, fetchCourses, fetchEnrollments, fetchSubmissions, redeemCode, isLoading } = useStore();
@@ -213,12 +214,13 @@ function StudentDashboardContent() {
                 >
                   <div className="flex flex-col gap-3.5 flex-1">
                     <div className="aspect-video w-full rounded-2xl overflow-hidden relative bg-forest/5 shrink-0">
-                      <img 
+                      <SafeImage 
                         src={course.coverImage} 
                         alt={course.title}
+                        fallbackType="course"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
-                      <div className="absolute top-3 start-3">
+                      <div className="absolute top-3 start-3 pointer-events-none z-10">
                         <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold shadow-xs ${
                           course.isFree ? 'bg-emerald-600 text-white' : 'bg-forest text-gold border border-gold/20'
                         }`}>

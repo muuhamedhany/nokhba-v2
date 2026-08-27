@@ -18,6 +18,7 @@ import {
   BookOpen
 } from '@phosphor-icons/react';
 import { SkCourseCard } from '../common/Skeleton';
+import { SafeImage } from '../common/SafeImage';
 
 // Category Keys
 type CategoryKey = 'all' | 'scientific' | 'literary' | 'shared';
@@ -199,38 +200,43 @@ export function CourseList() {
                     <div className="double-bezel-inner p-5 flex flex-col justify-between h-full bg-white shadow-xs opacity-100 flex-1">
                       
                       <div className="flex-1 flex flex-col">
-                        {/* Course Cover Image */}
+                        {/* Course Cover Image with Badges */}
                         <Link href={`/courses/${course.id}`} className="block relative aspect-[16/10] w-full rounded-2xl overflow-hidden mb-4 bg-forest/5 shadow-inner cursor-pointer shrink-0">
-                          <img 
+                          <SafeImage 
                             src={course.coverImage} 
                             alt={course.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]"
+                            fallbackType="course"
+                            className="group-hover:scale-105 transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]"
                           />
                           
-                          {/* Top Badges */}
-                          <div className="absolute top-3 inset-x-3 flex items-center justify-between pointer-events-none">
-                            <span className="bg-forest/85 backdrop-blur-md text-white text-xs font-semibold px-3 py-1 rounded-full shadow-sm">
+                          {/* Top Badges: Subject on Start, Price/Status on End */}
+                          <div className="absolute top-3 inset-x-3 flex items-center justify-between gap-2 pointer-events-none z-10">
+                            <span className="bg-forest/90 backdrop-blur-md text-white text-[11px] font-bold px-3 py-1 rounded-full shadow-sm whitespace-nowrap">
                               {subjectLabel}
                             </span>
 
-                            <div className="flex items-center gap-1.5">
-                              <span className="bg-white/90 backdrop-blur-md text-forest text-xs font-bold px-3 py-1 rounded-full shadow-sm border border-black/5">
-                                {gradeLabel}
-                              </span>
+                            <div>
                               {course.isFree ? (
-                                <span className="bg-gold text-forest font-bold px-2.5 py-1 rounded-full text-xs shadow-sm">
+                                <span className="bg-gold text-forest font-bold px-3 py-1 rounded-full text-[11px] shadow-sm whitespace-nowrap inline-block">
                                   {t.courses.free}
                                 </span>
                               ) : isEnrolled ? (
-                                <span className="bg-emerald-600 text-white font-bold px-2.5 py-1 rounded-full text-xs shadow-sm">
+                                <span className="bg-emerald-600 text-white font-bold px-3 py-1 rounded-full text-[11px] shadow-sm whitespace-nowrap inline-block">
                                   {isArabic ? 'مفعل' : 'Active'}
                                 </span>
                               ) : (
-                                <span className="bg-forest/80 text-gold font-bold px-2.5 py-1 rounded-full text-xs shadow-sm">
+                                <span className="bg-forest/90 backdrop-blur-md text-gold font-bold px-3 py-1 rounded-full text-[11px] shadow-sm border border-gold/20 whitespace-nowrap inline-block">
                                   {isArabic ? 'يتطلب كود' : 'Code Required'}
                                 </span>
                               )}
                             </div>
+                          </div>
+
+                          {/* Bottom Overlay: Academic Grade Pill on Bottom-Start */}
+                          <div className="absolute bottom-3 start-3 pointer-events-none z-10">
+                            <span className="bg-white/95 backdrop-blur-md text-forest text-[11px] font-bold px-3 py-1 rounded-full shadow-sm border border-black/5 whitespace-nowrap inline-block">
+                              {gradeLabel}
+                            </span>
                           </div>
                         </Link>
 
@@ -242,7 +248,7 @@ export function CourseList() {
                         >
                           <div className="w-8 h-8 rounded-full bg-forest text-gold flex items-center justify-center text-xs font-bold shrink-0 overflow-hidden shadow-xs">
                             {teacher?.avatar ? (
-                              <img src={teacher.avatar} alt={teacher.name} className="w-full h-full object-cover" />
+                              <SafeImage src={teacher.avatar} alt={teacher.name} fallbackType="avatar" />
                             ) : (
                               <GraduationCap size={16} weight="bold" />
                             )}

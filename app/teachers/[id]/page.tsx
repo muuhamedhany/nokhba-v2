@@ -21,6 +21,7 @@ import {
 import { Button } from '@/components/common/Button';
 import { useLanguage } from '@/context/LanguageContext';
 import { useStore } from '@/store';
+import { SafeImage } from '@/components/common/SafeImage';
 
 export default function TeacherProfile() {
   const params = useParams();
@@ -132,10 +133,10 @@ export default function TeacherProfile() {
                 <div className="w-32 h-32 sm:w-40 sm:h-40 md:w-44 md:h-44 rounded-[2.5rem] bg-[#F2F0EB] p-2 ring-1 ring-black/5 shadow-lg overflow-hidden">
                   <div className="w-full h-full rounded-[calc(2.5rem-0.5rem)] overflow-hidden bg-forest/5 flex items-center justify-center">
                     {teacher.avatar ? (
-                      <img
+                      <SafeImage
                         src={teacher.avatar}
                         alt={teacher.name}
-                        className="w-full h-full object-cover"
+                        fallbackType="avatar"
                       />
                     ) : (
                       <User size={64} weight="duotone" className="text-forest/30" />
@@ -297,38 +298,43 @@ export default function TeacherProfile() {
                     <div className="double-bezel-inner p-5 flex flex-col justify-between h-full bg-white shadow-xs flex-1">
                       
                       <div className="flex-1 flex flex-col">
-                        {/* Course Cover Image */}
+                        {/* Course Cover Image with Badges */}
                         <Link href={`/courses/${course.id}`} className="block relative aspect-[16/10] w-full rounded-2xl overflow-hidden mb-4 bg-forest/5 shadow-inner cursor-pointer shrink-0">
-                          <img
+                          <SafeImage
                             src={course.coverImage || 'https://picsum.photos/seed/course/800/600'}
                             alt={course.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]"
+                            fallbackType="course"
+                            className="group-hover:scale-105 transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]"
                           />
 
-                          {/* Badges */}
-                          <div className="absolute top-3 inset-x-3 flex items-center justify-between pointer-events-none">
-                            <span className="bg-forest/85 backdrop-blur-md text-white text-xs font-semibold px-3 py-1 rounded-full shadow-sm">
+                          {/* Top Badges: Subject on Start, Price/Status on End */}
+                          <div className="absolute top-3 inset-x-3 flex items-center justify-between gap-2 pointer-events-none z-10">
+                            <span className="bg-forest/90 backdrop-blur-md text-white text-[11px] font-bold px-3 py-1 rounded-full shadow-sm whitespace-nowrap">
                               {subjectLabel}
                             </span>
 
-                            <div className="flex items-center gap-1.5">
-                              <span className="bg-white/90 backdrop-blur-md text-forest text-xs font-bold px-3 py-1 rounded-full shadow-sm border border-black/5">
-                                {gradeLabel}
-                              </span>
+                            <div>
                               {course.isFree ? (
-                                <span className="bg-gold text-forest font-bold px-2.5 py-1 rounded-full text-xs shadow-sm">
+                                <span className="bg-gold text-forest font-bold px-3 py-1 rounded-full text-[11px] shadow-sm whitespace-nowrap inline-block">
                                   {t.courses.free}
                                 </span>
                               ) : isEnrolled ? (
-                                <span className="bg-emerald-600 text-white font-bold px-2.5 py-1 rounded-full text-xs shadow-sm">
+                                <span className="bg-emerald-600 text-white font-bold px-3 py-1 rounded-full text-[11px] shadow-sm whitespace-nowrap inline-block">
                                   {isArabic ? 'مفعل' : 'Active'}
                                 </span>
                               ) : (
-                                <span className="bg-forest/80 text-gold font-bold px-2.5 py-1 rounded-full text-xs shadow-sm">
+                                <span className="bg-forest/90 backdrop-blur-md text-gold font-bold px-3 py-1 rounded-full text-[11px] shadow-sm border border-gold/20 whitespace-nowrap inline-block">
                                   {isArabic ? 'يتطلب كود' : 'Code Required'}
                                 </span>
                               )}
                             </div>
+                          </div>
+
+                          {/* Bottom Overlay: Academic Grade Pill on Bottom-Start */}
+                          <div className="absolute bottom-3 start-3 pointer-events-none z-10">
+                            <span className="bg-white/95 backdrop-blur-md text-forest text-[11px] font-bold px-3 py-1 rounded-full shadow-sm border border-black/5 whitespace-nowrap inline-block">
+                              {gradeLabel}
+                            </span>
                           </div>
                         </Link>
 
