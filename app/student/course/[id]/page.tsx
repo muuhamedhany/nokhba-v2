@@ -417,7 +417,8 @@ function CourseViewContent() {
               <div className="double-bezel-dark-inner relative bg-[#0C1510] aspect-video">
                 {activeVideoItem ? (
                   <SecureVideoPlayer
-                    url={activeVideoItem.url || 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'}
+                    key={activeVideoItem.id}
+                    url={activeVideoItem.url || 'https://www.youtube.com/watch?v=k1t55VUefPI'}
                     title={activeVideoItem.title}
                     studentName={currentUser?.name || (isArabic ? 'طالب نُـخبة' : 'Student')}
                     studentPhone={currentUser?.phone || ''}

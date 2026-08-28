@@ -38,7 +38,7 @@ declare global {
   }
 }
 
-const DEFAULT_SAMPLE_VIDEO = 'https://www.youtube.com/watch?v=LdA-wGOdqmA';
+const DEFAULT_SAMPLE_VIDEO = 'https://www.youtube.com/watch?v=k1t55VUefPI';
 const PLAYBACK_SPEEDS = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
 
 export function SecureVideoPlayer({
@@ -58,7 +58,7 @@ export function SecureVideoPlayer({
   const videoRef = useRef<HTMLVideoElement>(null);
   const ytPlayerRef = useRef<any>(null);
   const progressRef = useRef<HTMLDivElement>(null);
-  const ytContainerId = useRef(`yt_player_${Math.random().toString(36).substring(2, 9)}`);
+  const ytSlotRef = useRef<HTMLDivElement>(null);
 
   // Playback States
   const [isPlaying, setIsPlaying] = useState(false);
@@ -76,13 +76,31 @@ export function SecureVideoPlayer({
   const [hoverTime, setHoverTime] = useState<number | null>(null);
   const [hoverPosition, setHoverPosition] = useState<number | null>(null);
   const [hasError, setHasError] = useState(false);
-  const [isYtReady, setIsYtReady] = useState(false);
 
   // Dynamic Floating Watermark Position
   const [watermarkPos, setWatermarkPos] = useState({ x: 10, y: 15 });
 
   const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Refs for callbacks & props to prevent useEffect re-executions
+  const onEndedRef = useRef(onEnded);
+  const onProgressRef = useRef(onProgress);
+  const isMutedRef = useRef(isMuted);
+  const volumeRef = useRef(volume);
+  const playbackSpeedRef = useRef(playbackSpeed);
+  const isPlayingRef = useRef(isPlaying);
+  const durationRef = useRef(duration);
+  const currentVideoIdRef = useRef<string | null>(null);
+  const isYtReadyRef = useRef(false);
+
+  useEffect(() => { onEndedRef.current = onEnded; }, [onEnded]);
+  useEffect(() => { onProgressRef.current = onProgress; }, [onProgress]);
+  useEffect(() => { isMutedRef.current = isMuted; }, [isMuted]);
+  useEffect(() => { volumeRef.current = volume; }, [volume]);
+  useEffect(() => { playbackSpeedRef.current = playbackSpeed; }, [playbackSpeed]);
+  useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
+  useEffect(() => { durationRef.current = duration; }, [duration]);
 
   // Extract YouTube ID safely
   const youtubeId = React.useMemo(() => {
@@ -116,34 +134,40 @@ export function SecureVideoPlayer({
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  // Reset state when URL changes
-  useEffect(() => {
-    setIsPlaying(false);
-    setCurrentTime(0);
-    setProgress(0);
-    setHasError(false);
-    setShowSpeedMenu(false);
-  }, [url]);
-
-  // YouTube IFrame API Integration
+  // YouTube IFrame API Initialization (Runs ONCE per youtubeId without resetting on user controls)
   useEffect(() => {
     if (!isYouTube || !youtubeId) return;
 
     let isSubscribed = true;
 
-    function initYouTubePlayer() {
-      if (!window.YT || !window.YT.Player) return;
+    // If player is already initialized and ready, just cue the new video ID
+    if (isYtReadyRef.current && ytPlayerRef.current && typeof ytPlayerRef.current.cueVideoById === 'function') {
+      if (currentVideoIdRef.current !== youtubeId) {
+        currentVideoIdRef.current = youtubeId;
+        try {
+          ytPlayerRef.current.cueVideoById(youtubeId);
+          setIsPlaying(false);
+          setCurrentTime(0);
+          setProgress(0);
+          setHasError(false);
+        } catch (e) {}
+      }
+      return;
+    }
 
-      const element = document.getElementById(ytContainerId.current);
-      if (!element) return;
+    currentVideoIdRef.current = youtubeId;
+
+    function initYouTubePlayer() {
+      if (!isSubscribed || !window.YT || !window.YT.Player || !ytSlotRef.current) return;
 
       if (ytPlayerRef.current && typeof ytPlayerRef.current.destroy === 'function') {
         try {
           ytPlayerRef.current.destroy();
         } catch (e) {}
+        ytPlayerRef.current = null;
       }
 
-      ytPlayerRef.current = new window.YT.Player(ytContainerId.current, {
+      ytPlayerRef.current = new window.YT.Player(ytSlotRef.current, {
         videoId: youtubeId,
         playerVars: {
           autoplay: 0,
@@ -160,18 +184,29 @@ export function SecureVideoPlayer({
         events: {
           onReady: (event: any) => {
             if (!isSubscribed) return;
-            setIsYtReady(true);
-            const dur = event.target.getDuration();
-            setDuration(dur || 0);
-            event.target.setVolume(volume * 100);
-            if (isMuted) event.target.mute();
-            event.target.setPlaybackRate(playbackSpeed);
+            isYtReadyRef.current = true;
+            try {
+              const dur = event.target.getDuration();
+              if (dur && dur > 0) {
+                setDuration(dur);
+                durationRef.current = dur;
+              }
+              event.target.setVolume(volumeRef.current * 100);
+              if (isMutedRef.current) event.target.mute();
+              else event.target.unMute();
+              event.target.setPlaybackRate(playbackSpeedRef.current);
+            } catch (e) {}
           },
           onStateChange: (event: any) => {
             if (!isSubscribed) return;
+            // 1: playing, 2: paused, 3: buffering, 0: ended, 5: cued
             if (event.data === 1) {
               setIsPlaying(true);
               setIsBuffering(false);
+              try {
+                const dur = event.target.getDuration();
+                if (dur && dur > 0) setDuration(dur);
+              } catch (e) {}
             } else if (event.data === 2) {
               setIsPlaying(false);
               setIsBuffering(false);
@@ -179,7 +214,11 @@ export function SecureVideoPlayer({
               setIsBuffering(true);
             } else if (event.data === 0) {
               setIsPlaying(false);
-              if (onEnded) onEnded();
+              setIsBuffering(false);
+              if (onEndedRef.current) onEndedRef.current();
+            } else if (event.data === 5 || event.data === -1) {
+              setIsBuffering(false);
+              setIsPlaying(false);
             }
           },
           onError: () => {
@@ -191,12 +230,16 @@ export function SecureVideoPlayer({
     }
 
     if (!window.YT || !window.YT.Player) {
-      const tag = document.createElement('script');
-      tag.src = 'https://www.youtube.com/iframe_api';
-      const firstScriptTag = document.getElementsByTagName('script')[0];
-      firstScriptTag?.parentNode?.insertBefore(tag, firstScriptTag);
+      if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) {
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag?.parentNode?.insertBefore(tag, firstScriptTag);
+      }
 
+      const prevCallback = window.onYouTubeIframeAPIReady;
       window.onYouTubeIframeAPIReady = () => {
+        if (typeof prevCallback === 'function') prevCallback();
         initYouTubePlayer();
       };
     } else {
@@ -205,56 +248,57 @@ export function SecureVideoPlayer({
 
     return () => {
       isSubscribed = false;
-      if (ytPlayerRef.current && typeof ytPlayerRef.current.destroy === 'function') {
-        try {
-          ytPlayerRef.current.destroy();
-        } catch (e) {}
-      }
     };
-  }, [isYouTube, youtubeId, isMuted, playbackSpeed, volume, onEnded]);
+  }, [isYouTube, youtubeId]);
 
   // YouTube polling interval for time progress
   useEffect(() => {
-    if (!isYouTube) return;
+    if (!isYouTube || !isPlaying) {
+      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+      return;
+    }
 
-    if (isPlaying) {
-      progressIntervalRef.current = setInterval(() => {
-        if (ytPlayerRef.current && typeof ytPlayerRef.current.getCurrentTime === 'function') {
+    progressIntervalRef.current = setInterval(() => {
+      if (ytPlayerRef.current && typeof ytPlayerRef.current.getCurrentTime === 'function') {
+        try {
           const curr = ytPlayerRef.current.getCurrentTime() || 0;
-          const dur = ytPlayerRef.current.getDuration() || duration || 1;
+          const dur = ytPlayerRef.current.getDuration() || durationRef.current || 1;
           setCurrentTime(curr);
           if (dur > 0) {
             const p = (curr / dur) * 100;
             setProgress(p);
-            if (onProgress) onProgress(p);
+            if (onProgressRef.current) onProgressRef.current(p);
+            if (dur !== durationRef.current && dur > 0) {
+              setDuration(dur);
+            }
           }
           if (typeof ytPlayerRef.current.getVideoLoadedFraction === 'function') {
             setBuffered((ytPlayerRef.current.getVideoLoadedFraction() || 0) * 100);
           }
-        }
-      }, 300);
-    } else {
-      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
-    }
+        } catch (e) {}
+      }
+    }, 250);
 
     return () => {
       if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
     };
-  }, [isYouTube, isPlaying, duration, onProgress]);
+  }, [isYouTube, isPlaying]);
 
   const togglePlay = useCallback(() => {
     if (hasError) return;
 
     if (isYouTube && ytPlayerRef.current) {
-      if (isPlaying) {
-        ytPlayerRef.current.pauseVideo();
-        setIsPlaying(false);
-      } else {
-        ytPlayerRef.current.playVideo();
-        setIsPlaying(true);
-      }
+      try {
+        if (isPlayingRef.current) {
+          ytPlayerRef.current.pauseVideo();
+          setIsPlaying(false);
+        } else {
+          ytPlayerRef.current.playVideo();
+          setIsPlaying(true);
+        }
+      } catch (e) {}
     } else if (videoRef.current) {
-      if (isPlaying) {
+      if (isPlayingRef.current) {
         videoRef.current.pause();
         setIsPlaying(false);
       } else {
@@ -263,32 +307,41 @@ export function SecureVideoPlayer({
         }).catch(() => {});
       }
     }
-  }, [isYouTube, isPlaying, hasError]);
+  }, [isYouTube, hasError]);
 
   const seekRelative = useCallback((seconds: number) => {
     if (isYouTube && ytPlayerRef.current) {
-      const curr = ytPlayerRef.current.getCurrentTime() || 0;
-      const target = Math.max(0, Math.min(duration, curr + seconds));
-      ytPlayerRef.current.seekTo(target, true);
-      setCurrentTime(target);
+      try {
+        const curr = ytPlayerRef.current.getCurrentTime() || 0;
+        const dur = ytPlayerRef.current.getDuration() || durationRef.current || 1;
+        const target = Math.max(0, Math.min(dur, curr + seconds));
+        ytPlayerRef.current.seekTo(target, true);
+        setCurrentTime(target);
+        if (dur > 0) setProgress((target / dur) * 100);
+      } catch (e) {}
     } else if (videoRef.current) {
       const curr = videoRef.current.currentTime || 0;
-      const target = Math.max(0, Math.min(videoRef.current.duration || 0, curr + seconds));
+      const dur = videoRef.current.duration || durationRef.current || 1;
+      const target = Math.max(0, Math.min(dur, curr + seconds));
       videoRef.current.currentTime = target;
       setCurrentTime(target);
+      if (dur > 0) setProgress((target / dur) * 100);
     }
-  }, [isYouTube, duration]);
+  }, [isYouTube]);
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!progressRef.current || hasError) return;
     const rect = progressRef.current.getBoundingClientRect();
     const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    const targetTime = pos * duration;
+    const dur = duration || durationRef.current || 1;
+    const targetTime = pos * dur;
 
     if (isYouTube && ytPlayerRef.current) {
-      ytPlayerRef.current.seekTo(targetTime, true);
-      setCurrentTime(targetTime);
-      setProgress(pos * 100);
+      try {
+        ytPlayerRef.current.seekTo(targetTime, true);
+        setCurrentTime(targetTime);
+        setProgress(pos * 100);
+      } catch (e) {}
     } else if (videoRef.current) {
       videoRef.current.currentTime = targetTime;
       setCurrentTime(targetTime);
@@ -297,11 +350,12 @@ export function SecureVideoPlayer({
   };
 
   const handleProgressMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!progressRef.current || duration <= 0) return;
+    const dur = duration || durationRef.current || 0;
+    if (!progressRef.current || dur <= 0) return;
     const rect = progressRef.current.getBoundingClientRect();
     const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
     setHoverPosition(pos * 100);
-    setHoverTime(pos * duration);
+    setHoverTime(pos * dur);
   };
 
   const handleProgressMouseLeave = () => {
@@ -315,25 +369,31 @@ export function SecureVideoPlayer({
     setIsMuted(safeVol === 0);
 
     if (isYouTube && ytPlayerRef.current) {
-      ytPlayerRef.current.setVolume(safeVol * 100);
-      if (safeVol === 0) ytPlayerRef.current.mute();
-      else ytPlayerRef.current.unMute();
+      try {
+        ytPlayerRef.current.setVolume(safeVol * 100);
+        if (safeVol === 0) ytPlayerRef.current.mute();
+        else ytPlayerRef.current.unMute();
+      } catch (e) {}
     } else if (videoRef.current) {
       videoRef.current.volume = safeVol;
       videoRef.current.muted = safeVol === 0;
     }
   };
 
-  const toggleMute = () => {
-    const nextMuted = !isMuted;
+  const toggleMute = useCallback(() => {
+    const nextMuted = !isMutedRef.current;
     setIsMuted(nextMuted);
 
     if (isYouTube && ytPlayerRef.current) {
-      if (nextMuted) ytPlayerRef.current.mute();
-      else {
-        ytPlayerRef.current.unMute();
-        ytPlayerRef.current.setVolume((volume || 0.8) * 100);
-      }
+      try {
+        if (nextMuted) {
+          ytPlayerRef.current.mute();
+        } else {
+          ytPlayerRef.current.unMute();
+          ytPlayerRef.current.setVolume((volumeRef.current || 0.8) * 100);
+          if (volumeRef.current === 0) setVolume(0.8);
+        }
+      } catch (e) {}
     } else if (videoRef.current) {
       videoRef.current.muted = nextMuted;
       if (!nextMuted && videoRef.current.volume === 0) {
@@ -341,14 +401,16 @@ export function SecureVideoPlayer({
         setVolume(0.8);
       }
     }
-  };
+  }, [isYouTube]);
 
   const handleSpeedChange = (speed: number) => {
     setPlaybackSpeed(speed);
     setShowSpeedMenu(false);
 
     if (isYouTube && ytPlayerRef.current) {
-      ytPlayerRef.current.setPlaybackRate(speed);
+      try {
+        ytPlayerRef.current.setPlaybackRate(speed);
+      } catch (e) {}
     } else if (videoRef.current) {
       videoRef.current.playbackRate = speed;
     }
@@ -369,7 +431,7 @@ export function SecureVideoPlayer({
     setShowControls(true);
     if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
     controlsTimeoutRef.current = setTimeout(() => {
-      if (isPlaying && !showSpeedMenu) {
+      if (isPlayingRef.current && !showSpeedMenu) {
         setShowControls(false);
       }
     }, 3500);
@@ -390,10 +452,10 @@ export function SecureVideoPlayer({
         seekRelative(-10);
       } else if (e.code === 'ArrowUp') {
         e.preventDefault();
-        handleVolumeChange(volume + 0.1);
+        handleVolumeChange(volumeRef.current + 0.1);
       } else if (e.code === 'ArrowDown') {
         e.preventDefault();
-        handleVolumeChange(volume - 0.1);
+        handleVolumeChange(volumeRef.current - 0.1);
       } else if (e.code === 'KeyM') {
         e.preventDefault();
         toggleMute();
@@ -405,15 +467,16 @@ export function SecureVideoPlayer({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [togglePlay, seekRelative, volume, isMuted]);
+  }, [togglePlay, seekRelative, toggleMute]);
 
   return (
     <div
       ref={containerRef}
+      dir="ltr"
       onMouseMove={handleMouseMove}
       onMouseLeave={() => isPlaying && !showSpeedMenu && setShowControls(false)}
       onContextMenu={(e) => e.preventDefault()}
-      className={`relative w-full aspect-video bg-[#0C1510] overflow-hidden select-none group transition-all duration-300 shadow-2xl ${
+      className={`relative w-full aspect-video bg-[#0C1510] overflow-hidden select-none group transition-all duration-300 shadow-2xl text-left ${
         isFullscreen ? 'rounded-none' : ''
       }`}
     >
@@ -421,7 +484,7 @@ export function SecureVideoPlayer({
       {isYouTube ? (
         <div className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden">
           <div
-            id={ytContainerId.current}
+            ref={ytSlotRef}
             className="w-full h-full scale-[1.03] origin-center pointer-events-none"
           />
         </div>
@@ -478,10 +541,11 @@ export function SecureVideoPlayer({
         </div>
       </motion.div>
 
-      {/* LAYER 4: Center Play / Buffering */}
+      {/* LAYER 4: Center Play / Buffering / Error */}
       <AnimatePresence>
         {!isPlaying && !hasError && (
           <motion.div
+            key="center-play-button"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
@@ -489,13 +553,17 @@ export function SecureVideoPlayer({
             className="absolute inset-0 flex items-center justify-center z-20 pointer-events-auto cursor-pointer"
           >
             <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-forest/85 border-2 border-gold/40 backdrop-blur-xl shadow-2xl flex items-center justify-center text-gold transition-all duration-300 hover:scale-110 hover:border-gold hover:shadow-gold/20">
-              <Play size={40} weight="fill" className="ms-1" />
+              <Play size={40} weight="fill" className="translate-x-0.5" />
             </div>
           </motion.div>
         )}
 
         {isBuffering && (
           <motion.div
+            key="buffering-spinner"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none"
           >
             <div className="w-14 h-14 border-4 border-gold/20 border-t-gold rounded-full animate-spin" />
@@ -503,7 +571,13 @@ export function SecureVideoPlayer({
         )}
 
         {hasError && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-forest/95 text-white p-6 text-center">
+          <motion.div
+            key="error-message"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-forest/95 text-white p-6 text-center"
+          >
             <WarningCircle size={48} className="text-amber-400 mb-3" weight="duotone" />
             <h4 className="font-bold text-lg mb-1">{isArabic ? 'تعذر تشغيل هذا الدرس' : 'Failed to Play Video'}</h4>
             <p className="text-xs text-white/60 max-w-sm">
@@ -512,7 +586,7 @@ export function SecureVideoPlayer({
                 : 'Please check your internet connection or contact the instructor.'
               }
             </p>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
 
@@ -533,16 +607,16 @@ export function SecureVideoPlayer({
         >
           {/* Buffered Progress */}
           <div
-            className="absolute top-0 start-0 h-full bg-white/30 rounded-full transition-all"
+            className="absolute top-0 left-0 h-full bg-white/30 rounded-full transition-all"
             style={{ width: `${buffered}%` }}
           />
 
           {/* Played Progress */}
           <div
-            className="absolute top-0 start-0 h-full bg-gradient-to-r from-gold/80 to-gold rounded-full relative"
+            className="absolute top-0 left-0 h-full bg-gradient-to-r from-gold/80 to-gold rounded-full relative"
             style={{ width: `${progress}%` }}
           >
-            <div className="absolute -end-1.5 -top-1 w-3.5 h-3.5 bg-white rounded-full shadow-md scale-0 group-hover/scrubber:scale-100 transition-transform" />
+            <div className="absolute -right-1.5 -top-1 w-3.5 h-3.5 bg-white rounded-full shadow-md scale-0 group-hover/scrubber:scale-100 transition-transform" />
           </div>
 
           {/* Hover Time Tooltip */}
@@ -640,10 +714,11 @@ export function SecureVideoPlayer({
               <AnimatePresence>
                 {showSpeedMenu && (
                   <motion.div
+                    key="speed-menu-dropdown"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
-                    className="absolute bottom-full end-0 mb-2 bg-forest/95 backdrop-blur-xl border border-white/10 rounded-xl p-1.5 shadow-2xl min-w-[110px] sm:min-w-[120px] z-50"
+                    className="absolute bottom-full right-0 mb-2 bg-forest/95 backdrop-blur-xl border border-white/10 rounded-xl p-1.5 shadow-2xl min-w-[110px] sm:min-w-[120px] z-50 text-left"
                   >
                     <div className="text-[10px] text-white/50 px-2 py-1 uppercase tracking-wider font-semibold border-b border-white/10 mb-1">
                       {isArabic ? 'سرعة التشغيل' : 'Speed'}
@@ -653,7 +728,7 @@ export function SecureVideoPlayer({
                         key={speed}
                         type="button"
                         onClick={() => handleSpeedChange(speed)}
-                        className={`w-full flex items-center justify-between px-2 py-1 rounded-lg text-xs font-mono text-start transition-colors ${
+                        className={`w-full flex items-center justify-between px-2 py-1 rounded-lg text-xs font-mono text-left transition-colors ${
                           playbackSpeed === speed
                             ? 'bg-gold text-forest font-bold'
                             : 'text-white/80 hover:bg-white/10'

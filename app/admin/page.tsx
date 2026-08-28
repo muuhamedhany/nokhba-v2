@@ -99,7 +99,7 @@ export default function AdminDashboardPage() {
   const [itemFormData, setItemFormData] = useState({
     title: '',
     type: 'video',
-    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+    url: 'https://www.youtube.com/watch?v=k1t55VUefPI',
     duration: 2700
   });
 

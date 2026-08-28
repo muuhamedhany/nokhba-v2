@@ -207,14 +207,14 @@ export const INITIAL_CURRICULUM_DATA: Record<string, Array<{
           id: 'v1_c1',
           type: 'video',
           title: 'الدرس الأول: مفهوم الدولة والفرق بين الدولة والأمة',
-          url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+          url: 'https://www.youtube.com/watch?v=k1t55VUefPI',
           duration: 2700,
         },
         {
           id: 'v2_c1',
           type: 'video',
           title: 'الدرس الثاني: أنواع الدول والمواقع المركزية والهامشية',
-          url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+          url: 'https://www.youtube.com/watch?v=k1t55VUefPI',
           duration: 3100,
         },
         {
@@ -247,7 +247,7 @@ export const INITIAL_CURRICULUM_DATA: Record<string, Array<{
           id: 'v3_c1',
           type: 'video',
           title: 'الدرس الثالث: التضاريس والمناخ وأثرهما في قوة الدولة',
-          url: 'https://www.youtube.com/watch?v=L_LUpnjgPso',
+          url: 'https://www.youtube.com/watch?v=k1t55VUefPI',
           duration: 2400,
         }
       ]
@@ -263,14 +263,14 @@ export const INITIAL_CURRICULUM_DATA: Record<string, Array<{
           id: 'v1_c2',
           type: 'video',
           title: 'المحاضرة الأولى: مفاتيح قراءة خرائط الجغرافيا السياسية بالنظام الحديث',
-          url: 'https://www.youtube.com/watch?v=aqz-KE-bpKQ',
+          url: 'https://www.youtube.com/watch?v=k1t55VUefPI',
           duration: 2850,
         },
         {
           id: 'v2_c2',
           type: 'video',
           title: 'المحاضرة الثانية: حل النموذج الاسترشادي الأول لوزارة التربية والتعليم',
-          url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+          url: 'https://www.youtube.com/watch?v=k1t55VUefPI',
           duration: 3400,
         },
         {
@@ -303,7 +303,7 @@ export const INITIAL_CURRICULUM_DATA: Record<string, Array<{
           id: 'v3_c2',
           type: 'video',
           title: 'المحاضرة الثالثة: أهم 50 سؤال ربط بين الوحدات الأربعة',
-          url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+          url: 'https://www.youtube.com/watch?v=k1t55VUefPI',
           duration: 3600,
         }
       ]
@@ -319,14 +319,14 @@ export const INITIAL_CURRICULUM_DATA: Record<string, Array<{
           id: 'v1_c4',
           type: 'video',
           title: 'المحاضرة 1: أحوال المجتمع المصري قبل مجيء الحملة الفرنسية',
-          url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+          url: 'https://www.youtube.com/watch?v=k1t55VUefPI',
           duration: 2600,
         },
         {
           id: 'v2_c4',
           type: 'video',
           title: 'المحاضرة 2: نزول الحملة والمقاومة الشعبية في الصعيد والإسكندرية',
-          url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+          url: 'https://www.youtube.com/watch?v=k1t55VUefPI',
           duration: 2900,
         },
         {
@@ -355,14 +355,14 @@ export const INITIAL_CURRICULUM_DATA: Record<string, Array<{
           id: 'v1_c6',
           type: 'video',
           title: 'الدرس 1: شدة التيار، فرق الجهد، والمقاومة النوعية والتوصيلية',
-          url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+          url: 'https://www.youtube.com/watch?v=k1t55VUefPI',
           duration: 3200,
         },
         {
           id: 'v2_c6',
           type: 'video',
           title: 'الدرس 2: استراتيجيات حل دوائر كيرشوف المعقدة في 3 خطوات',
-          url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+          url: 'https://www.youtube.com/watch?v=k1t55VUefPI',
           duration: 3500,
         },
         {
@@ -391,14 +391,14 @@ export const INITIAL_CURRICULUM_DATA: Record<string, Array<{
           id: 'v1_c7',
           type: 'video',
           title: 'المحاضرة 1: اشتقاق الدوال المثلثية والدوال الأسية واللوغاريتمية',
-          url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+          url: 'https://www.youtube.com/watch?v=k1t55VUefPI',
           duration: 3100,
         },
         {
           id: 'v2_c7',
           type: 'video',
           title: 'المحاضرة 2: مسائل المعدلات الزمنية المرتبطة ورسم المنحنيات',
-          url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+          url: 'https://www.youtube.com/watch?v=k1t55VUefPI',
           duration: 2950,
         }
       ]
@@ -414,14 +414,14 @@ export const INITIAL_CURRICULUM_DATA: Record<string, Array<{
           id: 'v1_c8',
           type: 'video',
           title: 'المحاضرة 1: تجربة الكشف عن الكربون والهيدروجين وتسمية الألكانات (IUPAC)',
-          url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+          url: 'https://www.youtube.com/watch?v=k1t55VUefPI',
           duration: 3300,
         },
         {
           id: 'v2_c8',
           type: 'video',
           title: 'المحاضرة 2: تفاعلات ماركونيكوف وألكينات وألكاينات بالتفصيل',
-          url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+          url: 'https://www.youtube.com/watch?v=k1t55VUefPI',
           duration: 3150,
         }
       ]
@@ -437,7 +437,7 @@ export const INITIAL_CURRICULUM_DATA: Record<string, Array<{
           id: 'v1_c9',
           type: 'video',
           title: 'المحاضرة 1: إعراب الجمل وثوابت النحو وإعمال المشتقات العاملة',
-          url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+          url: 'https://www.youtube.com/watch?v=k1t55VUefPI',
           duration: 2750,
         }
       ]
@@ -453,7 +453,7 @@ export const INITIAL_CURRICULUM_DATA: Record<string, Array<{
           id: 'v1_c10',
           type: 'video',
           title: 'Lecture 1: Masterclass in Tenses, Active & Passive, and Conditionals',
-          url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+          url: 'https://www.youtube.com/watch?v=k1t55VUefPI',
           duration: 2800,
         }
       ]
