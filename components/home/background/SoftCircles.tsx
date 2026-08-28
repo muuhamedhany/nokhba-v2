@@ -5,9 +5,10 @@ import { motion } from 'motion/react';
 
 interface SoftCirclesProps {
   active?: boolean;
+  baseDelay?: number;
 }
 
-export function SoftCircles({ active = true }: SoftCirclesProps) {
+export function SoftCircles({ active = true, baseDelay = 1.6 }: SoftCirclesProps) {
   return (
     <g className="soft-circles select-none">
       {/* ------------------------------------------------------------- */}
@@ -21,7 +22,7 @@ export function SoftCircles({ active = true }: SoftCirclesProps) {
                 opacity: 1,
                 scale: 1,
                 y: 0,
-                transition: { duration: 1.3, delay: 0.35, ease: [0.16, 1, 0.3, 1] },
+                transition: { duration: 1.3, delay: baseDelay + 0.2, ease: [0.16, 1, 0.3, 1] },
               }
             : { opacity: 0, scale: 0.85, y: 20 }
         }
@@ -55,7 +56,7 @@ export function SoftCircles({ active = true }: SoftCirclesProps) {
                 opacity: 1,
                 scale: 1,
                 y: 0,
-                transition: { duration: 1.2, delay: 0.5, ease: [0.16, 1, 0.3, 1] },
+                transition: { duration: 1.2, delay: baseDelay + 0.32, ease: [0.16, 1, 0.3, 1] },
               }
             : { opacity: 0, scale: 0.7, y: -15 }
         }

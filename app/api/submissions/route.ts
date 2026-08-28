@@ -27,8 +27,17 @@ export async function GET(request: NextRequest) {
         }
       };
     } else if (user.role === 'parent') {
-      if (user.studentId) {
-        whereClause.studentId = user.studentId;
+      let studentId = user.studentId;
+      if (!studentId && user.phone) {
+        const student = await prisma.user.findFirst({
+          where: { role: 'student', parentPhone: user.phone.trim() },
+          select: { id: true }
+        });
+        studentId = student?.id;
+      }
+
+      if (studentId) {
+        whereClause.studentId = studentId;
       } else {
         return NextResponse.json({ submissions: [] });
       }

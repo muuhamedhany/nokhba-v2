@@ -9,16 +9,17 @@ import { SoftCircles } from './SoftCircles';
 
 interface HeroBackgroundProps {
   active?: boolean;
+  baseDelay?: number;
 }
 
-export function HeroBackground({ active = true }: HeroBackgroundProps) {
+export function HeroBackground({ active = true, baseDelay = 1.6 }: HeroBackgroundProps) {
   return (
     <div 
       aria-hidden="true" 
       className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden select-none z-0"
     >
       {/* Layer 1: Atmospheric Canvas Gradients & Base Ivory */}
-      <BackgroundGradient active={active} />
+      <BackgroundGradient active={active} delay={baseDelay} />
 
       {/* Layer 2: Vector Graphic System (Blobs, Waves, Dots, Circles) */}
       <svg
@@ -29,16 +30,16 @@ export function HeroBackground({ active = true }: HeroBackgroundProps) {
         className="absolute inset-0 w-full h-full pointer-events-none z-0"
       >
         {/* Step 1: Organic Layered Blobs */}
-        <OrganicBlobs active={active} />
+        <OrganicBlobs active={active} baseDelay={baseDelay} />
 
         {/* Step 2: Translucent Soft Circles */}
-        <SoftCircles active={active} />
+        <SoftCircles active={active} baseDelay={baseDelay} />
 
         {/* Step 3: Subtle Dot Pattern Grids */}
-        <DotPatterns active={active} />
+        <DotPatterns active={active} baseDelay={baseDelay} />
 
         {/* Step 4: Flowing Precision Wave Lines */}
-        <WaveLines active={active} />
+        <WaveLines active={active} baseDelay={baseDelay} />
       </svg>
     </div>
   );

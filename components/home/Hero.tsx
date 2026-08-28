@@ -151,8 +151,8 @@ export function Hero() {
 
   return (
     <section className="relative w-full min-h-[90dvh] lg:min-h-[92dvh] flex flex-col justify-center items-center text-center px-4 pt-29 md:pt-30 pb-19 md:pb-30 overflow-hidden isolate">
-      {/* Code-based Vector Animated Background (Blobs, Waves, Dots, Soft Circles) */}
-      <HeroBackground active={hasEntered} />
+      {/* Code-based Vector Animated Background (Blobs, Waves, Dots, Soft Circles) - enters last */}
+      <HeroBackground active={hasEntered} baseDelay={1.6} />
 
       {/* Main Centered Content Orchestration */}
       <motion.div
@@ -398,8 +398,8 @@ export function Hero() {
         </motion.div>
       </motion.div>
 
-      {/* Seamless Multi-Layered S-Curve & Gold Crest Bottom Divider */}
-      <HeroBottomDivider active={hasEntered} />
+      {/* Seamless Multi-Layered S-Curve & Gold Crest Bottom Divider - enters last */}
+      <HeroBottomDivider active={hasEntered} baseDelay={1.6} />
     </section>
   );
 }

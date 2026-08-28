@@ -3,7 +3,13 @@
 import React from 'react';
 import { motion } from 'motion/react';
 
-export function BackgroundGradient({ active = true }: { active?: boolean }) {
+export function BackgroundGradient({ 
+  active = true,
+  delay = 1.5,
+}: { 
+  active?: boolean;
+  delay?: number;
+}) {
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0">
       {/* Base warm ivory background canvas */}
@@ -13,7 +19,7 @@ export function BackgroundGradient({ active = true }: { active?: boolean }) {
       <motion.div
         initial={{ opacity: 0 }}
         animate={active ? { opacity: 1 } : { opacity: 0 }}
-        transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 1.3, delay, ease: [0.16, 1, 0.3, 1] }}
         className="absolute inset-0"
       >
         {/* Top-left soft warm beige wash */}

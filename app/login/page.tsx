@@ -188,6 +188,10 @@ function LoginForm() {
             dir="ltr"
             className={isArabic ? "text-end" : "text-start"}
             placeholder="••••••••"
+            hint={role === 'parent' 
+              ? (isArabic ? 'كلمة المرور الافتراضية لولي الأمر هي رقم هاتف الطالب المسجل' : 'Default password is the student\'s registered phone number')
+              : undefined
+            }
             value={password}
             error={touched.password ? errors.password : undefined}
             onChange={(e) => {

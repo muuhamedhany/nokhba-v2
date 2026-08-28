@@ -398,7 +398,7 @@ function SignupContent() {
                   dir="ltr"
                   className={isArabic ? "text-end" : "text-start"}
                   placeholder="010XXXXXXXX"
-                  hint={isArabic ? '(للمتابعة والتقارير)' : '(For reports & sync)'}
+                  hint={isArabic ? '(سيتم إنشاء حساب لولي الأمر تلقائياً وتكون كلمة مروره هي رقم هاتف الطالب)' : '(Parent account is auto-created with student phone as password)'}
                   value={formData.parentPhone}
                   error={touched.parentPhone ? errors.parentPhone : undefined}
                   onChange={(e) => {

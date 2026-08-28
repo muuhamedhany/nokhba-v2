@@ -5,9 +5,10 @@ import { motion } from 'motion/react';
 
 interface HeroBottomDividerProps {
   active?: boolean;
+  baseDelay?: number;
 }
 
-export function HeroBottomDivider({ active = true }: HeroBottomDividerProps) {
+export function HeroBottomDivider({ active = true, baseDelay = 1.6 }: HeroBottomDividerProps) {
   return (
     <div 
       aria-hidden="true" 
@@ -27,7 +28,7 @@ export function HeroBottomDivider({ active = true }: HeroBottomDividerProps) {
           fillOpacity="0.75"
           initial={{ opacity: 0, y: 15 }}
           animate={active ? { opacity: 0.75, y: 0 } : { opacity: 0, y: 15 }}
-          transition={{ duration: 1.2, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 1.2, delay: baseDelay + 0.35, ease: [0.16, 1, 0.3, 1] }}
         />
 
         {/* Layer 2: Main Organic S-Curve Crest (Matches Journey section background #F7F6F3) */}
@@ -36,7 +37,7 @@ export function HeroBottomDivider({ active = true }: HeroBottomDividerProps) {
           fill="#F7F6F3"
           initial={{ opacity: 0, y: 20 }}
           animate={active ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-          transition={{ duration: 1.2, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 1.2, delay: baseDelay + 0.25, ease: [0.16, 1, 0.3, 1] }}
         />
 
         {/* Layer 3: Gold Trailing Hairline Crest Accent */}
@@ -49,7 +50,7 @@ export function HeroBottomDivider({ active = true }: HeroBottomDividerProps) {
           fill="none"
           initial={{ pathLength: 0 }}
           animate={active ? { pathLength: 1 } : { pathLength: 0 }}
-          transition={{ duration: 1.5, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 1.5, delay: baseDelay + 0.45, ease: [0.16, 1, 0.3, 1] }}
         />
 
         {/* Layer 4: Upper White Trailing Accent Line */}
@@ -62,7 +63,7 @@ export function HeroBottomDivider({ active = true }: HeroBottomDividerProps) {
           fill="none"
           initial={{ pathLength: 0 }}
           animate={active ? { pathLength: 1 } : { pathLength: 0 }}
-          transition={{ duration: 1.5, delay: 0.45, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 1.5, delay: baseDelay + 0.55, ease: [0.16, 1, 0.3, 1] }}
         />
 
         {/* Layer 5: Secondary Gold Echo Hairline */}
@@ -75,7 +76,7 @@ export function HeroBottomDivider({ active = true }: HeroBottomDividerProps) {
           fill="none"
           initial={{ pathLength: 0 }}
           animate={active ? { pathLength: 1 } : { pathLength: 0 }}
-          transition={{ duration: 1.6, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 1.6, delay: baseDelay + 0.65, ease: [0.16, 1, 0.3, 1] }}
         />
       </svg>
     </div>

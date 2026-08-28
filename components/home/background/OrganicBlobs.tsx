@@ -5,9 +5,10 @@ import { motion } from 'motion/react';
 
 interface OrganicBlobsProps {
   active?: boolean;
+  baseDelay?: number;
 }
 
-export function OrganicBlobs({ active = true }: OrganicBlobsProps) {
+export function OrganicBlobs({ active = true, baseDelay = 1.6 }: OrganicBlobsProps) {
   return (
     <g className="organic-blobs select-none">
       {/* ------------------------------------------------------------- */}
@@ -22,7 +23,7 @@ export function OrganicBlobs({ active = true }: OrganicBlobsProps) {
                 scale: 1,
                 x: 0,
                 y: 0,
-                transition: { duration: 1.2, ease: [0.16, 1, 0.3, 1] },
+                transition: { duration: 1.3, delay: baseDelay, ease: [0.16, 1, 0.3, 1] },
               }
             : { opacity: 0, scale: 0.95, x: -20, y: -20 }
         }
@@ -76,7 +77,7 @@ export function OrganicBlobs({ active = true }: OrganicBlobsProps) {
                 scale: 1,
                 x: 0,
                 y: 0,
-                transition: { duration: 1.2, delay: 0.1, ease: [0.16, 1, 0.3, 1] },
+                transition: { duration: 1.3, delay: baseDelay + 0.12, ease: [0.16, 1, 0.3, 1] },
               }
             : { opacity: 0, scale: 0.95, x: 20, y: 20 }
         }

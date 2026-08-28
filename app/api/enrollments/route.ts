@@ -52,19 +52,37 @@ export async function GET() {
   }
 
   if (user.role === 'parent') {
-    const enrollments = await prisma.enrollment.findMany({
-      where: { studentId: user.studentId || '' },
-      include: { course: true }
-    });
-    return NextResponse.json({
-      enrollments: enrollments.map(e => ({
-        id: e.id,
-        studentId: e.studentId,
-        courseId: e.courseId,
-        completedItems: JSON.parse(e.completedItemsJson || '[]'),
-        unlockedAt: e.unlockedAt.toISOString(),
-      }))
-    });
+    try {
+      let studentId = user.studentId;
+      if (!studentId && user.phone) {
+        const student = await prisma.user.findFirst({
+          where: { role: 'student', parentPhone: user.phone.trim() },
+          select: { id: true }
+        });
+        studentId = student?.id;
+      }
+
+      if (!studentId) {
+        return NextResponse.json({ enrollments: [] });
+      }
+
+      const enrollments = await prisma.enrollment.findMany({
+        where: { studentId },
+        include: { course: true }
+      });
+      return NextResponse.json({
+        enrollments: enrollments.map(e => ({
+          id: e.id,
+          studentId: e.studentId,
+          courseId: e.courseId,
+          completedItems: JSON.parse(e.completedItemsJson || '[]'),
+          unlockedAt: e.unlockedAt.toISOString(),
+        }))
+      });
+    } catch (err) {
+      console.warn('Error fetching parent student enrollments from DB:', err);
+      return NextResponse.json({ enrollments: [] });
+    }
   }
 
   return NextResponse.json({ enrollments: [] });

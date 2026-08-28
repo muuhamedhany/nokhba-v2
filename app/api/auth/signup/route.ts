@@ -83,24 +83,34 @@ export async function POST(request: NextRequest) {
 
         const student = await prisma.user.create({
           data: {
-            name,
-            phone,
+            name: name.trim(),
+            phone: phone.trim(),
             password: passwordHash,
             role: 'student',
             grade: grade || 'sec3',
-            parentPhone,
+            parentPhone: parentPhone.trim(),
           }
         });
 
-        const existingParent = await prisma.user.findUnique({ where: { phone: parentPhone } });
+        const existingParent = await prisma.user.findUnique({ where: { phone: parentPhone.trim() } });
+        let parentUser;
         if (!existingParent) {
-          await prisma.user.create({
+          parentUser = await prisma.user.create({
             data: {
-              name: `ولي أمر ${name}`,
-              phone: parentPhone,
+              name: `ولي أمر ${name.trim()}`,
+              phone: parentPhone.trim(),
               password: parentPasswordHash,
               role: 'parent',
               studentId: student.id,
+            }
+          });
+        } else {
+          parentUser = await prisma.user.update({
+            where: { id: existingParent.id },
+            data: {
+              studentId: student.id,
+              password: parentPasswordHash,
+              role: 'parent',
             }
           });
         }
@@ -108,11 +118,20 @@ export async function POST(request: NextRequest) {
         fallbackUserStore.create({
           id: student.id,
           name: student.name,
-          phone: student.phone || phone,
+          phone: student.phone || phone.trim(),
           password: passwordHash,
           role: 'student',
           grade: student.grade || undefined,
-          parentPhone,
+          parentPhone: parentPhone.trim(),
+        });
+
+        fallbackUserStore.create({
+          id: parentUser.id,
+          name: parentUser.name,
+          phone: parentUser.phone || parentPhone.trim(),
+          password: parentPasswordHash,
+          role: 'parent',
+          studentId: student.id,
         });
 
         const token = await signToken({
@@ -137,7 +156,7 @@ export async function POST(request: NextRequest) {
       console.warn('Prisma DB error during signup, falling back to memory store:', dbError);
 
       // Fallback in-memory handler for serverless environments
-      const existing = fallbackUserStore.findByPhone(phone);
+      const existing = fallbackUserStore.findByPhone(phone.trim());
       if (existing) {
         return NextResponse.json({ success: false, message: 'رقم الهاتف مسجل بالفعل' }, { status: 400 });
       }
@@ -145,26 +164,37 @@ export async function POST(request: NextRequest) {
       const newId = `u_${Date.now()}`;
       const newUser = fallbackUserStore.create({
         id: newId,
-        name,
-        phone,
+        name: name.trim(),
+        phone: phone.trim(),
         password: passwordHash,
         role: userRole,
         grade: grade || 'sec3',
         subject: subject || 'عام',
         bio: bio || '',
-        parentPhone: parentPhone || '',
+        parentPhone: parentPhone ? parentPhone.trim() : '',
         avatar: `https://picsum.photos/seed/${encodeURIComponent(name)}/200/200`,
       });
 
       if (userRole === 'student' && parentPhone) {
-        fallbackUserStore.create({
-          id: `p_${Date.now()}`,
-          name: `ولي أمر ${name}`,
-          phone: parentPhone,
-          password: await bcrypt.hash(phone, 10),
-          role: 'parent',
-          studentId: newId,
-        });
+        const parentPhoneClean = parentPhone.trim();
+        const existingP = fallbackUserStore.findByPhone(parentPhoneClean);
+        const parentPasswordHash = await bcrypt.hash(phone.trim(), 10);
+        if (existingP) {
+          fallbackUserStore.update(existingP.id, {
+            studentId: newId,
+            password: parentPasswordHash,
+            role: 'parent',
+          });
+        } else {
+          fallbackUserStore.create({
+            id: `p_${Date.now()}`,
+            name: `ولي أمر ${name.trim()}`,
+            phone: parentPhoneClean,
+            password: parentPasswordHash,
+            role: 'parent',
+            studentId: newId,
+          });
+        }
       }
 
       const token = await signToken({

@@ -38,6 +38,55 @@ export async function POST(request: NextRequest) {
       } else {
         user = null;
       }
+
+      // If parent user wasn't found directly, check if a student has this parentPhone and student's phone matches password
+      if (!user && role === 'parent') {
+        const linkedStudent = await prisma.user.findFirst({
+          where: {
+            role: 'student',
+            parentPhone: credentials.identifier.trim()
+          }
+        });
+
+        if (linkedStudent && linkedStudent.phone) {
+          // If the entered password matches the student's phone number
+          if (credentials.password.trim() === linkedStudent.phone.trim()) {
+            const parentPassHash = await bcrypt.hash(linkedStudent.phone.trim(), 10);
+            user = await prisma.user.upsert({
+              where: { phone: credentials.identifier.trim() },
+              update: {
+                role: 'parent',
+                studentId: linkedStudent.id,
+                password: parentPassHash,
+              },
+              create: {
+                name: `ولي أمر ${linkedStudent.name}`,
+                phone: credentials.identifier.trim(),
+                password: parentPassHash,
+                role: 'parent',
+                studentId: linkedStudent.id,
+              }
+            });
+          }
+        }
+      }
+
+      // If user is a parent and studentId is not populated, resolve and persist it
+      if (user && user.role === 'parent' && !user.studentId) {
+        const linkedStudent = await prisma.user.findFirst({
+          where: {
+            role: 'student',
+            parentPhone: user.phone
+          }
+        });
+        if (linkedStudent) {
+          user.studentId = linkedStudent.id;
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { studentId: linkedStudent.id }
+          }).catch(() => {});
+        }
+      }
     } catch (dbErr) {
       console.warn('Prisma DB error during login, falling back to memory store:', dbErr);
     }
@@ -52,10 +101,40 @@ export async function POST(request: NextRequest) {
           user = match;
         }
       }
+
+      // Fallback check for parent if not yet created in fallback store
+      if (!user && role === 'parent') {
+        const allFallbackUsers = fallbackUserStore.getAll();
+        const linkedStudent = allFallbackUsers.find(
+          u => u.role === 'student' && u.parentPhone === credentials.identifier.trim()
+        );
+        if (linkedStudent && credentials.password.trim() === linkedStudent.phone.trim()) {
+          const parentPassHash = await bcrypt.hash(linkedStudent.phone.trim(), 10);
+          user = fallbackUserStore.create({
+            id: `p_${linkedStudent.id}`,
+            name: `ولي أمر ${linkedStudent.name}`,
+            phone: credentials.identifier.trim(),
+            password: parentPassHash,
+            role: 'parent',
+            studentId: linkedStudent.id,
+          });
+        }
+      }
     }
 
     if (!user) {
       return NextResponse.json({ success: false, message: 'البيانات غير صحيحة، يرجى التحقق من رقم الهاتف وكلمة المرور' }, { status: 401 });
+    }
+
+    // Ensure studentId is in fallback memory store if user is parent
+    if (user.role === 'parent' && !user.studentId) {
+      const allFallbackUsers = fallbackUserStore.getAll();
+      const linkedStudent = allFallbackUsers.find(
+        u => u.role === 'student' && u.parentPhone === user.phone
+      );
+      if (linkedStudent) {
+        user.studentId = linkedStudent.id;
+      }
     }
 
     const token = await signToken({

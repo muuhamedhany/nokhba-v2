@@ -55,13 +55,38 @@ export async function getSessionUser() {
       }
     });
 
-    if (user) return user;
+    if (user) {
+      if (user.role === 'parent' && !user.studentId && user.phone) {
+        const linkedStudent = await prisma.user.findFirst({
+          where: { role: 'student', parentPhone: user.phone },
+          select: { id: true }
+        });
+        if (linkedStudent) {
+          user.studentId = linkedStudent.id;
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { studentId: linkedStudent.id }
+          }).catch(() => {});
+        }
+      }
+      return user;
+    }
   } catch (err) {
     console.warn('Prisma DB error in getSessionUser, using fallback store:', err);
   }
 
   const fallback = fallbackUserStore.findById(payload.id);
   if (fallback) {
+    let resolvedStudentId = fallback.studentId;
+    if (fallback.role === 'parent' && !resolvedStudentId && fallback.phone) {
+      const linkedStudent = fallbackUserStore.getAll().find(
+        u => u.role === 'student' && u.parentPhone === fallback.phone
+      );
+      if (linkedStudent) {
+        resolvedStudentId = linkedStudent.id;
+      }
+    }
+
     return {
       id: fallback.id,
       name: fallback.name,
@@ -72,7 +97,7 @@ export async function getSessionUser() {
       parentPhone: fallback.parentPhone,
       grade: fallback.grade,
       subject: fallback.subject,
-      studentId: fallback.studentId,
+      studentId: resolvedStudentId,
     };
   }
 

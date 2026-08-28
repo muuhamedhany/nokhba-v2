@@ -5,9 +5,10 @@ import { motion } from 'motion/react';
 
 interface DotPatternsProps {
   active?: boolean;
+  baseDelay?: number;
 }
 
-export function DotPatterns({ active = true }: DotPatternsProps) {
+export function DotPatterns({ active = true, baseDelay = 1.6 }: DotPatternsProps) {
   return (
     <g className="dot-patterns select-none">
       <defs>
@@ -52,7 +53,7 @@ export function DotPatterns({ active = true }: DotPatternsProps) {
             ? {
                 opacity: 0.85,
                 y: 0,
-                transition: { duration: 1.2, delay: 0.3, ease: [0.16, 1, 0.3, 1] },
+                transition: { duration: 1.2, delay: baseDelay + 0.25, ease: [0.16, 1, 0.3, 1] },
               }
             : { opacity: 0, y: 15 }
         }
@@ -74,7 +75,7 @@ export function DotPatterns({ active = true }: DotPatternsProps) {
             ? {
                 opacity: 0.85,
                 y: 0,
-                transition: { duration: 1.2, delay: 0.4, ease: [0.16, 1, 0.3, 1] },
+                transition: { duration: 1.2, delay: baseDelay + 0.35, ease: [0.16, 1, 0.3, 1] },
               }
             : { opacity: 0, y: -15 }
         }
@@ -96,7 +97,7 @@ export function DotPatterns({ active = true }: DotPatternsProps) {
             ? {
                 opacity: 0.8,
                 scale: 1,
-                transition: { duration: 1.2, delay: 0.5, ease: [0.16, 1, 0.3, 1] },
+                transition: { duration: 1.2, delay: baseDelay + 0.45, ease: [0.16, 1, 0.3, 1] },
               }
             : { opacity: 0, scale: 0.9 }
         }

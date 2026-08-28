@@ -17,24 +17,39 @@ import Link from 'next/link';
 import { ParentDashboardSkeleton } from '@/components/common/Skeleton';
 
 function ParentDashboardContent() {
-  const { currentUser, users, enrollments, courses, submissions, fetchCourses, fetchEnrollments, fetchSubmissions, isLoading } = useStore();
+  const { currentUser, enrollments, courses, submissions, fetchCourses, fetchEnrollments, fetchSubmissions, isLoading } = useStore();
   const { t, isArabic } = useLanguage();
+  const [student, setStudent] = React.useState<any>(null);
+  const [isStudentLoading, setIsStudentLoading] = React.useState(true);
 
   useEffect(() => {
     fetchCourses();
     fetchEnrollments();
     fetchSubmissions();
+
+    async function loadLinkedStudent() {
+      setIsStudentLoading(true);
+      try {
+        const res = await fetch('/api/parent/student');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.student) {
+            setStudent(data.student);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load linked student for parent:', err);
+      } finally {
+        setIsStudentLoading(false);
+      }
+    }
+
+    loadLinkedStudent();
   }, [fetchCourses, fetchEnrollments, fetchSubmissions]);
 
-  if (isLoading && courses.length === 0) {
+  if ((isLoading && courses.length === 0) || isStudentLoading) {
     return <ParentDashboardSkeleton />;
   }
-
-  // Find linked student strictly from database users
-  const studentId = currentUser?.studentId;
-  const student = users.find(u => u.id === studentId) ||
-                  users.find(u => u.role === 'student' && u.parentPhone === currentUser?.phone) ||
-                  users.find(u => u.role === 'student');
 
   const studentEnrollments = student ? enrollments.filter(e => e.studentId === student.id) : [];
   const activeCourses = student ? courses.filter(c => studentEnrollments.some(e => e.courseId === c.id) || c.isFree) : [];
